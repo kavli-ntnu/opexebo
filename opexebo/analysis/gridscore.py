@@ -1,7 +1,5 @@
 """
-Created on Wed Aug 29 10:49:42 2018
-
-@author: Vadim Frolov
+Provide function for gridness score calculation.
 """
 
 from skimage import measure
@@ -11,7 +9,39 @@ import numpy as np
 from scipy.spatial.distance import cdist
 from scipy.stats import pearsonr
 
-def gridness_score(aCorr, fieldThreshold=0.2):
+def gridness_score(aCorr, fieldThreshold = 0.2, min_orientation = 15,
+        calc_stats = False):
+    """Calculate gridness score for an autocorrelogram.
+
+    Calculates a gridness score by expanding a circle around the centre field
+    and calculating a correlation value of that circle with it's rotated versions.
+    The expansion is done up until the smallest side of the autocorrelogram.
+    The function may also calculate grid statistics.
+
+    Gridness score value by itself is calculated as a maximum over a sliding mean
+    of expanded circle. The width of the sliding window is given by a variable
+    numGridnessRadii. This is done in order to keep gridness score the same as
+    historical values (i.e. older versions of gridness score).
+
+    Arguments:
+    acorr: A 2D autocorrelogram.
+    field_threshold: Normalized threshold value used to search for peaks on the
+        autocorrelogram. Ranges from 0 to 1, default value is 0.2.
+    min_orientation: Value of minimal difference of inner fields orientation (in
+        degrees). If there are fields that differ in orientation for less than
+        min_orientation, then only the closest to the centre field is left.
+        Default value is 15.
+    calc_stats: Flag that indicates whether grid statistics must be calculated
+        and returned. Default value is False.
+
+    Returns:
+    Always returns a gridness score value. It ranges from -2 to 2. 2 is more of
+    a theoretical bound for a perfect grid. More practical value for a good
+    grid is around 1.3. If function can not calculate a gridness score, NaN value
+    is returned.
+    If calc_stats is set to True, then in addition to gridness score value,
+    the function returns gridness statistics.
+    """
 
     # normalize aCorr in order to find contours
     aCorr = aCorr / aCorr.max()
@@ -32,16 +62,16 @@ def gridness_score(aCorr, fieldThreshold=0.2):
     rotAngles_deg = 30 * np.arange(1,6); # 30, 60, 90, 120, 150
     rotatedACorr = np.zeros(shape=(aCorr.shape[0], aCorr.shape[1], len(rotAngles_deg)), dtype=float)
 
-    # we get roated maps here as it is a heavy operation
+    # we get rotated maps here as it is a heavy operation
     for n, angle in enumerate(rotAngles_deg):
         rotatedACorr[:, :, n] = rotate(aCorr, angle, preserve_range=True, clip=False)
 
     rr, cc = np.meshgrid(heightIndices, widthIndices, sparse=False)
-    
+
     # This is needed for compatibility with Matlab's code
     rr = rr + 1
     cc = cc + 1
-    
+
     mainCircle = np.sqrt(np.power((cc - halfWidth), 2) + np.power(rr-halfHeight, 2))
     innerCircle = mainCircle > cFieldRadius
     GNS = np.zeros(shape=(numSteps, 2), dtype=float)
@@ -78,7 +108,7 @@ def gridness_score(aCorr, fieldThreshold=0.2):
     return gscore
 
 
-def plotContours(img, contours):
+def _plotContours(img, contours):
     fig, ax = plt.subplots()
     ax.imshow(img, cmap='jet', origin='lower')
 

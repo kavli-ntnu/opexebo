@@ -1,16 +1,28 @@
 """
-Created on Wed Aug 29 09:37:41 2018
+Calculate 2D spatial autocorrelation
 
-@author: Vadim Frolov
+Calculates 2D autocorrelation (autocorrelogram) of a firing map.
+
 """
 
-from opexebo.general import normxcorr2_general
+from opexebo import general
 import numpy as np
 
 def autocorrelation(map):
+    """Calculate 2D spatial autocorrelation of a firing map.
+
+    Arguments:
+    map: NxM matrix, firing map. map is not necessary a numpy array. May
+         cnontain NaNs.
+
+    Returns:
+    Resulting correlation matrix, which is a 2D numpy array.
+    """
+
     # overlap_amount is a parameter that is intentionally not exposed to
     # the outside world. This is because too many users depend on it and we
     # do not what everyone to use their own overlap value.
+    # Should be a value in range [0, 1]
     overlap_amount = 0.8
     slices = []
 
@@ -21,8 +33,7 @@ def autocorrelation(map):
     map = np.nan_to_num(map)
 
     # get full autocorrelgram
-    aCorr = normxcorr2_general(map)
-
+    aCorr = general.normxcorr2_general(map)
 
     # we are only interested in a portion of the autocorrelogram. Since the values
     # on edges are too noise (due to the fact that very small amount of elements
