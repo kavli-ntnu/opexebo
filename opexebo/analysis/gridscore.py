@@ -9,8 +9,10 @@ import numpy as np
 from scipy.spatial.distance import cdist
 from scipy.stats import pearsonr
 
+import opexebo
+
 def gridness_score(aCorr, fieldThreshold = 0.2, min_orientation = 15,
-        calc_stats = False):
+        calc_stats = False, debug=False):
     """Calculate gridness score for an autocorrelogram.
 
     Calculates a gridness score by expanding a circle around the centre field
@@ -46,7 +48,11 @@ def gridness_score(aCorr, fieldThreshold = 0.2, min_orientation = 15,
     # normalize aCorr in order to find contours
     aCorr = aCorr / aCorr.max()
     cFieldRadius = np.floor(_findCentreRadius(aCorr, fieldThreshold))
-    print("Center radius is {}".format(cFieldRadius))
+    if debug:
+        print("Center radius is {}".format(cFieldRadius))
+    
+    if cFieldRadius in [-1, 0, 1]:
+        return np.NaN;
 
     halfHeight = np.ceil(aCorr.shape[0]/2)
     halfWidth = np.ceil(aCorr.shape[1]/2)
@@ -84,7 +90,8 @@ def gridness_score(aCorr, fieldThreshold = 0.2, min_orientation = 15,
             rotatedValues = rotatedACorr[mask, j]
             r, p = pearsonr(aCorrValues, rotatedValues)
             rotCorr[j] = r
-            print("Step {}, angle {}, corr value {}".format(i, angle, r))
+            if debug:
+                print("Step {}, angle {}, corr value {}".format(i, angle, r))
 
         GNS[i, 0] = np.min(rotCorr[[1, 3]]) - np.max(rotCorr[[0, 2, 4]]);
         GNS[i, 1] = radius
@@ -150,38 +157,43 @@ def _findCentreRadius(aCorr, fieldThreshold):
     centroids = []
     radii = []
 
-    contours = measure.find_contours(aCorr, fieldThreshold)
-    for n, contour in enumerate(contours):
-        x = contour[:, 1]
-        y = contour[:, 0]
+    fields = opexebo.analysis.placefield(aCorr, min_bins=0, min_peak=0)[0]
+    if fields == None or len(fields) == 0:
+        return 0
 
-        centroid = (sum(x) / len(contour), sum(y) / len(contour))
-        radius = [np.mean([np.sqrt(np.square(x-centroid[0]) + np.square(y-centroid[1]))])]
-
-        centroids.append(centroid)
-        radii.append(radius)
+    peak_coords = np.ndarray(shape=(len(fields), 2), dtype=np.integer)
+    areas = np.ndarray(shape=(len(fields), 1), dtype=np.integer)
+    for i, field in enumerate(fields):
+        peak_rc = field['peak_coords']
+        peak_coords[i, 0] = peak_rc[0]
+        peak_coords[i, 1] = peak_rc[1]
+        areas[i] = field['area']
 
     aCorrCentre = np.zeros(shape=(1,2), dtype=float)
     aCorrCentre[0] = aCorr.shape[0]
     aCorrCentre[0,1] = aCorr.shape[1]
     aCorrCentre = np.ceil(aCorrCentre/2)
 
-    # get all distances and check two minimum of them
-    distancesToCentre = cdist(centroids, aCorrCentre)
-    sortInd = np.squeeze(np.argsort(distancesToCentre, axis=0))
-
     # index of the closest field to the centre
-    closestFieldInd = sortInd[0]
-    twoMinDistances = distancesToCentre[sortInd[:2]]
+    closestFieldInd = 0
+    if len(peak_coords) >= 2:
+        # get all distances and check two minimum of them
+        distancesToCentre = cdist(peak_coords, aCorrCentre)
+        sortInd = np.squeeze(np.argsort(distancesToCentre, axis=0))
 
-    areFieldsClose = np.abs(twoMinDistances[0] - twoMinDistances[1])[0] < 2
-    if areFieldsClose:
-        # two fields with close middle point. Let's select one with minimum square
-        areas = np.zeros((1, 2), dtype=float)
-        areas[0, 0] = _contourArea(contours, sortInd[0])
-        areas[0, 1] = _contourArea(contours, sortInd[1])
-        minInd = np.squeeze(np.argsort(areas))
-        closestFieldInd = minInd[0]
+        closestFieldInd = sortInd[0]
+        twoMinDistances = distancesToCentre[sortInd[:2]]
 
-    radius = radii[closestFieldInd]
+        areFieldsClose = np.abs(twoMinDistances[0] - twoMinDistances[1])[0] < 2
+        if areFieldsClose:
+            # two fields with close middle point. Let's select one with minimum area
+            indices_to_test = sortInd[:2]
+            min_ind = np.argmin(areas[indices_to_test])
+            closestFieldInd = indices_to_test[min_ind]
+
+    #radius = radii[closestFieldInd]
+    #area = _contourArea(contours, closestFieldInd)
+    #contour = contours[closestFieldInd]
+    #radius = np.floor(np.sqrt(_polyArea(contour[:, 0], contour[:, 1]) / np.pi ));
+    radius = np.floor(np.sqrt(areas[closestFieldInd] / np.pi))
     return radius
