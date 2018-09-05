@@ -53,4 +53,4 @@ def autocorrelation(map):
         d1 = int(aCorr.shape[i] - offset + 1)
         slices.append(slice(d0, d1))
 
-    return aCorr[slices]
+    return aCorr[tuple(slices)]
