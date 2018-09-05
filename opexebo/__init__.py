@@ -8,8 +8,8 @@ analysis
 general
     general signal processing function (smoothing, correlation, e.t.c.)
 """
-import analysis
-import general
+from . import analysis
+from . import general
 
 __author__ = """Vadim Frolov"""
 __email__ = 'vadim.frolov@ntnu.no'
