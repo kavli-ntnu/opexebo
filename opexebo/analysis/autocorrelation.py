@@ -31,6 +31,9 @@ def autocorrelation(map):
     if not isinstance(map, np.ndarray):
         map = np.array(map)
 
+    if map.size == 0:
+        return map
+
     # make sure there are no NaNs in the map
     map = np.nan_to_num(map)
 
