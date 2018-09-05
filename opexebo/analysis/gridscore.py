@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial.distance import cdist
 from scipy.stats import pearsonr
+import pdb
 
 import opexebo
 
@@ -104,8 +105,8 @@ def gridness_score(aCorr, fieldThreshold = 0.2, min_orientation = 15,
     if numStep < 1:
         numStep = 1
 
-    if numSteps == 1:
-        gscore = np.mean(GNS, axis=0)
+    if numStep == 1:
+        gscore = np.mean(GNS, axis=0)[0]
     else:
         meanGridness = np.zeros((numStep, ))
         for ii in range(numStep):
@@ -157,7 +158,12 @@ def _findCentreRadius(aCorr, fieldThreshold):
     centroids = []
     radii = []
 
-    fields = opexebo.analysis.placefield(aCorr, min_bins=0, min_peak=0)[0]
+    halfHeight = np.ceil(aCorr.shape[0]/2)
+    halfWidth = np.ceil(aCorr.shape[1]/2)
+    peak_coords = np.ones(shape=(1, 2), dtype=np.int)
+    peak_coords[0, 0] = halfHeight-1
+    peak_coords[0, 1] = halfWidth-1
+    fields = opexebo.analysis.placefield(aCorr, min_bins=2, min_peak=0, peak_coords=peak_coords)[0]
     if fields == None or len(fields) == 0:
         return 0
 
@@ -196,4 +202,5 @@ def _findCentreRadius(aCorr, fieldThreshold):
     #contour = contours[closestFieldInd]
     #radius = np.floor(np.sqrt(_polyArea(contour[:, 0], contour[:, 1]) / np.pi ));
     radius = np.floor(np.sqrt(areas[closestFieldInd] / np.pi))
+    #print("radius is {}".format(radius))
     return radius

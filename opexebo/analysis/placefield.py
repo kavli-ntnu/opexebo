@@ -9,8 +9,9 @@ from scipy.ndimage import filters
 
 from skimage import morphology
 from skimage import measure
+from scipy import ndimage
 
-def placefield(map, min_bins = 9, min_peak = 1, min_mean_rate = 0):
+def placefield(map, min_bins = 9, min_peak = 1, min_mean_rate = 0, peak_coords = None):
     """Locate place fields on a firing map.
 
     Identifies place fields in 2D firing map.
@@ -41,22 +42,22 @@ def placefield(map, min_bins = 9, min_peak = 1, min_mean_rate = 0):
 
     #ir = np.zeros(shape=(len(regions), 1), dtype=np.int)
     #ic = np.zeros(shape=(len(regions), 1), dtype=np.int)
-    peak_coords = np.zeros(shape=(len(regions), 2), dtype=np.int)
-
-    for i, props in enumerate(regions):
-        y0, x0 = props.centroid
-        peak = np.array([y0, x0])
-        peak = np.round(peak)
-        # ensure that there are no peaks off the map (due to rounding)
-        peak[peak < 0] = 0
-        for j in range(map.ndim):
-            if peak[j] > map.shape[j]:
-                peak[j] = map.shape[j] - 1
-
-        #ir[i] = peak[0]
-        #ic[i] = peak[1]
-        peak_coords[i, :] = peak
-
+    if peak_coords is None:
+        peak_coords = np.zeros(shape=(len(regions), 2), dtype=np.int)
+    
+        for i, props in enumerate(regions):
+            y0, x0 = props.centroid
+            peak = np.array([y0, x0])
+            peak = np.round(peak)
+            # ensure that there are no peaks off the map (due to rounding)
+            peak[peak < 0] = 0
+            for j in range(map.ndim):
+                if peak[j] > map.shape[j]:
+                    peak[j] = map.shape[j] - 1
+    
+            #ir[i] = peak[0]
+            #ic[i] = peak[1]
+            peak_coords[i, :] = peak        
 
     # Order is important to make it Matlab compatible!
     #peaks_linear_ind = np.ravel_multi_index(multi_index=(ir,ic), dims=map.shape,
@@ -179,6 +180,8 @@ def _expand_field(I, peak_rc, initial_change, initial_area, other_fields_linear,
 
     num_steps = np.round((initial_th - 0.2) / 0.02) + 1
     for i in np.linspace(initial_th, 0.2, num_steps):
+        i = round(i, 2)
+            
         area, pixels, is_bad = _area_for_threshold(I, peak_rc, i, other_fields_linear)
         if np.isnan(area) or is_bad:
             pixel_list = last_pixels
@@ -250,10 +253,18 @@ def _area_for_threshold(I, peak_rc, th, other_fields_linear):
     labeled_img[labeled_img != target_label] = 0
     labeled_img[labeled_img == target_label] = 1
 
-    regions = measure.regionprops(labeled_img)
-    if regions[0].euler_number <= 0:
+    # calclate euler_number by hand rather than by regionprops
+    # This yields results that are more similar to Matlab's regionprops
+    filled_image = ndimage.morphology.binary_fill_holes(labeled_img)
+    euler_array= filled_image != labeled_img
+    euler_objects = morphology.label(euler_array, connectivity=2)
+    num = np.max(euler_objects)
+    euler_number = -num + 1
+    
+    if euler_number <= 0:
         return (ar, [], is_bad)
 
+    regions = measure.regionprops(labeled_img)
     ar = np.sum(labeled_img == 1)
     area_linear_indices =  np.ravel_multi_index(multi_index=(regions[0].coords[:, 0],
          regions[0].coords[:, 1]), dims=I.shape, order='F')

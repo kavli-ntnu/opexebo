@@ -32,7 +32,7 @@ def autocorrelation(map):
     # make sure there are no NaNs in the map
     map = np.nan_to_num(map)
 
-    # get full autocorrelgram
+    # get full autocorrelgramn
     aCorr = general.normxcorr2_general(map)
 
     # we are only interested in a portion of the autocorrelogram. Since the values

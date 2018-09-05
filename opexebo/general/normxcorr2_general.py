@@ -23,6 +23,9 @@ def normxcorr2_general(map):
     Resulting correlation matrix, which is a 2D numpy array.
     """
 
+    if not isinstance(map, np.ndarray):
+        map = np.array(map)
+
     requiredNumberOfOverlapPixels = 0
     A = _shiftData(map)
     T = _shiftData(map)
@@ -101,11 +104,14 @@ def _freqxcorr(a, b, outsize):
     # Find the next largest size that is a multiple of a combination of 2, 3,
     # and/or 5.  This makes the FFT calculation much faster.
     optimalSize = np.zeros((2, 1))
-    optimalSize[0] = _FindClosestValidDimension(outsize[0]);
-    optimalSize[1] = _FindClosestValidDimension(outsize[1]);
+    optimalSize[0] = _FindClosestValidDimension(outsize[0])
+    optimalSize[1] = _FindClosestValidDimension(outsize[1])
+    optimalSize = optimalSize.squeeze()
+    optimalSize = optimalSize.astype(np.integer)
 
     # Calculate correlation in frequency domain
-    Fa = np.fft.fft2(np.rot90(a, 2), s=(optimalSize[0], optimalSize[1]))
+    rot_version = np.rot90(a, 2)
+    Fa = np.fft.fft2(rot_version, s=(optimalSize[0], optimalSize[1]))
     Fb = np.fft.fft2(b, s=(optimalSize[0], optimalSize[1]))
     xcorr_ab = np.real(np.fft.ifft2(Fa * Fb))
 
