@@ -9,3 +9,5 @@ Sphinx==1.7.x
 twine==1.11.x
 numpy==1.15.x
 scipy==1.1.0
+scikit-image==0.14.0
+matplotlib==2.2.3

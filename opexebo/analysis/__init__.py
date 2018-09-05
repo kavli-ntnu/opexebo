@@ -1,8 +1,4 @@
-from .gridscore import gridness_score
-from .autocorrelation import autocorrelation
-from .placefield import placefield
+from opexebo.analysis import gridscore
+from opexebo.analysis import autocorrelation
+from opexebo.analysis import placefield
 
-__all__ = ['gridness_score',
-	'autocorrelation',
-        'placefield'
-]

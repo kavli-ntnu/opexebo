@@ -2,18 +2,18 @@
 Provide function for gridness score calculation.
 """
 
-from skimage import measure
-from skimage.transform import rotate
 import matplotlib.pyplot as plt
 import numpy as np
+
 from scipy.spatial.distance import cdist
 from scipy.stats import pearsonr
-import pdb
+from skimage import measure
+from skimage.transform import rotate
 
 import opexebo
 
-def gridness_score(aCorr, fieldThreshold = 0.2, min_orientation = 15,
-        calc_stats = False, debug=False):
+def gridscore(aCorr, fieldThreshold=0.2, min_orientation=15,
+                   calc_stats=False, debug=False):
     """Calculate gridness score for an autocorrelogram.
 
     Calculates a gridness score by expanding a circle around the centre field
@@ -51,9 +51,9 @@ def gridness_score(aCorr, fieldThreshold = 0.2, min_orientation = 15,
     cFieldRadius = np.floor(_findCentreRadius(aCorr, fieldThreshold))
     if debug:
         print("Center radius is {}".format(cFieldRadius))
-    
+
     if cFieldRadius in [-1, 0, 1]:
-        return np.NaN;
+        return np.NaN
 
     halfHeight = np.ceil(aCorr.shape[0]/2)
     halfWidth = np.ceil(aCorr.shape[1]/2)
@@ -66,8 +66,10 @@ def gridness_score(aCorr, fieldThreshold = 0.2, min_orientation = 15,
     outerBound = int(np.ceil(np.min(np.array(aCorr.shape)/2)))
     radii = np.linspace(cFieldRadius+1, outerBound, outerBound-cFieldRadius).astype(int)
     numSteps = len(radii)
-    rotAngles_deg = 30 * np.arange(1,6); # 30, 60, 90, 120, 150
-    rotatedACorr = np.zeros(shape=(aCorr.shape[0], aCorr.shape[1], len(rotAngles_deg)), dtype=float)
+    rotAngles_deg = 30 * np.arange(1, 6)  # 30, 60, 90, 120, 150
+    rotatedACorr = np.zeros(
+            shape=(aCorr.shape[0], aCorr.shape[1], len(rotAngles_deg)),
+            dtype=float)
 
     # we get rotated maps here as it is a heavy operation
     for n, angle in enumerate(rotAngles_deg):
@@ -83,7 +85,7 @@ def gridness_score(aCorr, fieldThreshold = 0.2, min_orientation = 15,
     innerCircle = mainCircle > cFieldRadius
     GNS = np.zeros(shape=(numSteps, 2), dtype=float)
     for i, radius in enumerate(radii):
-        mask = innerCircle & (mainCircle < radius);
+        mask = innerCircle & (mainCircle < radius)
         aCorrValues = aCorr[mask]
 
         rotCorr = np.zeros(len(rotAngles_deg, ), dtype=float)
@@ -94,13 +96,13 @@ def gridness_score(aCorr, fieldThreshold = 0.2, min_orientation = 15,
             if debug:
                 print("Step {}, angle {}, corr value {}".format(i, angle, r))
 
-        GNS[i, 0] = np.min(rotCorr[[1, 3]]) - np.max(rotCorr[[0, 2, 4]]);
+        GNS[i, 0] = np.min(rotCorr[[1, 3]]) - np.max(rotCorr[[0, 2, 4]])
         GNS[i, 1] = radius
 
     # find the greatest gridness score value and radius
     gscoreInd = np.argmax(GNS, axis=0)
 
-    numGridnessRadii = 3;
+    numGridnessRadii = 3
     numStep = numSteps - numGridnessRadii
     if numStep < 1:
         numStep = 1
@@ -121,7 +123,7 @@ def _plotContours(img, contours):
     ax.imshow(img, cmap='jet', origin='lower')
 
     centroids = np.zeros(shape=(len(contours), 2), dtype=float)
-    radii = np.zeros(shape=(len(contours),1), dtype=float)
+    radii = np.zeros(shape=(len(contours), 1), dtype=float)
     for n, contour in enumerate(contours):
         x = contour[:, 1]
         y = contour[:, 0]
@@ -142,10 +144,12 @@ def _plotContours(img, contours):
     plt.show()
     return radii, centroids
 
+
 # Polygon area, from https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
 # Seems to be the same as Matlab's polyarea
 def _polyArea(x, y):
     return 0.5*np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+
 
 def _contourArea(contours, i):
     contour = contours[i]
@@ -153,6 +157,7 @@ def _contourArea(contours, i):
     y = contour[:, 0]
     area = _polyArea(x, y)
     return area
+
 
 def _findCentreRadius(aCorr, fieldThreshold):
     centroids = []
@@ -164,7 +169,7 @@ def _findCentreRadius(aCorr, fieldThreshold):
     peak_coords[0, 0] = halfHeight-1
     peak_coords[0, 1] = halfWidth-1
     fields = opexebo.analysis.placefield(aCorr, min_bins=2, min_peak=0, peak_coords=peak_coords)[0]
-    if fields == None or len(fields) == 0:
+    if fields is None or len(fields) == 0:
         return 0
 
     peak_coords = np.ndarray(shape=(len(fields), 2), dtype=np.integer)
@@ -175,9 +180,9 @@ def _findCentreRadius(aCorr, fieldThreshold):
         peak_coords[i, 1] = peak_rc[1]
         areas[i] = field['area']
 
-    aCorrCentre = np.zeros(shape=(1,2), dtype=float)
+    aCorrCentre = np.zeros(shape=(1, 2), dtype=float)
     aCorrCentre[0] = aCorr.shape[0]
-    aCorrCentre[0,1] = aCorr.shape[1]
+    aCorrCentre[0, 1] = aCorr.shape[1]
     aCorrCentre = np.ceil(aCorrCentre/2)
 
     # index of the closest field to the centre
@@ -197,10 +202,6 @@ def _findCentreRadius(aCorr, fieldThreshold):
             min_ind = np.argmin(areas[indices_to_test])
             closestFieldInd = indices_to_test[min_ind]
 
-    #radius = radii[closestFieldInd]
-    #area = _contourArea(contours, closestFieldInd)
-    #contour = contours[closestFieldInd]
-    #radius = np.floor(np.sqrt(_polyArea(contour[:, 0], contour[:, 1]) / np.pi ));
     radius = np.floor(np.sqrt(areas[closestFieldInd] / np.pi))
-    #print("radius is {}".format(radius))
+    # print("radius is {}".format(radius))
     return radius

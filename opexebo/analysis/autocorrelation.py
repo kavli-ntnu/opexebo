@@ -5,8 +5,10 @@ Calculates 2D autocorrelation (autocorrelogram) of a firing map.
 
 """
 
-from opexebo import general
 import numpy as np
+
+from opexebo import general
+
 
 def autocorrelation(map):
     """Calculate 2D spatial autocorrelation of a firing map.

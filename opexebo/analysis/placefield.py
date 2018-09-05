@@ -3,15 +3,13 @@ Provide function for 2D placefield detection.
 """
 
 import numpy as np
-import pandas as pd
-from scipy.ndimage import filters
-#from scipy.ndimage import morphology
 
-from skimage import morphology
-from skimage import measure
 from scipy import ndimage
+from scipy.ndimage import filters
+from skimage import measure, morphology
 
-def placefield(map, min_bins = 9, min_peak = 1, min_mean_rate = 0, peak_coords = None):
+
+def placefield(map, min_bins=9, min_peak=1, min_mean_rate=0, peak_coords=None):
     """Locate place fields on a firing map.
 
     Identifies place fields in 2D firing map.
@@ -27,24 +25,19 @@ def placefield(map, min_bins = 9, min_peak = 1, min_mean_rate = 0, peak_coords =
     # disc structural element of size 1
     se = morphology.disk(1)
 
-    #Ie = morphology.grey_erosion(map, structure=se)
     Ie = morphology.erosion(map, se)
     Iobr = morphology.reconstruction(Ie, map)
 
     # this is regionmax equivalent
-    #lm = filters.maximum_filter(Iobr, size=(3,3))
-    #regionalMaxMap = (Iobr == lm);
     regionalMaxMap = morphology.local_maxima(Iobr)
 
     # regionprops works on labeled iamge, so we have to convert binary to labeled
     labeled_max = measure.label(regionalMaxMap)
     regions = measure.regionprops(labeled_max)
 
-    #ir = np.zeros(shape=(len(regions), 1), dtype=np.int)
-    #ic = np.zeros(shape=(len(regions), 1), dtype=np.int)
     if peak_coords is None:
         peak_coords = np.zeros(shape=(len(regions), 2), dtype=np.int)
-    
+
         for i, props in enumerate(regions):
             y0, x0 = props.centroid
             peak = np.array([y0, x0])
@@ -54,23 +47,15 @@ def placefield(map, min_bins = 9, min_peak = 1, min_mean_rate = 0, peak_coords =
             for j in range(map.ndim):
                 if peak[j] > map.shape[j]:
                     peak[j] = map.shape[j] - 1
-    
-            #ir[i] = peak[0]
-            #ic[i] = peak[1]
-            peak_coords[i, :] = peak        
 
-    # Order is important to make it Matlab compatible!
-    #peaks_linear_ind = np.ravel_multi_index(multi_index=(ir,ic), dims=map.shape,
-    #                                        order='F')
-    #map_flat = map.flatten('F') # in order to use linear index
+            peak_coords[i, :] = peak
 
     # obtain value of found peaks
-    found_peaks = map[peak_coords[:,0], peak_coords[:,1]] # or map[ir,ic]
+    found_peaks = map[peak_coords[:, 0], peak_coords[:, 1]]
 
     # leave only peaks that satisfy the threshold
     good_peaks = found_peaks >= min_peak
     peak_coords = peak_coords[good_peaks, :]
-    #peaks_linear_ind = peaks_linear_ind[good_peaks]
 
     I = Iobr
     max_value = np.max(I)
@@ -85,13 +70,14 @@ def placefield(map, min_bins = 9, min_peak = 1, min_mean_rate = 0, peak_coords =
     field_id = 1
 
     for i, peak_rc in enumerate(peak_coords):
-        # peak_rc => [row, col]
+        # peak_rc == [row, col]
 
         # select all peaks except the current one
         other_fields = peak_coords[peaks_index != i]
         if other_fields.size > 0:
-            other_fields_linear = np.ravel_multi_index(multi_index=(other_fields[:, 0],
-                    other_fields[:, 1]), dims=I.shape, order='F')
+            other_fields_linear = np.ravel_multi_index(
+                    multi_index=(other_fields[:, 0], other_fields[:, 1]),
+                    dims=I.shape, order='F')
         else:
             other_fields_linear = []
 
@@ -110,7 +96,7 @@ def placefield(map, min_bins = 9, min_peak = 1, min_mean_rate = 0, peak_coords =
                 if not np.isnan(initial_change) > 0:
                     used_th = j - 0.01
                     break
-            # isempty(initial_change) and ~isempty(area1)
+
             if np.isnan(initial_change) and not np.isnan(area1):
                 pixels = np.unravel_index(first_pixels, I.shape, 'F')
                 I[pixels] = max_value * 1.5
@@ -121,8 +107,9 @@ def placefield(map, min_bins = 9, min_peak = 1, min_mean_rate = 0, peak_coords =
             if np.isnan(initial_change):
                 # failed to extract the field
                 continue
+
         pixel_list = _expand_field(I, peak_rc, initial_change, area2,
-           other_fields_linear, used_th)
+                                   other_fields_linear, used_th)
         if np.any(np.isnan(pixel_list)):
             # nu - not used
             nu, pixel_list, nu = _area_for_threshold(I, peak_rc, used_th+0.01, other_fields_linear)
@@ -135,7 +122,7 @@ def placefield(map, min_bins = 9, min_peak = 1, min_mean_rate = 0, peak_coords =
     regions = measure.regionprops(fields_map)
 
     fields = []
-    fields_map = np.zeros(map.shape) # void it as we can eliminate some fields
+    fields_map = np.zeros(map.shape)  # void it as we can eliminate some fields
 
     for region in regions:
         field_map = map[region.coords[:, 0], region.coords[:, 1]]
@@ -168,8 +155,8 @@ def placefield(map, min_bins = 9, min_peak = 1, min_mean_rate = 0, peak_coords =
 
         fields_map[region.coords[:, 0], region.coords[:, 1]] = len(fields)
 
-    #return (pd.DataFrame(fields), fields_map)
     return (fields, fields_map)
+
 
 def _expand_field(I, peak_rc, initial_change, initial_area, other_fields_linear, initial_th):
     pixel_list = np.nan
@@ -181,7 +168,7 @@ def _expand_field(I, peak_rc, initial_change, initial_area, other_fields_linear,
     num_steps = np.round((initial_th - 0.2) / 0.02) + 1
     for i in np.linspace(initial_th, 0.2, num_steps):
         i = round(i, 2)
-            
+
         area, pixels, is_bad = _area_for_threshold(I, peak_rc, i, other_fields_linear)
         if np.isnan(area) or is_bad:
             pixel_list = last_pixels
@@ -207,7 +194,7 @@ def _expand_field(I, peak_rc, initial_change, initial_area, other_fields_linear,
         break
 
     peak_linear = np.ravel_multi_index(multi_index=(peak_rc[0], peak_rc[1]),
-       dims=I.shape, order='F')
+                                       dims=I.shape, order='F')
     # last_pixels is a vector, peak_linear is a single value
     if np.any(last_pixels == peak_linear):
         # good field
@@ -217,14 +204,17 @@ def _expand_field(I, peak_rc, initial_change, initial_area, other_fields_linear,
 
 
 def _area_change(I, peak_rc, first, second, other_fields_linear):
-    results = {'acceleration': np.nan, 'area1': np.nan, 'area2': np.nan, 'first_pixels': np.nan,
+    results = {'acceleration': np.nan, 'area1': np.nan, 'area2': np.nan,
+               'first_pixels': np.nan,
                'second_pixels': np.nan}
 
-    area1, first_pixels, is_bad1 = _area_for_threshold(I, peak_rc, first, other_fields_linear)
+    area1, first_pixels, is_bad1 = _area_for_threshold(I, peak_rc, first,
+                                                       other_fields_linear)
     if np.isnan(area1) or is_bad1:
         return results
 
-    area2, second_pixels, is_bad2 = _area_for_threshold(I, peak_rc, second, other_fields_linear)
+    area2, second_pixels, is_bad2 = _area_for_threshold(I, peak_rc, second,
+                                                        other_fields_linear)
     if np.isnan(area2) or is_bad2:
         return results
 
@@ -236,6 +226,7 @@ def _area_change(I, peak_rc, first, second, other_fields_linear):
     results['second_pixels'] = second_pixels
 
     return results
+
 
 def _area_for_threshold(I, peak_rc, th, other_fields_linear):
     ar = np.nan
@@ -256,20 +247,19 @@ def _area_for_threshold(I, peak_rc, th, other_fields_linear):
     # calclate euler_number by hand rather than by regionprops
     # This yields results that are more similar to Matlab's regionprops
     filled_image = ndimage.morphology.binary_fill_holes(labeled_img)
-    euler_array= filled_image != labeled_img
+    euler_array = filled_image != labeled_img
     euler_objects = morphology.label(euler_array, connectivity=2)
     num = np.max(euler_objects)
     euler_number = -num + 1
-    
+
     if euler_number <= 0:
         return (ar, [], is_bad)
 
     regions = measure.regionprops(labeled_img)
     ar = np.sum(labeled_img == 1)
-    area_linear_indices =  np.ravel_multi_index(multi_index=(regions[0].coords[:, 0],
-         regions[0].coords[:, 1]), dims=I.shape, order='F')
+    area_linear_indices = np.ravel_multi_index(multi_index=(regions[0].coords[:, 0],
+            regions[0].coords[:, 1]), dims=I.shape, order='F')
     if len(other_fields_linear) > 0:
         is_bad = len(np.intersect1d(area_linear_indices, other_fields_linear)) > 0
 
     return (ar, area_linear_indices, is_bad)
-
