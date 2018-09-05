@@ -35,7 +35,7 @@ setup(
     include_package_data=True,
     keywords='neuroscience kavli gridscore',
     name='opexebo',
-    packages=find_packages(include=['opexebo.*']),
+    packages=find_packages(include=['opexebo*']),
     url='https://github.com/kavli-ntnu/opexebo',
     version='0.1.0',
     zip_safe=False,
