@@ -11,6 +11,8 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
+here = path.abspath(path.dirname(__file__))
+
 with open(path.join(here, 'requirements.txt')) as f:
     requirements = f.read().split()
 
