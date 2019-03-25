@@ -50,7 +50,7 @@ The file contains cell arrays ``aCorrs``, ``rateMaps`` and vectors ``gridScores`
 
     same_scores = np.abs(df['BNT score'] - df['Python score']) < 0.001
     # see indices of elements that have different scores
-    np.where(b == False)
+    np.where(same_scores == False)
 
     map = rate_maps[0]
     plt.imshow(map, cmap='jet', origin='lower')
