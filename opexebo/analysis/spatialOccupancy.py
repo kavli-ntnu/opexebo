@@ -1,5 +1,5 @@
 '''
-Provides function to calculate the occupancy map
+Provides function to calculate the spatial occupancy of the arena
 '''
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
