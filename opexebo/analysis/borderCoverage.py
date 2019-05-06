@@ -3,7 +3,7 @@
 import numpy as np
 from scipy.ndimage import distance_transform_edt
 
-def borderCoverage():
+def borderCoverage(fields, **kwargs):
     '''
     Calculate border coverage for detected fields.
     
@@ -91,22 +91,22 @@ def _wall_field(wfmap):
     distance_transform_edt(inverted_wfmap)
     
     ##### TODO TODO TODO
-    # Don't understand this unction in the original MatLab at all
+    # Don't understand this function in the original MatLab at all
     # Need to get a datafile to compare with. 
     
     
 def _validate_wall_definition(walls):
     '''Parse the walls argument for invalid entry'''
     if type(walls) != str:
-        raise ValueException("Wall definition must be given as a string, e.g. 'trbl'. %s is not a valid input." % str(walls))
+        raise ValueError("Wall definition must be given as a string, e.g. 'trbl'. %s is not a valid input." % str(walls))
     elif len(walls) > 4:
-        raise ValueException("Wall definition may not exceed 4 characters. String '%s' contains %d characters." % (walls, len(walls)))
+        raise ValueError("Wall definition may not exceed 4 characters. String '%s' contains %d characters." % (walls, len(walls)))
     elif len(walls) == 0:
-        raise ValueException("Wall definition must contain at least 1 character from the set [t, r, b, l]")
+        raise ValueError("Wall definition must contain at least 1 character from the set [t, r, b, l]")
     else:
         for char in walls:
             if char.lower() not in ["t","r","b","l"]:
-                raise ValueException("Character %s is not a valid entry in wall definition. Valid characters are [t, r, b, l]" % char)
+                raise ValueError("Character %s is not a valid entry in wall definition. Valid characters are [t, r, b, l]" % char)
     
     
     
