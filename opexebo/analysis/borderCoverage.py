@@ -73,26 +73,31 @@ def borderCoverage(fields, **kwargs):
 def _wall_field(wfmap):
     '''Evaluate what fraction of the border area is covered by a single field
     
+    Border coverage is provided as two values: 
+        covered : the sum of the values across all sites immediately adjacent to the border, where the values
+                are calculated from the distance of those sites to the firing field, excluding NaN, inf, and masked values
+        norm    : the number of non nan, inf, masked values considered in the above sum
+    
     The border area is defined by wfmap - this is the subsection of the binary firing map of a 
-    single field that lies within search_width of a border. wfmap is therefore of size NxM -or- MxN
-    where
-        N = search_width
-        M = arena_size/bin_size
-    Whether NxM or MxN depends on whether looking at left/right or top/bottom walls.
+    single field that lies within search_width of a border. wfmap is must be of size NxM where
+        N : arena_size / bin_size
+        M : search_width
+    and where the 0th column (wfmap[:,0], len()=N) repsents the sites closest to the border
     
-    
-    
+    wfmap: has value 1 inside the field and 0 outside the field
     '''
-    ly = wfmap.shape[0]
-    inverted_wfmap = 1-wfmap # Want to measure the distance of the wall from the field, 
-                             # while calling distance_transform_edt(wfmap) would give 
-                             # distance of elements of field from non-field
+    N = wfmap.shape[0]
+    inverted_wfmap = 1-wfmap 
+    distance = distance_transform_edt(inverted_wfmap)
+    # distance_transform_edt(1-map) is the Python equivalent to (Matlab bwdist(map))
+    # Cells in map with value 1 go to value 0
+    # Cells in map with value 0 go to the geomretric distance to the nearest value 1 in map
     
-    distance_transform_edt(inverted_wfmap)
+    adjacent_sites = distance[:,0]
+    
     
     ##### TODO TODO TODO
-    # Don't understand this function in the original MatLab at all
-    # Need to get a datafile to compare with. 
+    # Vadim transformed the matrix wfmap in the if, if, if, if area, such that the first column in wfmap are the bins closest to the wall.
     
     
 def _validate_wall_definition(walls):
