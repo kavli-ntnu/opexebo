@@ -3,12 +3,22 @@
 import numpy as np
 from scipy.ndimage import distance_transform_edt
 
-def borderCoverage(fields, **kwargs):
+def bordercoverage(fields, **kwargs):
     '''
     Calculate border coverage for detected fields.
     
     This function calculates firing map border coverage that is further
     used in calculation of a border score.
+    
+    
+    TODO
+    I have copied the approach used in BNT, but I want to double check whether there 
+    is a better way to do this - it only tells you that *a* field (it doesn't tell 
+    you which one) has coverage of *a* border (it doesn't tell you which one)).
+    
+    It seems like there should be a better way of doing this
+        (e.g. return a vector of coverage, i.e. a value for each border checked, and 
+        return an index of the best field for each border, or something similar)
     
     
     Parameters
@@ -58,16 +68,34 @@ def borderCoverage(fields, **kwargs):
         fmap = field['field map'] # binary image of field: values are 1 inside field, 0 outside
         if "l" in walls:
             aux_map = fmap[:,:sw]
-            _wall_field(aux_map)
-        
-        
+            c = _wall_field(aux_map)
+            if c > coverage:
+                coverage = c   
         
         if "r" in walls:
-            pass
-        if "t" in walls:
-            pass
+            aux_map = fmap[:, -sw:]
+            aux_map = np.fliplr(aux_map) # Mirror image to match the expectations in _wall_field, i.e. border adjacent to left-most column
+            c = _wall_field(aux_map)
+            if c > coverage:
+                coverage = c  
+        
+        # since we are dealing with data that came from a camera
+        #'bottom' is actually at the top of the matrix curField.
+        # TODO: confirm this with real data. The fake data only confirms that it does what I *think* I expect. 
         if "b" in walls:
-            pass
+            aux_map = fmap[:sw, :]
+            aux_map = np.rot90(aux_map) # Rotate counterclockwise - top of image moves to left of image
+            if c > coverage:
+                coverage = c
+        
+        if "t" in walls:
+            aux_map = fmap[-sw:, :]
+            aux_map = np.fliplr(np.rot90(aux_map)) # rotate 90 deg counter clockwise (bottom to right), then mirror image
+            c = _wall_field(aux_map)
+            if c > coverage:
+                coverage = c  
+            
+    return coverage
     
     
 def _wall_field(wfmap):
@@ -86,19 +114,38 @@ def _wall_field(wfmap):
     
     wfmap: has value 1 inside the field and 0 outside the field
     '''
+    if type(wfmap) != np.ma.MaskedArray:
+        wfmap = np.ma.asanyarray(wfmap)
     N = wfmap.shape[0]
     inverted_wfmap = 1-wfmap 
     distance = distance_transform_edt(inverted_wfmap)
+    distance = np.ma.masked_where(wfmap.mask, distance) # Preserve masking
     # distance_transform_edt(1-map) is the Python equivalent to (Matlab bwdist(map))
     # Cells in map with value 1 go to value 0
     # Cells in map with value 0 go to the geomretric distance to the nearest value 1 in map
     
     adjacent_sites = distance[:,0]
+    # Identify sites which are NaN, inf, or masked
+    # Replace them with the next cell along the row, closest to the wall, that is not masked, nan, or inf
+    adjacent_sites.mask += np.isnan(adjacent_sites.data)
+    if adjacent_sites.mask.any():
+        for i, rep in enumerate(adjacent_sites.mask):
+            if rep:
+                for j, val in enumerate(distance[i,:]):
+                    if not distance.mask[i,j] and not np.isnan(val):
+                        adjacent_sites[i] = val
+                        adjacent_sites.mask[i] = False
+                        break
+    sum_of_distances = np.ma.sum(adjacent_sites) # sum of distances excluding those masked
+    contributing_cells = N - np.sum(adjacent_sites.mask) # The sum gives the number of remaining inf, nan or masked cells
     
+    coverage = sum_of_distances / contributing_cells
     
-    ##### TODO TODO TODO
-    # Vadim transformed the matrix wfmap in the if, if, if, if area, such that the first column in wfmap are the bins closest to the wall.
+    return coverage
     
+                        
+                
+
     
 def _validate_wall_definition(walls):
     '''Parse the walls argument for invalid entry'''
@@ -114,5 +161,34 @@ def _validate_wall_definition(walls):
                 raise ValueError("Character %s is not a valid entry in wall definition. Valid characters are [t, r, b, l]" % char)
     
     
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+    test_data = [[0,0,0,0,0,5,0,4],
+                 [0,0,0,0,1,1,2,4],
+                 [0,0,3,6,6,4,4,1],
+                 [0,5,2,5,2,4,2,1],
+                 [0,0,1,5,3,2,1,1],
+                 [0,0,2,5,2,2,6,1],
+                 [0,0,0,5,6,6,6,6]]
+    test_data = np.ma.MaskedArray(test_data)
+    test_data.mask = np.zeros(test_data.shape, dtype=bool)
+    test_data[test_data.data>0]=1
+    test_data.mask[3,5] = True
+    test_data.mask[3,6] = True
+    test_data.mask[0,0] = True
     
-    
+    inv_wf = 1-test_data
+    distance = distance_transform_edt(inv_wf)
+    distance = np.ma.masked_where(test_data.mask, distance)
+    sw = 2
+    fig, ((ax1, ax2), (ax3, ax4), (ax5, ax6)) = plt.subplots(3,2)
+    ax1.imshow(distance)
+    ax3.imshow((distance[:, :sw]))
+    ax3.set_ylabel("L")
+    ax4.imshow(np.fliplr(distance[:, -sw:]))
+    ax4.set_ylabel("R")
+    ax5.imshow(np.rot90(distance[:sw, :]))
+    ax5.set_ylabel("B")
+    ax6.imshow(np.fliplr(np.rot90(distance[-sw:, :])))
+    ax6.set_ylabel("T")
+    plt.show()
