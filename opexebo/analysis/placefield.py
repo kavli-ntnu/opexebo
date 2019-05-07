@@ -9,24 +9,24 @@ from scipy.ndimage import filters
 from skimage import measure, morphology
 
 
-def placefield(map, min_bins=9, min_peak=1, min_mean_rate=0, peak_coords=None):
+def placefield(firing_map, min_bins=9, min_peak=1, min_mean_rate=0, peak_coords=None):
     """Locate place fields on a firing map.
 
     Identifies place fields in 2D firing map.
     """
 
-    global_peak = np.nanmax(map)
+    global_peak = np.nanmax(firing_map)
     if np.isnan(global_peak) or global_peak == 0:
         return None
 
-    nan_indices = np.isnan(map)
-    map = np.nan_to_num(map)
+    nan_indices = np.isnan(firing_map)
+    firing_map = np.nan_to_num(firing_map)
 
     # disc structural element of size 1
     se = morphology.disk(1)
 
-    Ie = morphology.erosion(map, se)
-    Iobr = morphology.reconstruction(Ie, map)
+    Ie = morphology.erosion(firing_map, se)
+    Iobr = morphology.reconstruction(Ie, firing_map)
 
     # this is regionmax equivalent
     regionalMaxMap = morphology.local_maxima(Iobr)
@@ -44,14 +44,14 @@ def placefield(map, min_bins=9, min_peak=1, min_mean_rate=0, peak_coords=None):
             peak = np.round(peak)
             # ensure that there are no peaks off the map (due to rounding)
             peak[peak < 0] = 0
-            for j in range(map.ndim):
-                if peak[j] > map.shape[j]:
-                    peak[j] = map.shape[j] - 1
+            for j in range(firing_map.ndim):
+                if peak[j] > firing_map.shape[j]:
+                    peak[j] = firing_map.shape[j] - 1
 
             peak_coords[i, :] = peak
 
     # obtain value of found peaks
-    found_peaks = map[peak_coords[:, 0], peak_coords[:, 1]]
+    found_peaks = firing_map[peak_coords[:, 0], peak_coords[:, 1]]
 
     # leave only peaks that satisfy the threshold
     good_peaks = found_peaks >= min_peak
@@ -122,10 +122,10 @@ def placefield(map, min_bins=9, min_peak=1, min_mean_rate=0, peak_coords=None):
     regions = measure.regionprops(fields_map)
 
     fields = []
-    fields_map = np.zeros(map.shape)  # void it as we can eliminate some fields
+    fields_map = np.zeros(firing_map.shape)  # void it as we can eliminate some fields
 
     for region in regions:
-        field_map = map[region.coords[:, 0], region.coords[:, 1]]
+        field_map = firing_map[region.coords[:, 0], region.coords[:, 1]]
         mean_rate = np.nanmean(field_map)
         num_bins = len(region.coords)
 
@@ -147,7 +147,7 @@ def placefield(map, min_bins=9, min_peak=1, min_mean_rate=0, peak_coords=None):
         field['y'] = region.centroid[1]
 
         field['mean_rate'] = mean_rate
-        mask = np.zeros(map.shape)
+        mask = np.zeros(firing_map.shape)
         mask[region.coords[:, 0], region.coords[:, 1]] = 1
         field['map'] = mask
 
