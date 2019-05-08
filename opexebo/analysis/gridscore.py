@@ -45,8 +45,6 @@ def gridscore(aCorr, **kwargs):
     a theoretical bound for a perfect grid. More practical value for a good
     grid is around 1.3. If function can not calculate a gridness score, NaN value
     is returned.
-    If calc_stats is set to True, then in addition to gridness score value,
-    the function returns gridness statistics.
     """
     # Arrange keyword arguments
     fieldThreshold = kwargs.get("field_threshold", default.field_threshold)
