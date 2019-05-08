@@ -7,13 +7,12 @@ import numpy as np
 
 from scipy.spatial.distance import cdist
 from scipy.stats import pearsonr
-from skimage import measure
 from skimage.transform import rotate
 
 import opexebo
+import opexebo.defaults as default
 
-def gridscore(aCorr, fieldThreshold=0.2, min_orientation=15,
-                   calc_stats=False, debug=False):
+def gridscore(aCorr, **kwargs):
     """Calculate gridness score for an autocorrelogram.
 
     Calculates a gridness score by expanding a circle around the centre field
@@ -27,15 +26,19 @@ def gridscore(aCorr, fieldThreshold=0.2, min_orientation=15,
     historical values (i.e. older versions of gridness score).
 
     Arguments:
-    acorr: A 2D autocorrelogram.
-    field_threshold: Normalized threshold value used to search for peaks on the
-        autocorrelogram. Ranges from 0 to 1, default value is 0.2.
-    min_orientation: Value of minimal difference of inner fields orientation (in
-        degrees). If there are fields that differ in orientation for less than
-        min_orientation, then only the closest to the centre field is left.
-        Default value is 15.
-    calc_stats: Flag that indicates whether grid statistics must be calculated
-        and returned. Default value is False.
+    acorr: np.ndarray
+        A 2D autocorrelogram.
+    **kwargs
+        field_threshold: float
+            Normalized threshold value used to search for peaks on the
+            autocorrelogram. Ranges from 0 to 1, default value is 0.2.
+        min_orientation: float
+            Value of minimal difference of inner fields orientation (in
+            degrees). If there are fields that differ in orientation for less than
+            min_orientation, then only the closest to the centre field is left.
+            Default value is 15.
+
+    
 
     Returns:
     Always returns a gridness score value. It ranges from -2 to 2. 2 is more of
@@ -45,7 +48,12 @@ def gridscore(aCorr, fieldThreshold=0.2, min_orientation=15,
     If calc_stats is set to True, then in addition to gridness score value,
     the function returns gridness statistics.
     """
-
+    # Arrange keyword arguments
+    fieldThreshold = kwargs.get("field_threshold", default.field_threshold)
+    minOrientation = kwargs.get("min_orientation", default.min_orientation)
+    debug = kwargs.get("debug", False)
+    
+    
     # normalize aCorr in order to find contours
     aCorr = aCorr / aCorr.max()
     cFieldRadius = np.floor(_findCentreRadius(aCorr, fieldThreshold))
