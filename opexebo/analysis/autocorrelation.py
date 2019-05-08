@@ -10,11 +10,11 @@ import numpy as np
 from opexebo import general
 
 
-def autocorrelation(map):
+def autocorrelation(firing_map):
     """Calculate 2D spatial autocorrelation of a firing map.
 
     Arguments:
-    map: NxM matrix, firing map. map is not necessary a numpy array. May
+    firing_map: NxM matrix, firing map. map is not necessary a numpy array. May
          cnontain NaNs.
 
     Returns:
@@ -28,23 +28,23 @@ def autocorrelation(map):
     overlap_amount = 0.8
     slices = []
 
-    if not isinstance(map, np.ndarray):
-        map = np.array(map)
+    if not isinstance(firing_map, np.ndarray):
+        firing_map = np.array(firing_map)
 
-    if map.size == 0:
-        return map
+    if firing_map.size == 0:
+        return firing_map
 
-    # make sure there are no NaNs in the map
-    map = np.nan_to_num(map)
+    # make sure there are no NaNs in the firing_map
+    firing_map = np.nan_to_num(firing_map)
 
     # get full autocorrelgramn
-    aCorr = general.normxcorr2_general(map)
+    aCorr = general.normxcorr2_general(firing_map)
 
     # we are only interested in a portion of the autocorrelogram. Since the values
     # on edges are too noise (due to the fact that very small amount of elements
     # are correlated).
-    for i in range(map.ndim):
-        new_size = np.round(map.shape[i] + map.shape[i] * overlap_amount)
+    for i in range(firing_map.ndim):
+        new_size = np.round(firing_map.shape[i] + firing_map.shape[i] * overlap_amount)
         if new_size % 2 == 0:
             new_size = new_size - 1
         offset = aCorr.shape[i] - new_size
