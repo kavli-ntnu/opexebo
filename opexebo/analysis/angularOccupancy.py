@@ -7,7 +7,7 @@ Closely based on code from Horst's initial imaging pipeline, tidied up and pytho
 (C) 2019 Horst Oberhaus, Simon Ball
 '''
 import numpy as np
-from scipy.ndimage.filters import gaussian_filter1d
+import opexebo.defaults as default
 
 def angularoccupancy(head_angle,**kwargs):
     '''
@@ -16,7 +16,7 @@ def angularoccupancy(head_angle,**kwargs):
     Parameters
     ----------
     head_angle : numpy array
-        Head angle in radians
+        Head angle in degrees
     **kwargs : 
         bins_angular : int
             how many bins? default: 180
@@ -28,18 +28,15 @@ def angularoccupancy(head_angle,**kwargs):
     -------
     masked_histogram : numpy masked array
         Angular histogram, masked (where no tracking data) and smoothed (with gaussian kernel)
-    bins_angle : numpy array
-        Histogram edges in radians
     '''
-    bins_angle = kwargs.get('bins_angle', 180)
+    bins_angle = kwargs.get('bins_angle', default.bins_angle)
+    
+
 
     
-    angle_histogram, bins_angle = np.histogram(head_angle, bins=bins_angle, range=(0,2*np.pi))
+    angle_histogram, bins_angle = np.histogram(head_angle, bins=bins_angle, range=(0,360))
     angle_histogram = np.array(angle_histogram,dtype=float)
     angle_histogram_unfiltered = angle_histogram
-    if 'sigma_angle' in kwargs:
-        sigma_angle = kwargs.get('sigma_angle')
-        angle_histogram = gaussian_filter1d(angle_histogram, sigma=sigma_angle, mode='nearest')
-    masked_angle_histogram = np.ma.masked_where(angle_histogram_unfiltered==0, angle_histogram)
+    masked_angle_histogram = np.ma.masked_where(angle_histogram_unfiltered==0, angle_histogram_unfiltered)
 
-    return masked_angle_histogram, bins_angle
+    return masked_angle_histogram
