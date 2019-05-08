@@ -1,8 +1,8 @@
 """Provides a function for calculating a Rate map from an Occupancy Map and positioned Spike Times"""
 
 import numpy as np
-from scipy.ndimage.filters import gaussian_filter
 from opexebo.general import validatekeyword__arena_size
+import opexebo.defaults as default
 
 def ratemap(occupancy_map, spikes, **kwargs):
     ''' Calculate the spatially correlated firing rate map
@@ -12,9 +12,12 @@ def ratemap(occupancy_map, spikes, **kwargs):
     very little time are masked such that the value is available for but typically
     excluded from future analyses.
     
+    The provided arena_size and bin_width **must* provide a number of bins such 
+    that the spike map has the same dimensions as the occupancy map. 
+    
     Parameters
     ----------
-    occupancy_map : np.ndarray
+    occupancy_map : np.ndarray or np.ma.MaskedArray
         Nx1 or Nx2 array of time spent by animal in each bin
         
     spikes : np.ndarray
@@ -28,7 +31,7 @@ def ratemap(occupancy_map, spikes, **kwargs):
     
     Returns
     -------
-    TBD
+    rate_map : np.
     '''
     
     # Check correct inputs
@@ -36,14 +39,17 @@ def ratemap(occupancy_map, spikes, **kwargs):
     dims_s, num_samples_s = spikes.shape
     if dims_s-1 != dims_p:
         raise ValueError("Spikes must have the same number of columns as positions ([t,x] or [t, x, y]). You have provided %d columns of spikes, and %d columns of positions" % (dims_s, dims_p))
-
+    if type(occupancy_map) not in (np.ndarray, np.ma.MaskedArray) :
+        raise ValueError("Occupancy Map not provided in usable format. Please provide either a Numpy ndarray or Numpy MaskedArray. You provided %s." % type(occupancy_map))
+    if "arena_size" not in kwargs:
+        raise ValueError("No arena dimensions provided. Please provide the dimensions of the arena by using keyword 'arena_size'.")
     
-    # Get default kwargs values
-    default_bin_width = 2.5
-    default_arena_size = 80
-    
-    bin_width = kwargs.get("bin_width", default_bin_width)
-    arena_size = kwargs.get("arena_size", default_arena_size)
+    if type(occupancy_map) == np.ndarray:
+        occupancy_map = np.ma.MaskedArray(occupancy_map)
+        
+    # Get kwargs values
+    bin_width = kwargs.get("bin_width", default.bin_width)
+    arena_size = kwargs.get("arena_size")
     
     arena_size, is_2d = validatekeyword__arena_size(arena_size, dims_p)
     num_bins = np.ceil(arena_size / bin_width)

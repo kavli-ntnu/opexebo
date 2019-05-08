@@ -2,7 +2,9 @@
 Provides function to calculate the spatial occupancy of the arena
 '''
 import numpy as np
+from opexebo import defaults as default
 from opexebo.general import validatekeyword__arena_size
+
 
 def spatialoccupancy(positions, speed, **kwargs):
     '''
@@ -45,16 +47,16 @@ def spatialoccupancy(positions, speed, **kwargs):
         raise ValueError("Speed array does not have the same number of samples as Positions")
     if speed.shape[0] != 2:
         raise ValueError("Speed array has the wrong number of columns")
+    if "arena_size" not in kwargs:
+        raise ValueError("Arena dimensions not provided. Please provide dimensions using keyword 'arena_size'.")
 
     
     # Get default kwargs values
-    default_bin_width = 2.5
-    default_arena_size = 80
-    default_speed_cutoff = np.inf
+
     
-    bin_width = kwargs.get("bin_width", default_bin_width)
-    arena_size = kwargs.get("arena_size", default_arena_size)
-    speed_cutoff = kwargs.get("speed_cutoff", default_speed_cutoff)
+    bin_width = kwargs.get("bin_width", default.bin_width)
+    arena_size = kwargs.get("arena_size")
+    speed_cutoff = kwargs.get("speed_cutoff", default.speed_cutoff)
     
     # Handle the distinctions with arena sizes: 1d or 2d, different kinds of 2d
     # If a single arena dimensions is provided, it treats the arena as either circular/square (len x len)

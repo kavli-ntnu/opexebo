@@ -2,6 +2,7 @@
 
 import numpy as np
 from scipy.ndimage import distance_transform_edt
+import opexebo.defaults as default
 
 def bordercoverage(fields, **kwargs):
     '''
@@ -52,10 +53,8 @@ def bordercoverage(fields, **kwargs):
     '''
     
     # Extract keyword arguments or set defaults
-    default_search_width = 8
-    default_walls = 'trbl'
-    sw = kwargs.get('search_width', default_search_width)
-    walls = kwargs.get('walls', default_walls).lower()
+    sw = kwargs.get('search_width', default.search_width)
+    walls = kwargs.get('walls', default.walls).lower()
     
     # Check that the wall definition is valid
     _validate_wall_definition(walls)

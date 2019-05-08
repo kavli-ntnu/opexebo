@@ -5,16 +5,41 @@ Provide function for 2D placefield detection.
 import numpy as np
 
 from scipy import ndimage
-from scipy.ndimage import filters
 from skimage import measure, morphology
+import opexebo.defaults as default
 
 
-def placefield(firing_map, min_bins=9, min_peak=1, min_mean_rate=0, peak_coords=None):
+def placefield(firing_map, **kwargs):
     """Locate place fields on a firing map.
 
     Identifies place fields in 2D firing map.
+    
+    Written by Vadim Frolov
+    
+    Parameters
+    ----------
+    firing_map : np.ndarray or np.ma.MaskedArray
+        rate map for cell
+    **kwargs
+        min_bins : int
+            Fields containing fewer than this many bins will be discarded.
+            Default 9
+        min_peak : float
+            Fields with a peak firing rate lower than this absolute value will 
+            be discarded. Default 1 Hz
+        min_mean : float
+            Fields with a mean firing rate lower than this absolute value will 
+            be discarded. Default 0 Hz
+        peak_coords : array-like
+            List of peak co-ordinates to consider instead of auto detection
+            Default None
     """
-
+    # Get keyword arguments
+    min_bins = kwargs.get("min_bins", default.firing_field_min_bins)
+    min_peak = kwargs.get("min_peak", default.firing_field_min_peak)
+    min_mean = kwargs.get("min_mean", default.firing_field_min_mean)
+    peak_coords = kwargs.get("peak_coords", None)
+    
     global_peak = np.nanmax(firing_map)
     if np.isnan(global_peak) or global_peak == 0:
         return None

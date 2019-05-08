@@ -3,6 +3,7 @@
 import numpy as np
 from scipy.ndimage import distance_transform_cdt
 from opexebo.analysis import bordercoverage
+import opexebo.defaults as default
 
 
 
@@ -67,10 +68,8 @@ def borderscore(rate_map, fields_map, fields, **kwargs):
     '''
     
     # Extract keyword arguments or set defaults
-    default_search_width = 8
-    default_walls = 'TRBL'
-    sw = kwargs.get('search_width', default_search_width)
-    walls = kwargs.get('walls', default_walls)
+    sw = kwargs.get('search_width', default.search_width)
+    walls = kwargs.get('walls', default.walls)
     
     # Check that fields exist
     if np.ma.max(fields_map) == 0:
