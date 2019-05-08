@@ -29,12 +29,13 @@ def smooth(data, sigma):
     smoothed_data : np.ndarray or np.ma.MaskedArray
         Smoothed data
     '''
-    if data.ndim ==2:
+    d = data.ndim
+    if  d== 2:
         kernel = Gaussian2DKernel(x_stddev=sigma)
-    elif data.ndim == 1:
+    elif d == 1:
         kernel = Gaussian1DKernel(stddev=sigma)
     else:
-        raise ValueError("This function can only smooth 1D or 2D data. You provided data with %d dimensions" % data.ndim)
+        raise ValueError("This function can only smooth 1D or 2D data. You provided data with %d dimensions" % d)
     
     if type(data) == np.ma.MaskedArray:
         data_copy = data.copy()
