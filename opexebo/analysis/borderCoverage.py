@@ -80,8 +80,13 @@ def bordercoverage(fields, **kwargs):
                 coverage = c  
         
         # since we are dealing with data that came from a camera
-        #'bottom' is actually at the top of the matrix curField.
-        # TODO: confirm this with real data. The fake data only confirms that it does what I *think* I expect. 
+        #'bottom' is actually at the top of the matrix fmap
+        # i.e. in a printed array (think Excel spreadheet), [0,0] is at top-left.
+        # in a figure (think graph) (0,0) is at bottom-left
+        
+        # Note: because I use rotations instead of transposition, this yields 
+        # arrays that are upside-down compared to Vadim's version, 
+        # BUT the left/right is correct.
         if "b" in walls:
             aux_map = fmap[:sw, :]
             aux_map = np.rot90(aux_map) # Rotate counterclockwise - top of image moves to left of image
