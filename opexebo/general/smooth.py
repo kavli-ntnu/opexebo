@@ -1,6 +1,5 @@
 """ Provides a function for Gaussian smoothing """
 import numpy as np
-from scipy.ndimage.filters import gaussian_filter
 from astropy.convolution import convolve, Gaussian2DKernel, Gaussian1DKernel
 #http://docs.astropy.org/en/stable/convolution/index.html
 
@@ -52,7 +51,6 @@ def smooth(data, sigma):
 
 
 if __name__ == '__main__':
-    import numpy as np
     import matplotlib.pyplot as plt
     a = np.nan
     test_data = [[0,0,0,0,5,3,0,4],
