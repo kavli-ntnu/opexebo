@@ -50,6 +50,14 @@ def bordercoverage(fields, **kwargs):
     -------
     coverage    : float
         Border coverage, ranges from 0 to 1.
+        
+    See also
+    --------
+    BNT.+analyses.placefield
+    BNT.+analyses.borderScore
+    BNT.+analyses.borderCoverage
+    opexebo.analysis.placefield
+    opexebo.analysis.borderscore
     '''
     
     # Extract keyword arguments or set defaults
@@ -64,7 +72,7 @@ def bordercoverage(fields, **kwargs):
     # Check coverage of each field in turn
     coverage = 0
     for field in fields:
-        fmap = field['field map'] # binary image of field: values are 1 inside field, 0 outside
+        fmap = field['map'] # binary image of field: values are 1 inside field, 0 outside
         if "l" in walls:
             aux_map = fmap[:,:sw]
             c = _wall_field(aux_map)
@@ -126,7 +134,7 @@ def _wall_field(wfmap):
     distance = np.ma.masked_where(wfmap.mask, distance) # Preserve masking
     # distance_transform_edt(1-map) is the Python equivalent to (Matlab bwdist(map))
     # Cells in map with value 1 go to value 0
-    # Cells in map with value 0 go to the geomretric distance to the nearest value 1 in map
+    # Cells in map with value 0 go to the geometric distance to the nearest value 1 in map
     
     adjacent_sites = distance[:,0]
     # Identify sites which are NaN, inf, or masked
@@ -140,10 +148,10 @@ def _wall_field(wfmap):
                         adjacent_sites[i] = val
                         adjacent_sites.mask[i] = False
                         break
-    sum_of_distances = np.ma.sum(adjacent_sites) # sum of distances excluding those masked
+    covered = np.ma.sum(adjacent_sites==0)
     contributing_cells = N - np.sum(adjacent_sites.mask) # The sum gives the number of remaining inf, nan or masked cells
     
-    coverage = sum_of_distances / contributing_cells
+    coverage = covered / contributing_cells
     
     return coverage
     

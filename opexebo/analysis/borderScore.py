@@ -65,6 +65,8 @@ def borderscore(rate_map, fields_map, fields, **kwargs):
     BNT.+analyses.placefield
     BNT.+analyses.borderScore
     BNT.+analyses.borderCoverage
+    opexebo.analysis.placefield
+    opexebo.analysis.bordercoverage
     '''
     
     # Extract keyword arguments or set defaults
@@ -106,7 +108,7 @@ def _weighted_firing_distance(rmap):
     x = np.ones(rmap.shape) # define area same size as ratemap
     x = np.pad(x, 1, mode='constant') # Pad outside with zeros, we calculate distance from nearest zero
     dist = distance_transform_cdt(x, metric='taxicab') # taxicab metric: distance along axes, not diagonal distance. 
-    wfd = dist[1:-1, 1:-1] * rmap
+    wfd = np.ma.sum( np.ma.dot(dist[1:-1, 1:-1], rmap) )
     
     # Normalise by half of the smallest arena dimensions
     wfd *= 2/np.min(rmap.shape)
