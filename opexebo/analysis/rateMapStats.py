@@ -3,7 +3,7 @@
 import numpy as np
 
 
-def ratemapstats(rate_map, time_map):
+def ratemapstats(rate_map, time_map, debug=False):
     '''
     Calculate statistics of a rate map that depend on probability distribution function (PDF)
     
@@ -35,12 +35,15 @@ def ratemapstats(rate_map, time_map):
     BNT.+analyses.mapStatsPDF(map)
     '''
      
-    
+    rm = rate_map.copy()
     duration = np.ma.sum(time_map)
     position_PDF = time_map / (duration + np.spacing(1)) # Probability distribution of where the animal spent its time. 
     
-    
-    # Sparsity
+    if debug:
+        print("Duration = %ds" % duration)
+        print("Masked locations: %d" % np.sum(rate_map.mask))
+        print("Masked values: %s" % rate_map.data[rate_map.mask])
+
     sparsity = np.nan
     selectivity = np.nan
     information_rate = np.nan
@@ -48,7 +51,16 @@ def ratemapstats(rate_map, time_map):
     
     mean_rate = np.ma.sum( rate_map * position_PDF )
     mean_rate_sq = np.ma.sum( np.ma.power(rate_map, 2) * position_PDF )
-    max_rate = np.ma.max(rate_map)
+    
+    max_rate = np.max(rate_map)
+    
+    if debug:
+        print("mean rate: %.2fHz" % mean_rate)
+        print("mean rate squared: %.2fHz^2" % mean_rate_sq)
+        print("max rate: %.2fHz" % max_rate)
+        
+        rm.shape = rm.size
+        print(np.sort(rm))
     
     if mean_rate_sq != 0:
         sparsity = mean_rate * mean_rate / mean_rate_sq
@@ -56,8 +68,12 @@ def ratemapstats(rate_map, time_map):
     if mean_rate != 0:
         selectivity = max_rate / mean_rate
         
-        log_argument = np.ma.min(rate_map / mean_rate, 1)
-        information_rate = np.ma.sum(position_PDF * rate_map * np.log2(log_argument))
+        log_argument = rate_map / mean_rate
+        log_argument[log_argument < 1] = 1
+        if debug:
+            print(log_argument.shape)
+            #print("log argument: %.4f" % log_argument)
+        information_rate = np.ma.sum(position_PDF * rate_map * np.ma.log2(log_argument))
         information_content = information_rate / mean_rate
     
     

@@ -37,6 +37,9 @@ def spatialoccupancy(positions, speed, **kwargs):
         speed_cutoff    : float. 
             Timestamps with instantaneous speed exceeding this value are ignored. 
             Default infinity
+        debug           : bool
+            If true, print out debugging information throughout the function.
+            Default False
 
     '''
     # Check for correct shapes. 
@@ -52,11 +55,10 @@ def spatialoccupancy(positions, speed, **kwargs):
 
     
     # Get default kwargs values
-
-    
     bin_width = kwargs.get("bin_width", default.bin_width)
     arena_size = kwargs.get("arena_size")
     speed_cutoff = kwargs.get("speed_cutoff", default.speed_cutoff)
+    debug = kwargs.get("debug", False)
     
     # Handle the distinctions with arena sizes: 1d or 2d, different kinds of 2d
     # If a single arena dimensions is provided, it treats the arena as either circular/square (len x len)
@@ -66,6 +68,9 @@ def spatialoccupancy(positions, speed, **kwargs):
     arena_size, is_2d = validatekeyword__arena_size(arena_size, dimensionality-1)
     num_bins = np.ceil(arena_size / bin_width)
     
+    if debug:
+        print("Arena size : %s" % str(arena_size))
+        print("Bin number : %s" % str(num_bins))
     # Calculate occupancy
     # This takes a histogram of frame positions: each position gets the number of frames found there
     # The below "range" approach means that it is assumed that the bounding box 
@@ -73,6 +78,12 @@ def spatialoccupancy(positions, speed, **kwargs):
     time_stamps = positions[0,:]
     x = positions[1,:]
     speeds = speed[1,:]
+    
+    if debug:
+        print("Number of time stamps: %d" % len(time_stamps))
+        print("Maximum time stamp value: %.2f" % time_stamps[-1])
+        print("Time stamp delta: %f" % np.min(np.diff(time_stamps)))
+    
     if is_2d:
         y = positions[2,:]
         
@@ -87,10 +98,16 @@ def spatialoccupancy(positions, speed, **kwargs):
                                        bins=num_bins, range=range_1Dhist)
     occupancy_map = np.array(occupancy_map, dtype=float)
     
+    if debug:
+        print("Frames included in histogram: %d (%.3f)" % (np.sum(occupancy_map), np.sum(occupancy_map)/len(time_stamps)) )
+    
     # So far, times are expressed in units of tracking frames
     # Convert to seconds:
     frame_duration = np.min(np.diff(time_stamps))    
-    occupancy_map_time = occupancy_map / frame_duration
+    occupancy_map_time = occupancy_map * frame_duration
+    
+    if debug:
+        print("Time length included in histogram: %.2f (%.3f)" % (np.sum(occupancy_map_time), np.sum(occupancy_map_time)/time_stamps[-1]) )
     
 
     masked_map = np.ma.masked_where(occupancy_map == 0, occupancy_map_time)
