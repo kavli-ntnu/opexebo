@@ -45,8 +45,9 @@ def smooth(data, sigma):
     
     
     if type(data) == np.ma.MaskedArray:
+        data.data[data_copy.mask] = data_copy[data_copy.mask]
         smoothed_data = np.ma.masked_where(data.mask, smoothed_data)
-        smoothed_data[data.mask] = data_copy[data.mask]
+        smoothed_data.data[data_copy.mask] = data_copy[data_copy.mask]
         
     return smoothed_data
 
