@@ -98,7 +98,7 @@ def _weighted_firing_distance(rmap):
         give the firing rate, and cells outside fields are zero
     returns
     -------
-    wfd     : np.ma.MaskedArray
+    wfd     : float
         Weighted firing distance. 
     '''
     # Normalise firing map by the sum of the firing map, such that it resembles a PDF

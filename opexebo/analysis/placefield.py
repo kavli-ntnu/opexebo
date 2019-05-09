@@ -33,6 +33,21 @@ def placefield(firing_map, **kwargs):
         peak_coords : array-like
             List of peak co-ordinates to consider instead of auto detection
             Default None
+            
+    Returns
+    -------
+    fields      : list (of dict)
+        'coords'        : np.ndarray    : Co-ordinates of all bins in the firing field
+        'peak_coords'   : np.ndarray    : Co-ordinates of the cell with the peak firing rate
+        'area'          : int           : Number of bins in firing field. [bins]
+        'bbox'          : tuple         : Co-ordinates of bounding box including the firing field (y_min, x_min, y_max, y_max)
+        'x'             : float         : x co-ordinate of centroid. (decimal) [bins]
+        'y'             : float         : y co-ordinate of centroid. (decimal) [bins]
+        'mean rate'     : float         : mean firing rate [Hz]
+        'peak rate'     : float         : peak firing rate [Hz]
+        'map'           : np.ndarray    : Binary map of arena. Cells inside firing field have value 1, all other cells have value 0
+    fields_map  : np.ndarray
+        labelled integer image (i.e. background = 0, field 1 = 1, field2 = 2, etc)
     """
     # Get keyword arguments
     min_bins = kwargs.get("min_bins", default.firing_field_min_bins)
@@ -154,7 +169,7 @@ def placefield(firing_map, **kwargs):
         mean_rate = np.nanmean(field_map)
         num_bins = len(region.coords)
 
-        peak_value = np.nanmax(field_map)
+        peak_rate = np.nanmax(field_map)
         peak_relative_index = np.argmax(field_map)
         peak_coords = region.coords[peak_relative_index, :]
 
@@ -163,7 +178,6 @@ def placefield(firing_map, **kwargs):
 
         field = {}
         field['coords'] = region.coords
-        field['peak_value'] = peak_value
         field['peak_coords'] = peak_coords
         field['area'] = region.area
         field['bbox'] = region.bbox
@@ -172,6 +186,7 @@ def placefield(firing_map, **kwargs):
         field['y'] = region.centroid[1]
 
         field['mean_rate'] = mean_rate
+        field['peak rate'] = peak_rate
         mask = np.zeros(firing_map.shape)
         mask[region.coords[:, 0], region.coords[:, 1]] = 1
         field['map'] = mask
