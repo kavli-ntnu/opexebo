@@ -14,6 +14,14 @@ def speedscore(spike_times, tracking_speeds, **kwargs):
     both the 2015 and 2016 scores are calculated. The primary difference is how 
     the speed smoothing is implemented
     
+    Speed score originates in the following paper in Nature from Emiliano et al
+    doi:10.1038/nature14622
+    
+    The original Matlab script implemented - but as far as I can tell, did not 
+    (by default) use, a Kalman filter for smoothing the animal speed. Since it is 
+    not the default behaviour, I have not (yet) added that Kalman filter to opexebo.
+    Its addition is contingent on the score similarity to BNT. 
+    
 
     
     Discussion on Python equivalent to matlab corr() is found here
@@ -49,6 +57,13 @@ def speedscore(spike_times, tracking_speeds, **kwargs):
     
     Returns
     -------
+    scores : dict
+        '2015' : float
+        '2016' : float
+            Variations on the speed score. '2015' is based on the code in the paper
+            above, but additionally including an upper speed filter
+            '2016' is a modification involving a slightly different approach to 
+            smoothing the firing rate data
     
     See also
     --------
@@ -121,7 +136,8 @@ def speedscore(spike_times, tracking_speeds, **kwargs):
     filtered_rate = filtered_rate[good_speeds]
     speed_score_2015 = np.corrcoef(filtered_speeds, filtered_rate.T, rowvar=0)[0,1]
     
-    return (speed_score_2015, speed_score_2016)
+    scores = {'2015': speed_score_2015, '2016': speed_score_2016}
+    return scores
     
     # (177) posForSpeed - get te list of positions from tracking 
     # Calculate speed
