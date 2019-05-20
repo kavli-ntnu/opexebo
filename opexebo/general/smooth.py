@@ -16,7 +16,9 @@ from astropy.convolution import convolve, Gaussian2DKernel, Gaussian1DKernel
 #    XDG_CACHE_HOME
 #    XDG_CONFIG_HOME 
 # pointing to local locations that do exist. Since we only use a very minor part
-# of Astropy here, the fact that the config file may be ephermeral is not a problem/
+# of Astropy here, the fact that the config file may be ephermeral is not a problem
+# See here for discussion of these variables
+# https://github.com/astropy/astropy/issues/6511
 
 
 def smooth(data, sigma):
