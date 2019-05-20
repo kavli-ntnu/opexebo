@@ -3,6 +3,21 @@ import numpy as np
 from astropy.convolution import convolve, Gaussian2DKernel, Gaussian1DKernel
 #http://docs.astropy.org/en/stable/convolution/index.html
 
+#Astropy appears to have an import problem - it routinely takes about 3 minutes 
+#to import, apparently because it is looking for a file with a stupidly long timeout.
+#It typically results in a warning: 
+#        ConfigurationMissingWarning : Configuration defaults will be used due to FileNotFoundError:2 on None
+
+#The root cause seems to be that Astropy expects to find a configuration file in
+#a very specific location - in thise case, a network location (\\home.ansatt.ntnu.no\.astropy)
+#Which doesn't exist. But the timeout for checking the network is very long
+
+# A tempoary workaround is to crate the environment variables 
+#    XDG_CACHE_HOME
+#    XDG_CONFIG_HOME 
+# pointing to local locations that do exist. Since we only use a very minor part
+# of Astropy here, the fact that the config file may be ephermeral is not a problem/
+
 
 def smooth(data, sigma):
     '''Smooth provided data with a Gaussian kernel 
