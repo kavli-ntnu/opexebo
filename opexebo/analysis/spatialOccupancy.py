@@ -35,8 +35,8 @@ def spatialoccupancy(positions, speed, **kwargs):
         bin_width       : float. 
             Bin size (in cm). Bins are always assumed square default 2.5 cm.
         speed_cutoff    : float. 
-            Timestamps with instantaneous speed exceeding this value are ignored. 
-            Default infinity
+            Timestamps with instantaneous speed beneath this value are ignored. 
+            Default 0
         debug           : bool
             If true, print out debugging information throughout the function.
             Default False
