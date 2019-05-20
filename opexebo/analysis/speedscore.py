@@ -10,30 +10,14 @@ def speedscore(spike_times, tracking_speeds, **kwargs):
     Calculate Speed score.
     
     Speed score is a correlation between cell firing *rate* and animal speed. 
-    The Python version is based on "score16" from BNT.+scripts.speedScore
+    The Python version is based on BNT.+scripts.speedScore. At Edvard's request, 
+    both the 2015 and 2016 scores are calculated. The primary difference is how 
+    the speed smoothing is implemented
     
+
     
-    General structure:
-        Speed limits:
-            Original code (Emiliano) uses a low speed filter
-            Score16 introduces an upper speed filter, defined as maximum speed 
-            at which the animal spent no more than <period_of_time=10s>
-        Kalman: (155-193)
-            Optionally, smooth the binned speedtuning curve with a Kalman filter
-            uses BNT.externals.kalman.doKalmanProcessing (I think)
-            Emiliano's Kalman filtering used a filter based on 
-            http://www.cs.ubc.ca/~murphyk/Software/Kalman/kalman.html (dated 2004)
-        Calculation: (243 - )
-            scores :
-                2015: (278-285)
-                2016: (285-300)
-                    Both operate on the table firingRateSmoothed
-                
-                
-    A whole bunch of the script is not very relevant - because it's a script 
-    rather than ana analysis it does a bunch of other stuff, like iterating over 
-    many cells / sessions, plotting data, etc, which this file doesn't need to 
-    handle
+    Discussion on Python equivalent to matlab corr() is found here
+    https://stackoverflow.com/questions/16698811/what-is-the-difference-between-matlab-octave-corr-and-python-numpy-correlate
                     
         
     
@@ -125,12 +109,8 @@ def speedscore(spike_times, tracking_speeds, **kwargs):
     # Score 2016: apply bandpass filter to already-smoothed rate and then correlate
     filtered_speeds = t_speeds[good_speeds]
     filtered_rate = firing_rate_smoothed[good_speeds]
-    if debug:
-        print(filtered_speeds.shape)
-        print(filtered_rate.shape)
     speed_score_2016 = np.corrcoef(filtered_speeds, filtered_rate.T, rowvar=0)[0,1]
-    if debug:
-        print(speed_score_2016)
+
     
     
     # Score 2015: Filter rates first (by setting to NaN), and then smooth and correlate
