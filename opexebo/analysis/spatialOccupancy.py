@@ -40,6 +40,25 @@ def spatialoccupancy(positions, speed, **kwargs):
         debug           : bool
             If true, print out debugging information throughout the function.
             Default False
+    
+    Returns
+    -------
+    masked_map : np.ma.MaskedArray
+    
+    
+    See also
+    --------
+    BNT.+analyses.map
+    
+    Testing vs BNT
+    --------------
+    Given the same list of positions, the resulting 2D array from BNT.+analyses.map.timeRaw
+    and the output of spatialoccupancy() are compared:    
+        The mean difference between the two arrays, and the mean ratio between the two is evaluated
+        Over many possible sessions, the meanDiff and meanRatio are tabulated
+    Over 100 sessions, a difference of (0.8+-4)e-3 and a ratio of (1+)(2+-5)e-2 is observed
+    
+    maximum differences do not exceed single digit milliseconds. 
 
     '''
     # Check for correct shapes. 
@@ -52,7 +71,10 @@ def spatialoccupancy(positions, speed, **kwargs):
         raise ValueError("Speed array has the wrong number of columns")
     if "arena_size" not in kwargs:
         raise ValueError("Arena dimensions not provided. Please provide dimensions using keyword 'arena_size'.")
-
+    
+    
+    # Handle NaN positions by converting to a Masked Array
+    positions = np.ma.masked_invalid(positions)
     
     # Get default kwargs values
     bin_width = kwargs.get("bin_width", default.bin_width)
@@ -69,6 +91,7 @@ def spatialoccupancy(positions, speed, **kwargs):
     num_bins = np.ceil(arena_size / bin_width)
     
     if debug:
+        print("Bin width: %.2f" % bin_width)
         print("Arena size : %s" % str(arena_size))
         print("Bin number : %s" % str(num_bins))
     # Calculate occupancy
@@ -96,7 +119,10 @@ def spatialoccupancy(positions, speed, **kwargs):
         range_1Dhist = [np.min(x), np.max(x)]
         occupancy_map, xedges_t = np.histogram(x[(speeds>speed_cutoff)],
                                        bins=num_bins, range=range_1Dhist)
-    occupancy_map = np.array(occupancy_map, dtype=float)
+    occupancy_map = np.array(occupancy_map, dtype=int)
+    
+    # Transpose the map to match the expected directions provided by BNT
+    occupancy_map = np.transpose(occupancy_map)
     
     if debug:
         print("Frames included in histogram: %d (%.3f)" % (np.sum(occupancy_map), np.sum(occupancy_map)/len(time_stamps)) )
@@ -110,7 +136,7 @@ def spatialoccupancy(positions, speed, **kwargs):
         print("Time length included in histogram: %.2f (%.3f)" % (np.sum(occupancy_map_time), np.sum(occupancy_map_time)/time_stamps[-1]) )
     
 
-    masked_map = np.ma.masked_where(occupancy_map == 0, occupancy_map_time)
+    masked_map = np.ma.masked_where(occupancy_map < 0.001, occupancy_map_time)
     
     return masked_map
     
