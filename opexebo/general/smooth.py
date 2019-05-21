@@ -54,17 +54,22 @@ def smooth(data, sigma):
     else:
         raise ValueError("This function can only smooth 1D or 2D data. You provided data with %d dimensions" % d)
     
+    working_data = data.copy()
+    # This is in case the input data has to be modified
+    # Since Python passes references instead of data, we create a new copy to work
+    # with, rather than modifying the state of data that other functions may rely on
+    
     if type(data) == np.ma.MaskedArray:
-        data_copy = data.copy()
-        data[data.mask] = np.nan
         
-    smoothed_data = convolve(data, kernel)
+        working_data[data.mask] = np.nan
+        
+    smoothed_data = convolve(working_data, kernel)
     
     
     if type(data) == np.ma.MaskedArray:
-        data.data[data_copy.mask] = data_copy[data_copy.mask]
+#        data.data[data_copy.mask] = data_copy[data_copy.mask]
         smoothed_data = np.ma.masked_where(data.mask, smoothed_data)
-        smoothed_data.data[data_copy.mask] = data_copy[data_copy.mask]
+        smoothed_data.data[data.mask] = data.data[data.mask]
         
     return smoothed_data
 
