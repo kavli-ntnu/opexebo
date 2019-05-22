@@ -60,20 +60,19 @@ def smooth(data, sigma):
     # with, rather than modifying the state of data that other functions may rely on
     
     if type(data) == np.ma.MaskedArray:
-        
         working_data[data.mask] = np.nan
         
-    smoothed_data = convolve(working_data, kernel)
+    smoothed_data = convolve(working_data, kernel, boundary='extend')
     
     
     if type(data) == np.ma.MaskedArray:
-#        data.data[data_copy.mask] = data_copy[data_copy.mask]
         smoothed_data = np.ma.masked_where(data.mask, smoothed_data)
         smoothed_data.data[data.mask] = data.data[data.mask]
         
     return smoothed_data
 
 
+    
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     a = np.nan
@@ -84,15 +83,12 @@ if __name__ == '__main__':
                  [0,0,1,a,a,2,0,0],
                  [0,0,a,a,a,2,6,0],
                  [0,0,3,5,6,6,6,6]]
-    test_data = np.ma.MaskedArray(test_data)
-    test_data.mask = np.zeros((8,7),dtype=bool)
+    test_data = np.ma.masked_invalid(test_data)
     
     
     
     fig, (ax1, ax2) = plt.subplots(1,2)
     ax1.imshow(test_data)
-    test_data.mask[5,2] = True
-    test_data.mask[3,5] = True
     ax2.imshow(smooth(test_data, 1))
     plt.show()
     
