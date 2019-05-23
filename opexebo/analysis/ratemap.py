@@ -1,7 +1,7 @@
 """Provides a function for calculating a Rate map from an Occupancy Map and positioned Spike Times"""
 
 import numpy as np
-from opexebo.general import validatekeyword__arena_size
+from opexebo.general import validatekeyword__arena_size, accumulatespatial
 import opexebo.defaults as default
 
 def ratemap(occupancy_map, spikes, **kwargs):
@@ -24,8 +24,23 @@ def ratemap(occupancy_map, spikes, **kwargs):
         Nx2 or Nx3 array of spike positions: [t, x] or [t, x, y]. Must have the same 
         dimensionality as positions (i.e. 1d, 2d)
     kwargs
-        bin_width
-        arena_size
+        bin_width       : float. 
+            Bin size (in cm). Bins are always assumed square default 2.5 cm.
+        arena_size      : float or tuple of floats. 
+            Dimensions of arena (in cm)
+            For a linear track, length
+            For a circular arena, diameter
+            For a square arena, length or (length, length)
+            For a non-square rectangle, (length1, length2)
+            In this function, a circle and a square are treated identically.
+        limits : tuple or np.ndarray
+            (x_min, x_max) or (x_min, x_max, y_min, y_max)
+            Provide concrete limits to the range over which the histogram searches
+            Any observations outside these limits are discarded
+            If no limits are provided, then use np.nanmin(data), np.nanmax(data)
+            to generate default limits. 
+            As is standard in python, acceptable values include the lower bound
+            and exclude the upper bound
 
         
     
@@ -47,30 +62,33 @@ def ratemap(occupancy_map, spikes, **kwargs):
     if type(occupancy_map) == np.ndarray:
         occupancy_map = np.ma.MaskedArray(occupancy_map)
         
-    # Get kwargs values
-    bin_width = kwargs.get("bin_width", default.bin_width)
-    arena_size = kwargs.get("arena_size")
-    
-    arena_size, is_2d = validatekeyword__arena_size(arena_size, dims_p)
-    num_bins = np.ceil(arena_size / bin_width)
-    
+
+#    # Get kwargs values
+#    bin_width = kwargs.get("bin_width", default.bin_width)
+#    arena_size = kwargs.get("arena_size")
+#    
+#    arena_size, is_2d = validatekeyword__arena_size(arena_size, dims_p)
+#    num_bins = np.ceil(arena_size / bin_width)
+#    spike_x = spikes[1,:]
+#    if is_2d:
+#        spike_y = spikes[2,:]
+#        
+#        range_2Dhist = [ [np.min(spike_x), np.max(spike_x)],
+#                    [np.min(spike_y), np.max(spike_y)] ]
+#        spike_map, xedges_t, yedges_t = np.histogram2d(spike_x, spike_y,
+#                                       bins=num_bins, range=range_2Dhist)
+#    else:
+#        range_1Dhist = [np.min(spike_x), np.max(spike_x)]
+#        spike_map, xedges_t = np.histogram(spike_x, bins=num_bins, range=range_1Dhist)
+#    spike_map = np.array(spike_map, dtype=int)
+#    spike_map = spike_map.transpose()
     
     
 
     
     # Histogram of spike positions
-    spike_x = spikes[1,:]
-    if is_2d:
-        spike_y = spikes[2,:]
-        
-        range_2Dhist = [ [np.min(spike_x), np.max(spike_x)],
-                    [np.min(spike_y), np.max(spike_y)] ]
-        spike_map, xedges_t, yedges_t = np.histogram2d(spike_x, spike_y,
-                                       bins=num_bins, range=range_2Dhist)
-    else:
-        range_1Dhist = [np.min(spike_x), np.max(spike_x)]
-        spike_map, xedges_t = np.histogram(spike_x, bins=num_bins, range=range_1Dhist)
-    spike_map = np.array(spike_map, dtype=float)
+    spike_map = accumulatespatial(spikes[1:,:], **kwargs)[0]
+
         
     if spike_map.shape != occupancy_map.shape:
         raise ValueError("Rate Map and Occupancy Map must have the same dimensions. Provided: %s, %s" % (spike_map.shape, occupancy_map.shape))

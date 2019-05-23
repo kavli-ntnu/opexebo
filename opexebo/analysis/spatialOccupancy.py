@@ -3,7 +3,7 @@ Provides function to calculate the spatial occupancy of the arena
 '''
 import numpy as np
 from opexebo import defaults as default
-from opexebo.general import validatekeyword__arena_size
+from opexebo.general import accumulatespatial
 
 
 def spatialoccupancy(positions, speed, **kwargs):
@@ -37,6 +37,14 @@ def spatialoccupancy(positions, speed, **kwargs):
         speed_cutoff    : float. 
             Timestamps with instantaneous speed beneath this value are ignored. 
             Default 0
+        limits : tuple or np.ndarray
+            (x_min, x_max) or (x_min, x_max, y_min, y_max)
+            Provide concrete limits to the range over which the histogram searches
+            Any observations outside these limits are discarded
+            If no limits are provided, then use np.nanmin(data), np.nanmax(data)
+            to generate default limits. 
+            As is standard in python, acceptable values include the lower bound
+            and exclude the upper bound
         debug           : bool
             If true, print out debugging information throughout the function.
             Default False
@@ -76,57 +84,28 @@ def spatialoccupancy(positions, speed, **kwargs):
     # Handle NaN positions by converting to a Masked Array
     positions = np.ma.masked_invalid(positions)
     
-    # Get default kwargs values
-    bin_width = kwargs.get("bin_width", default.bin_width)
-    arena_size = kwargs.get("arena_size")
+
     speed_cutoff = kwargs.get("speed_cutoff", default.speed_cutoff)
     debug = kwargs.get("debug", False)
     
-    # Handle the distinctions with arena sizes: 1d or 2d, different kinds of 2d
-    # If a single arena dimensions is provided, it treats the arena as either circular/square (len x len)
-    # or linear (len x 1).. In both cases, num_bins is an int
-    # If two arena dimensions are provided, it treats it as a rectangle (len1 x len2)
-    # in this case, num_bins is an array.
-    arena_size, is_2d = validatekeyword__arena_size(arena_size, dimensionality-1)
-    num_bins = np.ceil(arena_size / bin_width)
-    
-    if debug:
-        print("Bin width: %.2f" % bin_width)
-        print("Arena size : %s" % str(arena_size))
-        print("Bin number : %s" % str(num_bins))
-    # Calculate occupancy
-    # This takes a histogram of frame positions: each position gets the number of frames found there
-    # The below "range" approach means that it is assumed that the bounding box 
-    # of the animal's movements is equal to the arena walls
     time_stamps = positions[0,:]
-    x = positions[1,:]
     speeds = speed[1,:]
     
     if debug:
         print("Number of time stamps: %d" % len(time_stamps))
         print("Maximum time stamp value: %.2f" % time_stamps[-1])
         print("Time stamp delta: %f" % np.min(np.diff(time_stamps)))
+   
+
+    good = speeds>speed_cutoff
+    x = positions[1,:][good]
+    y = positions[2,:][good]
+    pos = np.array([x,y])
     
-    if is_2d:
-        y = positions[2,:]
-        
-        range_2Dhist = [ [np.min(x), np.max(x)],
-                    [np.min(y), np.max(y)] ]
-        occupancy_map, xedges_t, yedges_t = np.histogram2d(x[(speeds>speed_cutoff)],
-                                       y[(speed[1]>speed_cutoff)],
-                                       bins=num_bins, range=range_2Dhist)
-    else:
-        range_1Dhist = [np.min(x), np.max(x)]
-        occupancy_map, xedges_t = np.histogram(x[(speeds>speed_cutoff)],
-                                       bins=num_bins, range=range_1Dhist)
-    occupancy_map = np.array(occupancy_map, dtype=int)
-    
-    # Transpose the map to match the expected directions provided by BNT
-    occupancy_map = np.transpose(occupancy_map)
-    
+    occupancy_map = accumulatespatial(pos, **kwargs)[0]
     if debug:
         print("Frames included in histogram: %d (%.3f)" % (np.sum(occupancy_map), np.sum(occupancy_map)/len(time_stamps)) )
-    
+
     # So far, times are expressed in units of tracking frames
     # Convert to seconds:
     frame_duration = np.min(np.diff(time_stamps))    
