@@ -91,8 +91,8 @@ def accumulatespatial(pos, **kwargs):
     if is_2d:
         y = pos[1,:]
         if limits == None:
-            limits = ( [np.min(x), np.max(x)],
-                         [np.min(y), np.max(y)] )
+            limits = ( [np.nanmin(x), np.nanmax(x)],
+                         [np.nanmin(y), np.nanmax(y)] )
         elif len(limits) != 4:
             raise ValueError("You must provide a 4-element 'limits' value for a \
                              2D map. You provided %d elements" % len(limits))
@@ -111,7 +111,7 @@ def accumulatespatial(pos, **kwargs):
                                             # the label xedge, yedge is potentially misleading
     else:
         if limits == None:
-            limits = [np.min(x), np.max(x)]
+            limits = [np.nanmin(x), np.nanmax(x)]
         elif len(limits) != 2: 
             raise ValueError("You must provide a 2-element 'limits' value for a \
                              1D map. You provided %d elements" % len(limits))
