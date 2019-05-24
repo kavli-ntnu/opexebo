@@ -25,8 +25,11 @@ def smooth(data, sigma):
     '''Smooth provided data with a Gaussian kernel 
     
     The smoothing is done with a routine from the astronomical package astropy
-    Like scipy.ndimage, this package DOES NOT RESPECT MASKED ARRAYS. However, it
-    replaces NaN values with an interpolation of nearby cells.
+    Like scipy.ndimage.gaussian_filter, this does not handle MaskedArrays - but
+    it handles NaNs much better. Specifically, astropy.convolution.convolve 
+    replaces NaN values with an interpolation across the void region.
+    
+    Prior to convolution, the provided data 
     
     Therefore, to handle masked arrays, the data at masked positions **is replaced by np.nan**
     prior to smoothing, and thus avoids influencing nearby, unmasked cells.
@@ -54,23 +57,45 @@ def smooth(data, sigma):
     else:
         raise ValueError("This function can only smooth 1D or 2D data. You provided data with %d dimensions" % d)
     
-    working_data = data.copy()
-    # This is in case the input data has to be modified
-    # Since Python passes references instead of data, we create a new copy to work
-    # with, rather than modifying the state of data that other functions may rely on
+    width = 3*sigma
+    
+    working_data = np.pad(data, pad_width=2*width, mode='symmetric')
+    # This does two things:
+    # First, we work with a copy of the data, rather than the pointer to the 
+    # original data -> reduced risk for unforeseen consequences
+    # Second, we reduce edge effects by avoiding a hard-cutoff at the border.
+    # As in BNT, we fill the "outer" space with a reflection of the inner space
+    # A note on np.pad
+        # mode='symmetrical' results in
+        # [0, 1, 2, 3, 4] -> [1,0  ,0,1,2,3,4,  4,3]
+        # mode='reflect results in
+        # [0, 1, 2, 3, 4] -> [2,1  ,0,1,2,3,4,  3,2]
+        # i.e. changing whether the reflection axis is outside the original data
+        # or overlaid on the outermost row
+        
     
     if type(data) == np.ma.MaskedArray:
         working_data[data.mask] = np.nan
         
-    smoothed_data = convolve(working_data, kernel, boundary='extend')
+    smoothed_data = convolve(working_data, kernel, boundary='extend') 
+    # Because of the padding, the boundary mode isn't really relevant
+    # By choosing a large width, the edge effects arising from this additional
+    # padding (boundary='extend') is minimised
+
     
+    if d == 2:
+        smoothed_data = smoothed_data[width:-width, width:-width]
+    else: #d==1
+        smoothed_data = smoothed_data[width:-width]
+    # We have to get rid of the padding that we previously added, and the only 
+    # way to do that is slicing, which is NOT dimensional-agnostic
+    # There may be a more elegant solution than if/else, but this will do for the moment
     
     if type(data) == np.ma.MaskedArray:
         smoothed_data = np.ma.masked_where(data.mask, smoothed_data)
         smoothed_data.data[data.mask] = data.data[data.mask]
         
     return smoothed_data
-
 
     
 if __name__ == '__main__':
