@@ -1,6 +1,7 @@
 """ Provides a function for Gaussian smoothing """
 import numpy as np
 from astropy.convolution import convolve, Gaussian2DKernel, Gaussian1DKernel
+import opexebo.defaults as default
 #http://docs.astropy.org/en/stable/convolution/index.html
 
 #Astropy appears to have an import problem - it routinely takes about 3 minutes 
@@ -21,7 +22,7 @@ from astropy.convolution import convolve, Gaussian2DKernel, Gaussian1DKernel
 # https://github.com/astropy/astropy/issues/6511
 
 
-def smooth(data, sigma):
+def smooth(data, sigma, **kwargs):
     '''Smooth provided data with a Gaussian kernel 
     
     The smoothing is done with a routine from the astronomical package astropy
@@ -41,13 +42,34 @@ def smooth(data, sigma):
     ----------
     data : np.ndarray or np.ma.MaskedArray
         Data that will be smoothed
-    sigma : int
+    sigma : float
         Standard deviations for Gaussian kernel in units of pixels
+    kwargs
+        mask_fill : float
+            The value that masked locations should be treated as
+            This can either be provided as an absolutel number (e.g. 0), or as nan
+            If nan, then each masked location will get a value by interpolating from nearby cells.
+            This will only apply if the input is a MaskedArray to start with
+            If the input is a standard np.ndarray, then no values will be substituted, 
+            *even if* there are nans present.
     
     Returns
     -------
     smoothed_data : np.ndarray or np.ma.MaskedArray
         Smoothed data
+        
+    See also:
+    --------
+    BNT.+general.smooth
+    http://docs.astropy.org/en/stable/convolution/index.html
+    https://github.com/astropy/astropy/issues/6511
+    
+    Copyright (C) 2019 by Simon Ball
+    
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
     '''
     d = data.ndim
     if  d== 2:
@@ -57,9 +79,18 @@ def smooth(data, sigma):
     else:
         raise ValueError("This function can only smooth 1D or 2D data. You provided data with %d dimensions" % d)
     
+    
+    mask_fill = kwargs.get('mask_fill', default.mask_fill)
+    
+    
+    working_data = data.copy()
+    if type(data) == np.ma.MaskedArray:
+        working_data[data.mask] = mask_fill
+    
+    
     width = 3*sigma
     
-    working_data = np.pad(data, pad_width=2*width, mode='symmetric')
+    working_data = np.pad(working_data, pad_width=width, mode='symmetric')
     # This does two things:
     # First, we work with a copy of the data, rather than the pointer to the 
     # original data -> reduced risk for unforeseen consequences
@@ -72,10 +103,7 @@ def smooth(data, sigma):
         # [0, 1, 2, 3, 4] -> [2,1  ,0,1,2,3,4,  3,2]
         # i.e. changing whether the reflection axis is outside the original data
         # or overlaid on the outermost row
-        
-    
-    if type(data) == np.ma.MaskedArray:
-        working_data[data.mask] = np.nan
+
         
     smoothed_data = convolve(working_data, kernel, boundary='extend') 
     # Because of the padding, the boundary mode isn't really relevant
@@ -85,11 +113,15 @@ def smooth(data, sigma):
     
     if d == 2:
         smoothed_data = smoothed_data[width:-width, width:-width]
-    else: #d==1
+    elif d == 1: 
         smoothed_data = smoothed_data[width:-width]
+    else: # This condition should never happen, due to checking above, but included for completeness
+        raise ValueError("This function can only smooth 1D or 2D data. You provided data with %d dimensions" % d)
     # We have to get rid of the padding that we previously added, and the only 
     # way to do that is slicing, which is NOT dimensional-agnostic
     # There may be a more elegant solution than if/else, but this will do for the moment
+    
+    assert(smoothed_data.shape == data.shape)
     
     if type(data) == np.ma.MaskedArray:
         smoothed_data = np.ma.masked_where(data.mask, smoothed_data)
