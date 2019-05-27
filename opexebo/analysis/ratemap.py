@@ -46,7 +46,21 @@ def ratemap(occupancy_map, spikes, **kwargs):
     
     Returns
     -------
-    rate_map : np.
+    rate_map : np.ma.MaskedArray
+        2D array, masked at locations of very low occupancy (t<1ms).
+        Each cell gives the rate of neuron firing at that location.
+    
+    See also
+    --------
+    BNT.+analyses.map
+    
+    
+    Copyright (C) 2019 by Simon Ball
+    
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
     '''
     
     # Check correct inputs
@@ -63,29 +77,6 @@ def ratemap(occupancy_map, spikes, **kwargs):
         occupancy_map = np.ma.MaskedArray(occupancy_map)
         
 
-#    # Get kwargs values
-#    bin_width = kwargs.get("bin_width", default.bin_width)
-#    arena_size = kwargs.get("arena_size")
-#    
-#    arena_size, is_2d = validatekeyword__arena_size(arena_size, dims_p)
-#    num_bins = np.ceil(arena_size / bin_width)
-#    spike_x = spikes[1,:]
-#    if is_2d:
-#        spike_y = spikes[2,:]
-#        
-#        range_2Dhist = [ [np.min(spike_x), np.max(spike_x)],
-#                    [np.min(spike_y), np.max(spike_y)] ]
-#        spike_map, xedges_t, yedges_t = np.histogram2d(spike_x, spike_y,
-#                                       bins=num_bins, range=range_2Dhist)
-#    else:
-#        range_1Dhist = [np.min(spike_x), np.max(spike_x)]
-#        spike_map, xedges_t = np.histogram(spike_x, bins=num_bins, range=range_1Dhist)
-#    spike_map = np.array(spike_map, dtype=int)
-#    spike_map = spike_map.transpose()
-    
-    
-
-    
     # Histogram of spike positions
     spike_map = accumulatespatial(spikes[1:,:], **kwargs)[0]
 
@@ -93,7 +84,9 @@ def ratemap(occupancy_map, spikes, **kwargs):
     if spike_map.shape != occupancy_map.shape:
         raise ValueError("Rate Map and Occupancy Map must have the same dimensions. Provided: %s, %s" % (spike_map.shape, occupancy_map.shape))
     # Convert to rate map
-    rate_map = spike_map / occupancy_map
+    rate_map = spike_map / (occupancy_map + np.spacing(1)) # Ensure that DivideByZero errors do not occur
+                                                            # Zero-valued cells in occupancy_map *should* have already been masked out
+                                                            # but added protection is rarely a bad thing
     
     return rate_map
     
