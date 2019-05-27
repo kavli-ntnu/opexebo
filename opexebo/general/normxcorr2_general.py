@@ -10,8 +10,8 @@ original function have been dropped.
 from __future__ import division
 
 import numpy as np
+import numpy.matlib  # Not included in the default numpy namespace
 from scipy.signal import convolve2d
-
 
 def normxcorr2_general(map):
     """Calculate spatial autocorrelation.
@@ -20,7 +20,7 @@ def normxcorr2_general(map):
 
     Args:
     map: NxM matrix, firing map. map is not necessary a numpy array. Must not
-        cnontain NaNs!
+        contain NaNs!
 
     Returns:
     Resulting correlation matrix, which is a 2D numpy array.
