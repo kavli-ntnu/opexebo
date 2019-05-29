@@ -14,7 +14,7 @@ def autocorrelation(firing_map):
     """Calculate 2D spatial autocorrelation of a firing map.
 
     Arguments:
-    firing_map: NxM matrix, firing map. map is not necessary a numpy array. May
+    firing_map: NxM matrix, smoothed firing map. map is not necessary a numpy array. May
          cnontain NaNs.
 
     Returns:
@@ -28,7 +28,7 @@ def autocorrelation(firing_map):
     overlap_amount = 0.8
     slices = []
 
-    if not isinstance(firing_map, np.ndarray):
+    if type(firing_map) != np.ndarray:
         firing_map = np.array(firing_map)
 
     if firing_map.size == 0:

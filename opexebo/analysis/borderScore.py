@@ -83,6 +83,7 @@ def borderscore(rate_map, fields_map, fields, **kwargs):
         fields_map_unlabelled[fields_map>0] = 1
         coverage = bordercoverage(fields, search_width = sw, walls = walls)
         fields_rate_map = fields_map_unlabelled * rate_map
+        fields_rate_map = np.ma.masked_invalid(fields_rate_map)
         wfd = _weighted_firing_distance(fields_rate_map)
         score = (coverage - wfd)/(coverage + wfd)
         
@@ -101,6 +102,10 @@ def _weighted_firing_distance(rmap):
     wfd     : float
         Weighted firing distance. 
     '''
+    # Check that the provided array is properly masked
+    if type(rmap != np.ma.MaskedArray):
+        rmap = np.ma.masked_invalid(rmap)
+        
     # Normalise firing map by the sum of the firing map, such that it resembles a PDF
     rmap /= np.ma.sum(rmap)
     
@@ -108,9 +113,10 @@ def _weighted_firing_distance(rmap):
     x = np.ones(rmap.shape) # define area same size as ratemap
     x = np.pad(x, 1, mode='constant') # Pad outside with zeros, we calculate distance from nearest zero
     dist = distance_transform_cdt(x, metric='taxicab') # taxicab metric: distance along axes, not diagonal distance. 
-    wfd = np.ma.sum( np.ma.dot(dist[1:-1, 1:-1], rmap) )
+    #wfd = np.ma.sum( np.ma.dot(dist[1:-1, 1:-1], rmap) )
+    wfd = np.ma.sum( dist[1:-1, 1:-1] * rmap )
     
     # Normalise by half of the smallest arena dimensions
-    wfd *= 2/np.min(rmap.shape)
+    wfd = 2 * wfd / np.min(rmap.shape)
     return wfd
     
