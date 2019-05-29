@@ -81,6 +81,9 @@ def speedscore(spike_times, tracking_speeds, **kwargs):
     lower_bound_speed = kwargs.get('lower_bound_speed', default.lower_bound_speed)
     debug = kwargs.get('debug', False)
     
+    tracking_speeds = np.ma.masked_invalid(tracking_speeds, copy=True)
+    spike_times = np.ma.masked_invalid(spike_times, copy=True)
+    
     t_times = tracking_speeds[0,:]
     t_speeds = tracking_speeds[1,:]
     
@@ -96,7 +99,7 @@ def speedscore(spike_times, tracking_speeds, **kwargs):
     # speeds from tracking frames, which ahs a consistent sampling rate
     # The spike-speeds does NOT have a consistent sampling rate, and therefore
     # cannot be used to calculate the time spent at a given speed.     
-    num_bins = int(( np.max(t_speeds) - np.min(t_speeds)) / bin_width) + 1
+    num_bins = int(( np.nanmax(t_speeds) - np.nanmin(t_speeds)) / bin_width) + 1
     range_bins = ( np.min(t_speeds), np.min(t_speeds) + (num_bins*bin_width) )
     
     hist, bin_edges = np.histogram(t_speeds, bins=num_bins, range=range_bins)
