@@ -62,10 +62,11 @@ def bordercoverage(fields, **kwargs):
     
     # Extract keyword arguments or set defaults
     sw = kwargs.get('search_width', default.search_width)
-    walls = kwargs.get('walls', default.walls).lower()
+    walls = kwargs.get('walls', default.walls)
     
     # Check that the wall definition is valid
     _validate_wall_definition(walls)
+    walls = walls.lower()
     
    
     
@@ -97,6 +98,7 @@ def bordercoverage(fields, **kwargs):
         if "b" in walls:
             aux_map = fmap[:sw, :]
             aux_map = np.rot90(aux_map) # Rotate counterclockwise - top of image moves to left of image
+            c = _wall_field(aux_map)
             if c > coverage:
                 coverage = c
         
@@ -168,6 +170,7 @@ def _validate_wall_definition(walls):
     elif len(walls) == 0:
         raise ValueError("Wall definition must contain at least 1 character from the set [t, r, b, l]")
     else:
+        walls = walls.lower()
         for char in walls:
             if char.lower() not in ["t","r","b","l"]:
                 raise ValueError("Character %s is not a valid entry in wall definition. Valid characters are [t, r, b, l]" % char)

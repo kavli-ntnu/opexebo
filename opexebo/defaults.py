@@ -9,7 +9,7 @@ bin_speed = 5 			# Standard speed bin, [cm/s]
 speed_cutoff = 0   # Standard speed cutoff below which to ignore positions [cm/s]
 
 # Smoothing
-sigma = 1               # Standard Gaussian Standard Deviation for smoothing, [bins]
+sigma = 2               # Standard Gaussian Standard Deviation for smoothing, [bins]
 sigma_speed = 0.4       # Standard Gaussian stdev for smoothing firing rate. [s]
 						# Default at 0.4s from doi:10.1038/nature14622 . 
 mask_fill = 0         # Used to define the behaviour of smoothing around masked values
