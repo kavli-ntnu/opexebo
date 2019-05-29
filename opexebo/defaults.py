@@ -1,6 +1,6 @@
 """ Provide common default values for analysis parameters """
 
-from numpy import nan
+
 
 # spatial/angular occupancy
 bin_width = 2.5         # Standard spatial resolution, [cm]

@@ -83,14 +83,6 @@ def ratemapstats(rate_map, time_map, debug=False):
             #print("log argument: %.4f" % log_argument)
         information_rate = np.ma.sum(position_PDF * rate_map * np.ma.log2(log_argument))
         information_content = information_rate / mean_rate
-        
-    
-
-    
-    
-    
-    
-    
     
     return information_rate, information_content, sparsity, selectivity
 
