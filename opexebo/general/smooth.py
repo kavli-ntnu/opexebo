@@ -88,7 +88,7 @@ def smooth(data, sigma, **kwargs):
         working_data[data.mask] = mask_fill
     
     
-    width = 3*sigma
+    width = int(3*sigma)
     
     working_data = np.pad(working_data, pad_width=width, mode='symmetric')
     # This does two things:
