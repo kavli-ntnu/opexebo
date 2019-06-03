@@ -47,14 +47,13 @@ def gridscore(aCorr, **kwargs):
     is returned.
     """
     # Arrange keyword arguments
-    fieldThreshold = kwargs.get("field_threshold", default.field_threshold)
     minOrientation = kwargs.get("min_orientation", default.min_orientation)
     debug = kwargs.get("debug", False)
     
     
     # normalize aCorr in order to find contours
     aCorr = aCorr / aCorr.max()
-    cFieldRadius = np.floor(_findCentreRadius(aCorr, fieldThreshold, debug))
+    cFieldRadius = np.floor(_findCentreRadius(aCorr, debug))
     if debug:
         print("Center radius is {}".format(cFieldRadius))
 
@@ -99,8 +98,8 @@ def gridscore(aCorr, **kwargs):
             rotatedValues = rotatedACorr[mask, j]
             r, p = pearsonr(aCorrValues, rotatedValues)
             rotCorr[j] = r
-            if debug:
-                print("Step {}, angle {}, corr value {}".format(i, angle, r))
+            #if debug:
+            #    print("Step {}, angle {}, corr value {}".format(i, angle, r))
 
         GNS[i, 0] = np.min(rotCorr[[1, 3]]) - np.max(rotCorr[[0, 2, 4]])
         GNS[i, 1] = radius
@@ -165,7 +164,7 @@ def _contourArea(contours, i):
     return area
 
 
-def _findCentreRadius(aCorr, fieldThreshold, debug):
+def _findCentreRadius(aCorr, debug):
     centroids = []
     radii = []
 
@@ -175,15 +174,15 @@ def _findCentreRadius(aCorr, fieldThreshold, debug):
     peak_coords[0, 0] = halfHeight-1
     peak_coords[0, 1] = halfWidth-1
     fields = placefield(aCorr, min_bins=2, min_peak=0, peak_coords=peak_coords)[0]
+    
     if fields is None or len(fields) == 0:
         return 0
 
     peak_coords = np.ndarray(shape=(len(fields), 2), dtype=np.integer)
     areas = np.ndarray(shape=(len(fields), 1), dtype=np.integer)
     for i, field in enumerate(fields):
-        peak_rc = field['peak_coords']
-        peak_coords[i, 0] = peak_rc[0]
-        peak_coords[i, 1] = peak_rc[1]
+        peak_coords[i, 0] = field['y_max']
+        peak_coords[i, 1] = field['x_max']
         areas[i] = field['area']
 
     aCorrCentre = np.zeros(shape=(1, 2), dtype=float)
@@ -207,7 +206,18 @@ def _findCentreRadius(aCorr, fieldThreshold, debug):
             indices_to_test = sortInd[:2]
             min_ind = np.argmin(areas[indices_to_test])
             closestFieldInd = indices_to_test[min_ind]
-    if debug: print('Center field coord: {}'.format(peak_coords[closestFieldInd]))
+    
     radius = np.floor(np.sqrt(areas[closestFieldInd] / np.pi))
-    if debug: print("Radius is {}".format(radius))
+    
+    if debug: 
+        print('Center field coord: {}'.format(peak_coords[closestFieldInd]))
+        print("Radius is {}".format(radius))
+        fig, ax = plt.subplots() 
+        center_circle =  plt.Circle((peak_coords[closestFieldInd][0],\
+                                     peak_coords[closestFieldInd][1]), radius[0], color='w', alpha=.4)
+        ax.imshow(aCorr)
+        ax.add_artist(center_circle)
+        ax.set_title('Center: {} Radius: {}'.format(peak_coords[closestFieldInd], radius[0]))
+        plt.show()
+        
     return radius
