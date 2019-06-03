@@ -415,7 +415,7 @@ def _area_for_threshold(I, occupancy_mask, peak_rc, th, other_fields_linear):
     # NOTE - this uses scipy.ndimage.morphology, while most else uses skimage.morphology
     filled_image = ndimage.morphology.binary_fill_holes(labeled_img)
     euler_array = (filled_image != labeled_img)  # True where holes were filled in
-    #euler_array = np.maximum((euler_array*1) - (occupancy_mask*1), 0)
+    euler_array = np.maximum((euler_array*1) - (occupancy_mask*1), 0)
     euler_objects = morphology.label(euler_array, connectivity=2) # connectivity=2 : vertical, horizontal, and diagonal
     num = np.max(euler_objects) # How many holes were filled in
     euler_number = -num + 1
