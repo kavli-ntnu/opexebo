@@ -1,9 +1,6 @@
 """ Provides functions for calculating Speed Score """
-
-
 import numpy as np
-import opexebo.defaults as default
-import opexebo
+from .. import defaults as default
 
 def speedscore(spike_times, tracking_speeds, **kwargs):
     '''
@@ -156,10 +153,7 @@ def speedscore(spike_times, tracking_speeds, **kwargs):
         # Also calculate shuffle
         # (286) Calculate score 2016
             # use firing_rate-smoothed[goodSpeed] - i.e. the bad speeds will nevertheless have contributed because they were used as part of the smoothing
-        
-    
-  
-    
+
 def _spiketimes_to_spikerate(spike_times, tracking_times):
     '''Convert a list of spike times to a list of spike rates
     parameters

@@ -1,14 +1,14 @@
-from opexebo.analysis.gridscore import gridscore
-from opexebo.analysis.autocorrelation import autocorrelation
-from opexebo.analysis.placefield import placefield
-from opexebo.analysis.angularoccupancy import angularoccupancy
-from opexebo.analysis.bordercoverage import bordercoverage
-from opexebo.analysis.borderscore import borderscore
-from opexebo.analysis.ratemap import ratemap
-from opexebo.analysis.ratemapstats import ratemapstats
-from opexebo.analysis.ratemapcoherence import ratemapcoherence
-from opexebo.analysis.spatialoccupancy import spatialoccupancy
-from opexebo.analysis.speedscore import speedscore
+from .gridscore import gridscore
+from .autocorrelation import autocorrelation
+from .placefield import placefield
+from .angularOccupancy import angularoccupancy
+from .borderCoverage import bordercoverage
+from .borderScore import borderscore
+from .ratemap import ratemap
+from .rateMapStats import ratemapstats
+from .ratemapcoherence import ratemapcoherence
+from .spatialOccupancy import spatialoccupancy
+from .speedscore import speedscore
 
 __all__ = ["gridscore", "autocorrelation", "placefield", "angularoccupancy", 
            "bordercoverage", "borderscore", "ratemap", "ratemapstats", 

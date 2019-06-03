@@ -1,7 +1,9 @@
 """ Provides a function for Gaussian smoothing """
 import numpy as np
 from astropy.convolution import convolve, Gaussian2DKernel, Gaussian1DKernel
-import opexebo.defaults as default
+
+from .. import defaults as default
+
 #http://docs.astropy.org/en/stable/convolution/index.html
 
 #Astropy appears to have an import problem - it routinely takes about 3 minutes 

@@ -2,8 +2,8 @@
 Provides function to calculate the spatial occupancy of the arena
 '''
 import numpy as np
-from opexebo import defaults as default
-from opexebo.general import accumulatespatial
+from ..general import accumulatespatial
+from .. import defaults as default
 
 
 def spatialoccupancy(positions, speed, **kwargs):

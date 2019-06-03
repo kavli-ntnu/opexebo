@@ -4,10 +4,10 @@ which the animal looked in each direction
 
 Closely based on code from Horst's initial imaging pipeline, tidied up and pythonised by Simon
 
-(C) 2019 Horst Oberhaus, Simon Ball
+(C) 2019 Horst Obenhaus, Simon Ball
 '''
 import numpy as np
-import opexebo.defaults as default
+from .. import defaults as default
 
 def angularoccupancy(head_angle,**kwargs):
     '''

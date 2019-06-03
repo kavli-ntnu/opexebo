@@ -1,8 +1,8 @@
 """Provides a function for calculating a Rate map from an Occupancy Map and positioned Spike Times"""
 
 import numpy as np
-from opexebo.general import validatekeyword__arena_size, accumulatespatial
-import opexebo.defaults as default
+from ..general import validatekeyword__arena_size, accumulatespatial
+from .. import defaults as default
 
 def ratemap(occupancy_map, spikes, **kwargs):
     ''' Calculate the spatially correlated firing rate map

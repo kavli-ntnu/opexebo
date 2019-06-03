@@ -6,9 +6,7 @@ Calculates 2D autocorrelation (autocorrelogram) of a firing map.
 """
 
 import numpy as np
-
-from opexebo import general
-
+from ..general import normxcorr2_general 
 
 def autocorrelation(firing_map):
     """Calculate 2D spatial autocorrelation of a firing map.
@@ -38,7 +36,7 @@ def autocorrelation(firing_map):
     firing_map = np.nan_to_num(firing_map)
 
     # get full autocorrelgramn
-    aCorr = general.normxcorr2_general(firing_map)
+    aCorr = normxcorr2_general(firing_map)
 
     # we are only interested in a portion of the autocorrelogram. Since the values
     # on edges are too noise (due to the fact that very small amount of elements

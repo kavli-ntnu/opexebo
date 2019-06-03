@@ -2,8 +2,7 @@
 
 import numpy as np
 from scipy.ndimage import distance_transform_cdt
-from opexebo.analysis import bordercoverage
-import opexebo.defaults as default
+from .borderCoverage import bordercoverage
 
 
 

@@ -2,8 +2,9 @@
 
 
 import numpy as np
-from opexebo.general import validatekeyword__arena_size
-import opexebo.defaults as default
+from ..general import validatekeyword__arena_size
+from .. import defaults as default
+
 
 def accumulatespatial(pos, **kwargs):
     """

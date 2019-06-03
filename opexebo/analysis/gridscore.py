@@ -9,8 +9,8 @@ from scipy.spatial.distance import cdist
 from scipy.stats import pearsonr
 from skimage.transform import rotate
 
-import opexebo
-import opexebo.defaults as default
+from .. import defaults as default
+from .placefield import * 
 
 def gridscore(aCorr, **kwargs):
     """Calculate gridness score for an autocorrelogram.
@@ -54,7 +54,7 @@ def gridscore(aCorr, **kwargs):
     
     # normalize aCorr in order to find contours
     aCorr = aCorr / aCorr.max()
-    cFieldRadius = np.floor(_findCentreRadius(aCorr, fieldThreshold))
+    cFieldRadius = np.floor(_findCentreRadius(aCorr, fieldThreshold, debug))
     if debug:
         print("Center radius is {}".format(cFieldRadius))
 
@@ -165,7 +165,7 @@ def _contourArea(contours, i):
     return area
 
 
-def _findCentreRadius(aCorr, fieldThreshold):
+def _findCentreRadius(aCorr, fieldThreshold, debug):
     centroids = []
     radii = []
 
@@ -174,7 +174,7 @@ def _findCentreRadius(aCorr, fieldThreshold):
     peak_coords = np.ones(shape=(1, 2), dtype=np.int)
     peak_coords[0, 0] = halfHeight-1
     peak_coords[0, 1] = halfWidth-1
-    fields = opexebo.analysis.placefield(aCorr, min_bins=2, min_peak=0, peak_coords=peak_coords)[0]
+    fields = placefield(aCorr, min_bins=2, min_peak=0, peak_coords=peak_coords)[0]
     if fields is None or len(fields) == 0:
         return 0
 
@@ -207,7 +207,7 @@ def _findCentreRadius(aCorr, fieldThreshold):
             indices_to_test = sortInd[:2]
             min_ind = np.argmin(areas[indices_to_test])
             closestFieldInd = indices_to_test[min_ind]
-
+    if debug: print('Center field coord: {}'.format(peak_coords[closestFieldInd]))
     radius = np.floor(np.sqrt(areas[closestFieldInd] / np.pi))
-    # print("radius is {}".format(radius))
+    if debug: print("Radius is {}".format(radius))
     return radius

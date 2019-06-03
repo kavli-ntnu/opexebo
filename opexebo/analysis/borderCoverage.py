@@ -2,7 +2,6 @@
 
 import numpy as np
 from scipy.ndimage import distance_transform_edt
-import opexebo.defaults as default
 
 def bordercoverage(fields, **kwargs):
     '''
