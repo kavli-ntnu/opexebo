@@ -231,20 +231,14 @@ def placefield(firing_map, **kwargs):
         if num_bins >= min_bins and mean_rate >= min_mean:
             field = {}
             field['coords'] = region.coords
-            field['peak_coords'] = peak_coords
+
             field['area'] = region.area
             field['bbox'] = region.bbox
     
             field['x'] = region.centroid[0]
             field['y'] = region.centroid[1]
-            # Correct to maximum of ratemap for that region, since centroid is usually
-            # bad predictor for elongated fields
-            regionmask = np.ones_like(firing_map)
-            regionmask[region.coords[:, 0], region.coords[:, 1]] = 0
-            masked_region  = np.ma.masked_array(firing_map, mask=regionmask)
-            peak_corrected = np.unravel_index(masked_region.argmax(), firing_map.shape)
-            field['x_max'] = peak_corrected[0]
-            field['y_max'] = peak_corrected[1]
+            field['x_max'] = peak_coords[0]
+            field['y_max'] = peak_coords[1]
     
             field['mean_rate'] = mean_rate
             field['peak_rate'] = peak_rate
