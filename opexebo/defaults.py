@@ -22,6 +22,7 @@ mask_fill = 0         # Used to define the behaviour of smoothing around masked 
 firing_field_min_bins = 9   # Minimum number of bins for a firing field to be valid [bins]
 firing_field_min_peak = 1   # Minimum peak firing rate for a firing field to be valid [Hz]
 firing_field_min_mean = 0   # Minimum mean firing rate for a firing field to be valid [Hz]
+used_th = .9 # Starting threshold for place field detection
 
 
 # Grid Score
