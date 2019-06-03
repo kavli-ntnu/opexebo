@@ -18,12 +18,7 @@ def placefield(firing_map, **kwargs):
     area doesn't change any more or the area explodes (this means the threshold 
     is too low).
     
-    General approach:
-        1 : Handle inputs
-        2 : Identify local maxima
-        3 : Identify fields
-        4 : filter fields by criteria
-    
+   
     Parameters
     ----------
     firing_map : np.ndarray or np.ma.MaskedArray
@@ -210,6 +205,8 @@ def placefield(firing_map, **kwargs):
             nu, pixel_list, nu = _area_for_threshold(Iobr, occupancy_mask, peak_rc, used_th+0.01, other_fields_linear)
         if len(pixel_list)>0:
             pixels = np.unravel_index(pixel_list, Iobr.shape, 'F')
+        else:
+            pixels = []
             
         Iobr[pixels] = max_value * 1.5
         fields_map[pixels] = field_id
@@ -415,7 +412,11 @@ def _area_for_threshold(I, occupancy_mask, peak_rc, th, other_fields_linear):
     # NOTE - this uses scipy.ndimage.morphology, while most else uses skimage.morphology
     filled_image = ndimage.morphology.binary_fill_holes(labeled_img)
     euler_array = (filled_image != labeled_img)  # True where holes were filled in
+    
     euler_array = np.maximum((euler_array*1) - (occupancy_mask*1), 0)
+    # Ignore filled-in holes at bins that the animal never visited
+    # Convert both arrays to integer, subtract one from the other, and replace resulting -1 values with 0
+    
     euler_objects = morphology.label(euler_array, connectivity=2) # connectivity=2 : vertical, horizontal, and diagonal
     num = np.max(euler_objects) # How many holes were filled in
     euler_number = -num + 1
@@ -433,3 +434,4 @@ def _area_for_threshold(I, occupancy_mask, peak_rc, th, other_fields_linear):
         is_bad = len(np.intersect1d(area_linear_indices, other_fields_linear)) > 0 # True if any other local maxima occur within this field
 
     return (ar, area_linear_indices, is_bad)
+
