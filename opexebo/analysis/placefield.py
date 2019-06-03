@@ -44,6 +44,8 @@ def placefield(firing_map, **kwargs):
         peak_coords : array-like
             List of peak co-ordinates to consider instead of auto detection
             Default None
+        init_thresh : float 
+            Initial threshold for field detection
             
     Returns
     -------
@@ -78,10 +80,10 @@ def placefield(firing_map, **kwargs):
     min_bins = kwargs.get("min_bins", default.firing_field_min_bins)
     min_peak = kwargs.get("min_peak", default.firing_field_min_peak)
     min_mean = kwargs.get("min_mean", default.firing_field_min_mean)
-    used_th = kwargs.get("used_th", default.used_th)
+    init_thresh = kwargs.get("init_thresh", default.init_thresh)
     
-    if used_th >=1: 
-        raise ValueError('Used threshold variable not valid ({})'.format(used_th))
+    if init_thresh >=1: 
+        raise ValueError('Used threshold variable not valid ({})'.format(init_thresh))
     
     peak_coords = kwargs.get("peak_coords", None)
     debug = kwargs.get("debug", False)
@@ -162,12 +164,12 @@ def placefield(firing_map, **kwargs):
         else:
             other_fields_linear = []
 
-        res = _area_change(Iobr, occupancy_mask, peak_rc, used_th, used_th-0.02, other_fields_linear)
+        res = _area_change(Iobr, occupancy_mask, peak_rc, init_thresh, init_thresh-0.02, other_fields_linear)
         initial_change = res['acceleration']
         area2 = res['area2']
         first_pixels = np.nan
         if np.isnan(initial_change):
-            for j in np.linspace(used_th+1, 1., 4):
+            for j in np.linspace(init_thresh+1, 1., 4):
                 # Thresholds get higher, area should tend downwards to 1 (i.e. only including the actual peak)
                 res = _area_change(Iobr, occupancy_mask, peak_rc, j, j-0.01, other_fields_linear)
                 initial_change = res['acceleration']
@@ -183,7 +185,7 @@ def placefield(firing_map, **kwargs):
                     # Weird conditonal from Vadim - initial change will EITHER:
                     # be greater than zero (can't get a negative area to give negative % change)
                     # OR be NaN (which will always yield false when compared to a number)
-                    used_th = j - 0.01
+                    init_thresh = j - 0.01
                     break
 
             if np.isnan(initial_change) and not np.isnan(area1):
@@ -199,10 +201,10 @@ def placefield(firing_map, **kwargs):
                 pass
 
         pixel_list = _expand_field(Iobr, occupancy_mask, peak_rc, initial_change, area2,
-                                   other_fields_linear, used_th)
+                                   other_fields_linear, init_thresh)
         if np.any(np.isnan(pixel_list)):
             # nu - not used
-            nu, pixel_list, nu = _area_for_threshold(Iobr, occupancy_mask, peak_rc, used_th+0.01, other_fields_linear)
+            nu, pixel_list, nu = _area_for_threshold(Iobr, occupancy_mask, peak_rc, init_thresh+0.01, other_fields_linear)
         if len(pixel_list)>0:
             pixels = np.unravel_index(pixel_list, Iobr.shape, 'F')
             
