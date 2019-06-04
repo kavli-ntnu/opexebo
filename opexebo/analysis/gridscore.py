@@ -60,7 +60,7 @@ def gridscore(aCorr, **kwargs):
         'orientation' : np.ndarray
             3x1 array giving orientation (in degrees) to closest fields. 
         
-    
+    See Also
     """
     # Arrange keyword arguments
 #    fieldThreshold = kwargs.get("field_threshold", default.field_threshold)
@@ -75,7 +75,7 @@ def gridscore(aCorr, **kwargs):
         print("Center radius is {}".format(cFieldRadius))
 
     if cFieldRadius in [-1, 0, 1]:
-        return np.NaN
+        return (np.nan, _grid_score_stats(np.zeros(aCorr.shape)))
 
     halfHeight = np.ceil(aCorr.shape[0]/2)
     halfWidth = np.ceil(aCorr.shape[1]/2)
@@ -134,17 +134,19 @@ def gridscore(aCorr, **kwargs):
         for ii in range(numStep):
             meanGridness[ii] = np.nanmean(GNS[ii:ii+numGridnessRadii, 0])
         gscore = np.max(meanGridness)
-    
+
     '''Then calculate stats about the autocorrelogram'''
     bestCorr = (mainCircle < radii[gscoreInd]*1.25) * aCorr
-    gstats = _grid_score_stats(bestCorr, aCorr, **kwargs)    
+    gstats = _grid_score_stats(bestCorr, **kwargs)    
     
-    return gscore, gstats
+    return (gscore, gstats)
 
 
-def _grid_score_stats(bestCorr, aCorr, **kwargs):
+def _grid_score_stats(bestCorr, **kwargs):
     # Get kwargs
     debug = kwargs.get('debug', False)
+    min_orientation = kwargs.get('min_orientation', default.min_orientation)
+    min_orientation = np.radians(min_orientation)
     
     # Initialise default output in case stats are uncalculable
     gs_ellipse_theta = np.nan
@@ -160,7 +162,7 @@ def _grid_score_stats(bestCorr, aCorr, **kwargs):
     labelled_img = morphology.label(dilated_img)
     
     if np.max(labelled_img) >= 7:
-        properties = measure.regionprops(labelled_img, acorr, cache=True)
+        properties = measure.regionprops(labelled_img, cache=True)
         all_coords = np.array([region.centroid for region in properties])
         # x-coords are all_coords[:,1], y are [:,0].
         if debug:
@@ -170,27 +172,58 @@ def _grid_score_stats(bestCorr, aCorr, **kwargs):
             plt.scatter(all_coords[:,1], all_coords[:,0])
         
         # centre : also [y, x]
-        centre = -0.5 + np.array(acorr.shape)/2
+        centre = -0.5 + np.array(bestCorr.shape)/2
         # Bearing from field to centre
         orientation = np.arctan2(all_coords[:,0] - centre[0], all_coords[:,1] - centre[1]) # in radians
         distance = np.sqrt(np.square(all_coords[:,0]-centre[0]) + np.square(all_coords[:,1]-centre[1]))
         if 0 not in distance:
             raise ValueError("There is not a peak in the centre of the autocorrelogram")
+        '''
+        #TODO
+        # NOT WORKING CORRECTLY
+        # Filter out fields that have very similar orientation by removing the more distant field
+        orient_distsq = _circ_dist2(orientation)
+        # Ignore lower triangle
+        close_fields = np.ma.MaskedArray(orient_distsq)
+        close_fields.mask = np.zeros(close_fields.shape) # annoyingly, the mask does not default to an array
+        close_fields.mask[np.tril_indices(close_fields.shape[0], 1, close_fields.shape[1])] = True
+
+        close_fields.mask = np.logical_and(close_fields.mask, np.abs(orient_distsq) > min_orientation)
+        # Now masked at all locations that we don't care about
+        # Unmasked elements are pair-wise field combinations that are too close.
+        # Therefore, each unmasked element represents a combination where the more distant field can be disposed of
+        indicies_to_delete = []
+        col, row = np.where(np.logical_not(close_fields.mask))
+        for i in range(row.size):
+            r = row[i]
+            c = col[i]
+            if distance[r] > distance[c]:
+                indicies_to_delete.append(r)
+            else:
+                indicies_to_delete.append(c)
+        indicies_to_delete = np.unique(indicies_to_delete)
+        # "delete" the undesirable fields by setting their values such that they must be excluded by the sorting
+        distance[indicies_to_delete] = 3*bestCorr.size
+           ''' 
+            
+        
+        
         
         # Consider the 6 closest fields -> sort by distance
         # Exclude the lowest value (which must be zero, because the central point is at the centre)
         # Positions needs all 6 indicies, in order to calculate the ellipse
-        # dist, orientation discard the duplicated values (6 values = 3x non-unique values, because acorr is symmetric)
+        # Discard the duplicate values -> because they're floating point, don't use np.unique()
+        # Instead, use array slicing: sort by size, and then take every 2nd value
         # Numpy slicing: [start:stop:step]
         sorted_ids = np.argsort(distance)[1:7]
         positions = all_coords[sorted_ids,:]
-        gs_spacing = np.unique(distance[sorted_ids])
-        gs_orientation = np.unique(orientation[sorted_ids])
+        gs_spacing = distance[sorted_ids[::2]]
+        gs_orientation = orientation[sorted_ids[::2]]
         gs_orientation = np.degrees(gs_orientation) # convert from rad to deg
         
         # Fit an ellipse to those remaining fields:
         gs_ellipse =  opexebo.general.fitellipse(positions[:,1], positions[:,0])
-        gs_ellipse_theta = np.degrees(gs_ellipse[4]%(2*np.pi))
+        gs_ellipse_theta = np.degrees(gs_ellipse[4]+np.pi)%360
         
         if debug:
             a, b, c, d, e = gs_ellipse
@@ -241,6 +274,15 @@ def _plotContours(img, contours):
     ax.set_yticks([])
     plt.show()
     return radii, centroids
+
+
+
+def _circ_dist2(X):
+    '''Given a 1D array of angles, find the 2D array of pair0wise differences'''
+    x = np.outer(np.exp(1j*X), np.ones(X.size))
+    y = np.transpose(x)
+    diff = x/y
+    return np.angle(diff)
 
 
 # Polygon area, from https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
@@ -319,10 +361,9 @@ if __name__ == '__main__':
     #bnt = spio.loadmat(bnt_output)
     print("Data loaded")
     
-    i = 23
+    i = 6
     acorr = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['aCorr'][0,0]
     gscore = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['gridScore'][0,0][0,0]
     
-    gsop, gsgs = gridscore(acorr, debug=True)
-    print(gsgs['ellipse_theta'])
+    gsop= gridscore(acorr, debug=True)
     print(gsop)
