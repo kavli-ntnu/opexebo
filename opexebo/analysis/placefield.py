@@ -112,7 +112,7 @@ def placefield(firing_map, **kwargs):
 
     bkg = sep.Background(firing_map, mask=firing_map_mask, fw=2, fh=2, \
                          bw=int(firing_map.shape[0]), bh=int(firing_map.shape[1]))
-    init_fields = sep.extract(firing_map-bkg, mask=firing_map_mask, thresh=1.5, \
+    init_fields = sep.extract(firing_map-bkg, mask=firing_map_mask, thresh=2, \
                               err=bkg.globalrms)   
     
     if peak_coords is None:
@@ -207,9 +207,8 @@ def placefield(firing_map, **kwargs):
             nu, pixel_list, nu = _area_for_threshold(Iobr, occupancy_mask, peak_rc, init_thresh+0.01, other_fields_linear)
         if len(pixel_list)>0:
             pixels = np.unravel_index(pixel_list, Iobr.shape, 'F')
-            
+            fields_map[pixels] = field_id
         #Iobr[pixels] = max_value * 1.5 # Why? - Horst
-        fields_map[pixels] = field_id
         field_id = field_id + 1
     
     
