@@ -173,7 +173,7 @@ def _findCentreRadius(aCorr, debug):
     peak_coords = np.ones(shape=(1, 2), dtype=np.int)
     peak_coords[0, 0] = halfHeight-1
     peak_coords[0, 1] = halfWidth-1
-    fields = placefield(aCorr, min_bins=2, min_peak=0, peak_coords=peak_coords)[0]
+    fields = placefield(aCorr, min_bins=1, min_peak=0, peak_coords=peak_coords)[0]
     
     if fields is None or len(fields) == 0:
         return 0
