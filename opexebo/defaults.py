@@ -27,6 +27,10 @@ search_method = 'default'   # The method used to find local maxima
 all_methods = (search_method, "sep")    # All implemented means of finding local maxima. 
                                         # These should all be lowercase
 
+
+# Head Direction score
+hd_percentile = 0.95    # Percentile for head drection arc
+
 # Grid Score
 min_orientation = 15    # minimum orientation before a field is considered for Gridness Score  [degrees]
 
