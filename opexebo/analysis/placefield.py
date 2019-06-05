@@ -115,7 +115,8 @@ def placefield(firing_map, **kwargs):
     elif search_method == "sep":
         fmap, peak_coords = _peak_search_sep(peak_coords, firing_map, occupancy_mask)
     else:
-        raise NotImplemented("The search method you have requested (%s) is not yet implemented" % search_method)
+        raise NotImplementedError("The search method you have requested (%s) is \
+                                  not yet implemented" % search_method)
         
     # obtain value of found peaks
     found_peaks = firing_map[peak_coords[:, 0], peak_coords[:, 1]]
@@ -250,7 +251,16 @@ def placefield(firing_map, **kwargs):
     return (fields, fields_map)
 
 
-def _peak_search_skimage(peak_coords, firing_map):
+
+
+#########################################################
+################        Helper Functions
+#########################################################
+
+
+
+
+def _peak_search_skimage(peak_coords, firing_map, **kwargs):
     '''Default peak detection method:erode and then dilate map to remove minor-most peaks
     Then use skimage.morphology.local_maxima to identify peaks
         '''
@@ -286,7 +296,7 @@ def _peak_search_skimage(peak_coords, firing_map):
             peak_coords[i, :] = peak
     return fmap, peak_coords
 
-def _peak_search_sep(peak_coords, firing_map, firing_map_mask):
+def _peak_search_sep(peak_coords, firing_map, firing_map_mask, **kwargs):
     '''Peak search using sep, a Python wrapper for a standard astronomy library.
     sep is typically used to identify astonomical objects in telescope images
     '''
@@ -488,3 +498,37 @@ def _area_for_threshold(I, occupancy_mask, peak_rc, th, other_fields_linear):
 
     return (ar, area_linear_indices, is_bad)
 
+
+
+
+
+if __name__ == '__main__':
+    print("Loading modules")
+    import os
+    import scipy.io as spio
+    import matplotlib.pyplot as plt
+    os.environ['HOMESHARE'] = r'C:\temp\astropy'
+    bnt_output = r'C:\Users\simoba\Documents\_work\Kavli\bntComp\Output\auto_input_file_vars.mat'
+    print("Loading data")
+    #bnt = spio.loadmat(bnt_output)
+    print("Data loaded")
+    
+    i = 16
+    rmap = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['map'][0,0]['z'][0,0]
+    fields, field_map = placefield(rmap, min_peak=0.4, search_method='default')
+    plt.rcParams['figure.figsize'] = [12,12]
+    plt.figure()
+    plt.subplot(2,2,1)
+    plt.title("Ratemap")
+    plt.imshow(rmap)
+    plt.colorbar()
+    plt.subplot(2,2,2)
+    plt.title("Default")
+    plt.imshow(field_map)
+    plt.colorbar()
+    fields, field_map = placefield(rmap, min_peak=0.4, search_method='sep')
+    plt.subplot(2,2,4)
+    plt.title("sep")
+    plt.imshow(field_map)
+    plt.colorbar()
+    

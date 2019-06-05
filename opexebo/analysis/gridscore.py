@@ -40,9 +40,7 @@ def gridscore(aCorr, **kwargs):
             Method passed to opexebo.analysis.placefield for detecting the central 
             peak of aCorr.
             Default and all possible values are stored in opexebo.defaults
-
-    grid_stats = {'ellipse':gs_ellipse, 'ellipse_theta':gs_ellipse_theta,
-                  'spacing':gs_spacing, 'orientation':gs_orientation}    
+   
 
     Returns:
     -------
@@ -65,6 +63,16 @@ def gridscore(aCorr, **kwargs):
             3x1 array giving orientation (in degrees) to closest fields. 
         
     See Also
+    --------
+    BNT.+analyses.gridnessScore
+    opexebo.analysis.placefield
+    
+    Copyright (C) 2018 by Vadim Frolov, (C) 2019 by Simon Ball, Horst Obenhaus
+    
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
     """
     # Arrange keyword arguments
 #    fieldThreshold = kwargs.get("field_threshold", default.field_threshold)
@@ -193,8 +201,6 @@ def _grid_score_stats(bestCorr, **kwargs):
         orientation = np.delete(orientation, centre_index)
         distance = np.delete(distance, centre_index)
         
-
-        
         # Where two fields have a very similar orientation, discard the more distant one
         orient_distsq = np.abs(_circ_dist2(orientation))
         close_fields = orient_distsq < min_orientation  
@@ -215,8 +221,7 @@ def _grid_score_stats(bestCorr, **kwargs):
         all_coords = np.delete(all_coords, to_del, axis=0)
         orientation = np.delete(orientation, to_del)
         # Actual deletion instead of substituting values - this handles cases 
-        # where there are fewer than 6 fields remaining after filtering
-        
+        # where there are fewer than 6 fields remaining after filtering        
         
         # Consider the 6 closest fields -> sort by distance
         # The central point has already been deleted.
@@ -390,5 +395,5 @@ if __name__ == '__main__':
     acorr = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['aCorr'][0,0]
     gscore = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['gridScore'][0,0][0,0]
     
-    gsop= gridscore(acorr, debug=True, search_method='default')
+    gsop = gridscore(acorr, debug=True, search_method='default')
     print(gsop)
