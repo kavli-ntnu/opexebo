@@ -160,62 +160,63 @@ def _grid_score_stats(bestCorr, **kwargs):
     selem = morphology.square(3)
     dilated_img = morphology.dilation(regionalMax, selem)
     labelled_img = morphology.label(dilated_img)
+    #labelled_img[labelled_img==int(np.max(labelled_img)/2)+1] = 0
     
     if np.max(labelled_img) >= 7:
         properties = measure.regionprops(labelled_img, cache=True)
+        
+        centre = -0.5 + np.array(bestCorr.shape)/2 # centre : also [y, x]
         all_coords = np.array([region.centroid for region in properties])
         # x-coords are all_coords[:,1], y are [:,0].
+        
         if debug:
             plt.figure()
             plt.title("Labelled autocorrelogram and ellipse")
             plt.imshow(labelled_img)
             plt.scatter(all_coords[:,1], all_coords[:,0])
         
-        # centre : also [y, x]
-        centre = -0.5 + np.array(bestCorr.shape)/2
+        
         # Bearing from field to centre
         orientation = np.arctan2(all_coords[:,0] - centre[0], all_coords[:,1] - centre[1]) # in radians
         distance = np.sqrt(np.square(all_coords[:,0]-centre[0]) + np.square(all_coords[:,1]-centre[1]))
-        if 0 not in distance:
-            raise ValueError("There is not a peak in the centre of the autocorrelogram")
-        '''
-        #TODO
-        # NOT WORKING CORRECTLY
-        # Filter out fields that have very similar orientation by removing the more distant field
-        orient_distsq = _circ_dist2(orientation)
-        # Ignore lower triangle
-        close_fields = np.ma.MaskedArray(orient_distsq)
-        close_fields.mask = np.zeros(close_fields.shape) # annoyingly, the mask does not default to an array
-        close_fields.mask[np.tril_indices(close_fields.shape[0], 1, close_fields.shape[1])] = True
 
-        close_fields.mask = np.logical_and(close_fields.mask, np.abs(orient_distsq) > min_orientation)
-        # Now masked at all locations that we don't care about
-        # Unmasked elements are pair-wise field combinations that are too close.
-        # Therefore, each unmasked element represents a combination where the more distant field can be disposed of
-        indicies_to_delete = []
-        col, row = np.where(np.logical_not(close_fields.mask))
+        # The centre field really mucks up the later min_orientation filtering
+        # Deleting it here is the best solution I found, but I'm not entirely happy
+        # It's both inefficient and inelegant
+        centre_index = np.where(distance==0)
+        all_coords = np.delete(all_coords, centre_index, axis=0)
+        orientation = np.delete(orientation, centre_index)
+        distance = np.delete(distance, centre_index)
+
+        
+        # Where two fields have a very similar orientation, discard the more distant one
+        orient_distsq = np.abs(_circ_dist2(orientation))
+        close_fields = orient_distsq < min_orientation  
+        close_fields = np.triu(close_fields, 1) # Upper triangle only - set lower triangle to zero
+                                                # k=1: +1 offset from diagonal: set diagonal to zero too
+        row, col = np.where(close_fields)
+        to_del = np.zeros(row.size) # this is more efficient than appending to a list
         for i in range(row.size):
             r = row[i]
             c = col[i]
             if distance[r] > distance[c]:
-                indicies_to_delete.append(r)
+                j = r
             else:
-                indicies_to_delete.append(c)
-        indicies_to_delete = np.unique(indicies_to_delete)
-        # "delete" the undesirable fields by setting their values such that they must be excluded by the sorting
-        distance[indicies_to_delete] = 3*bestCorr.size
-           ''' 
-            
-        
-        
+                j = c
+            to_del[i] = int(j)
+        to_del = np.unique(to_del).astype(int) # this gets rid of all the zeros
+        distance[to_del] = np.nanmax(distance)
+        # filter out the undesirable fields by setting their values such that 
+        #they must be excluded by the sorting
+
         
         # Consider the 6 closest fields -> sort by distance
-        # Exclude the lowest value (which must be zero, because the central point is at the centre)
+        # The central point has already been deleted.
         # Positions needs all 6 indicies, in order to calculate the ellipse
         # Discard the duplicate values -> because they're floating point, don't use np.unique()
         # Instead, use array slicing: sort by size, and then take every 2nd value
         # Numpy slicing: [start:stop:step]
-        sorted_ids = np.argsort(distance)[1:7]
+        sorted_ids = np.argsort(distance)[:6]
         positions = all_coords[sorted_ids,:]
         gs_spacing = distance[sorted_ids[::2]]
         gs_orientation = orientation[sorted_ids[::2]]
@@ -224,12 +225,16 @@ def _grid_score_stats(bestCorr, **kwargs):
         # Fit an ellipse to those remaining fields:
         gs_ellipse =  opexebo.general.fitellipse(positions[:,1], positions[:,0])
         gs_ellipse_theta = np.degrees(gs_ellipse[4]+np.pi)%360
+        # The +pi term was included in the original BNT, I have kept it to 
+        # maintain consistency with past results. 
+        
         
         if debug:
             a, b, c, d, e = gs_ellipse
             _draw_ellipse(a, b, c, d, e)
             plt.scatter(positions[:,1], positions[:,0])
-        
+    
+    # Not sure whether a list or dictionary is preferred here.
     grid_stats = {'ellipse':gs_ellipse, 'ellipse_theta':gs_ellipse_theta,
                   'spacing':gs_spacing, 'orientation':gs_orientation}
     #grid_stats = [gs_ellipse, gs_ellipse_theta, gs_spacing, gs_orientation]
@@ -278,11 +283,11 @@ def _plotContours(img, contours):
 
 
 def _circ_dist2(X):
-    '''Given a 1D array of angles, find the 2D array of pair0wise differences'''
-    x = np.outer(np.exp(1j*X), np.ones(X.size))
+    '''Given a 1D array of angles, find the 2D array of pairwise differences
+    Based on https://github.com/circstat/circstat-matlab/blob/master/circ_dist2.m'''
+    x = np.outer(np.exp(1j*X), np.ones(X.size)) # similar to meshgrid, but simpler to implement
     y = np.transpose(x)
-    diff = x/y
-    return np.angle(diff)
+    return np.angle(x/y)
 
 
 # Polygon area, from https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
@@ -361,7 +366,7 @@ if __name__ == '__main__':
     #bnt = spio.loadmat(bnt_output)
     print("Data loaded")
     
-    i = 6
+    i = 9
     acorr = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['aCorr'][0,0]
     gscore = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['gridScore'][0,0][0,0]
     

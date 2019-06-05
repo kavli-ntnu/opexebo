@@ -25,7 +25,6 @@ firing_field_min_mean = 0   # Minimum mean firing rate for a firing field to be 
 
 
 # Grid Score
-field_threshold = 0.2   # The default threshold to search for firing fields
 min_orientation = 15    # minimum orientation before a field is considered for Gridness Score  [degrees]
 
 
