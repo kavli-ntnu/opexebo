@@ -36,6 +36,10 @@ def gridscore(aCorr, **kwargs):
     **kwargs
         'debug' : bool
             if true, output debugging information. Default False
+        'search_method' : str
+            Method passed to opexebo.analysis.placefield for detecting the central 
+            peak of aCorr.
+            Default and all possible values are stored in opexebo.defaults
 
     grid_stats = {'ellipse':gs_ellipse, 'ellipse_theta':gs_ellipse_theta,
                   'spacing':gs_spacing, 'orientation':gs_orientation}    
@@ -70,11 +74,11 @@ def gridscore(aCorr, **kwargs):
     
     # normalize aCorr in order to find contours
     aCorr = aCorr / aCorr.max()
-    cFieldRadius = int( np.floor(_findCentreRadius(aCorr)) )
+    cFieldRadius = int( np.floor(_findCentreRadius(aCorr, **kwargs)) )
     if debug:
         print("Center radius is {}".format(cFieldRadius))
 
-    if cFieldRadius in [-1, 0, 1] or cFieldRadius[0] > .8*aCorr.shape[0]/2 or cFieldRadius[0] > .8*aCorr.shape[1]/2:
+    if cFieldRadius in [-1, 0, 1]:# or cFieldRadius[0] > .8*aCorr.shape[0]/2 or cFieldRadius[0] > .8*aCorr.shape[1]/2:
         return (np.nan, _grid_score_stats(np.zeros(aCorr.shape)))
 
     halfHeight = np.ceil(aCorr.shape[0]/2)
@@ -319,16 +323,17 @@ def _contourArea(contours, i):
     return area
 
 
-def _findCentreRadius(aCorr):
+def _findCentreRadius(aCorr, **kwargs):
     centroids = []
     radii = []
+    
 
     halfHeight = np.ceil(aCorr.shape[0]/2)
     halfWidth = np.ceil(aCorr.shape[1]/2)
     peak_coords = np.ones(shape=(1, 2), dtype=np.int)
     peak_coords[0, 0] = halfHeight-1
     peak_coords[0, 1] = halfWidth-1
-    fields = opexebo.analysis.placefield(aCorr, min_bins=2, min_peak=0, peak_coords=peak_coords)[0]
+    fields = opexebo.analysis.placefield(aCorr, min_bins=2, min_peak=0, peak_coords=peak_coords, **kwargs)[0]
     if fields is None or len(fields) == 0:
         return 0
 
@@ -385,5 +390,5 @@ if __name__ == '__main__':
     acorr = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['aCorr'][0,0]
     gscore = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['gridScore'][0,0][0,0]
     
-    gsop= gridscore(acorr, debug=True)
+    gsop= gridscore(acorr, debug=True, search_method='default')
     print(gsop)
