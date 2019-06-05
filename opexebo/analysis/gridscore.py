@@ -74,7 +74,7 @@ def gridscore(aCorr, **kwargs):
     if debug:
         print("Center radius is {}".format(cFieldRadius))
 
-    if cFieldRadius in [-1, 0, 1]:
+    if cFieldRadius in [-1, 0, 1] or cFieldRadius[0] > .8*aCorr.shape[0]/2 or cFieldRadius[0] > .8*aCorr.shape[1]/2:
         return (np.nan, _grid_score_stats(np.zeros(aCorr.shape)))
 
     halfHeight = np.ceil(aCorr.shape[0]/2)
