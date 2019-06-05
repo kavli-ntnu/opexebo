@@ -16,7 +16,7 @@ from opexebo import analysis
 from opexebo import general
 from opexebo import defaults
 
-__author__ = """Vadim Frolov"""
-__email__ = 'vadim.frolov@ntnu.no'
+__author__ = """Simon Ball"""
+__email__ = 'simon.ball@ntnu.no'
 __version__ = '0.1.0'
 
