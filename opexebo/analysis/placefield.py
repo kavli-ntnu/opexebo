@@ -6,6 +6,7 @@ import numpy as np
 
 from scipy import ndimage
 from skimage import measure, morphology             # scikit-image package
+import sep
 import opexebo.defaults as default
 
 
@@ -35,6 +36,12 @@ def placefield(firing_map, **kwargs):
         min_mean : float
             Fields with a mean firing rate lower than this absolute value will 
             be discarded. Default 0 Hz
+        init_thresh : float
+            Initial threshold to search for fields from. Must be in the range [0, 1].
+            Default 0.96
+        search_method : str
+            Peak detection finding method. By default, use skimage.morphology.local_maxima
+            Acceptable values are defined in opexebo.defaults.
         peak_coords : array-like
             List of peak co-ordinates to consider instead of auto detection
             Default None
@@ -59,7 +66,7 @@ def placefield(firing_map, **kwargs):
     BNT.+analyses.placefieldAdaptive
     https://se.mathworks.com/help/images/understanding-morphological-reconstruction.html
     
-    Copyright (C) 2018 by Vadim Frolov, (C) 2019 by Simon Ball
+    Copyright (C) 2018 by Vadim Frolov, (C) 2019 by Simon Ball, Horst Obenhaus
     
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -72,8 +79,18 @@ def placefield(firing_map, **kwargs):
     min_bins = kwargs.get("min_bins", default.firing_field_min_bins)
     min_peak = kwargs.get("min_peak", default.firing_field_min_peak)
     min_mean = kwargs.get("min_mean", default.firing_field_min_mean)
+    init_thresh = kwargs.get("init_thresh", default.initial_search_threshold)
+    search_method = kwargs.get("search_method", default.search_method).lower()
     peak_coords = kwargs.get("peak_coords", None)
     debug = kwargs.get("debug", False)
+    
+    if not 0 <= init_thresh <= 1:
+        raise ValueError("Keyword 'init_thresh' must be in the range [0, 1]. \
+                         You provided %.2f" % init_thresh)
+    if search_method not in default.all_methods:
+        raise ValueError("Keyword 'search_method' must be left blank or given a \
+                         value from the following list: %s. You provided '%s'."\
+                         % (default.all_methods, search_method) )
     
     global_peak = np.nanmax(firing_map)
     if np.isnan(global_peak) or global_peak == 0:
@@ -84,47 +101,22 @@ def placefield(firing_map, **kwargs):
     # True if the animal did NOT visit that bin
     if type(firing_map) == np.ma.MaskedArray:
         occupancy_mask = firing_map.mask
+        firing_map = firing_map.data
     else:
-        occupancy_mask = np.isnan(firing_map)
-    firing_map = np.nan_to_num(firing_map, copy=True)
+        occupancy_mask = np.ones_like(firing_map).astype('bool')
+        occupancy_mask[np.isnan(firing_map)] = False
+        firing_map = np.nan_to_num(firing_map, copy=True)
     
     
-    '''Part 2: find local maxima'''        
-    # disc structural element of size 1
-    se = morphology.disk(1)
-    Ie = morphology.erosion(firing_map, se)
-    Iobr = morphology.reconstruction(Ie, firing_map)
-    # The effect of this erosion/reconstruction is to reduce value of cells 
-    # around local maxima of the firing map. This can be shown, for instance, by
-    # plt.imshow(np.ma.masked_where(firing_map-Iobr!=0, firing_map))
-    # Also well explained here 
-    # https://se.mathworks.com/help/images/understanding-morphological-reconstruction.html
-    # Not 100% clear on the exact purpose -Simon
-    # However, it *seems* as if it may act to suppress very small local maxima
-
-
-    # this is regionmax equivalent
-    regionalMaxMap = morphology.local_maxima(Iobr)
-
-    # regionprops works on labeled iamge, so we have to convert binary to labeled
-    labeled_max = measure.label(regionalMaxMap)
-    regions = measure.regionprops(labeled_max)
-
-    if peak_coords is None:
-        peak_coords = np.zeros(shape=(len(regions), 2), dtype=np.int)
-
-        for i, props in enumerate(regions):
-            y0, x0 = props.centroid
-            peak = np.array([y0, x0])
-            peak = np.round(peak)
-            # ensure that there are no peaks off the map (due to rounding)
-            peak[peak < 0] = 0
-            for j in range(firing_map.ndim):
-                if peak[j] > firing_map.shape[j]:
-                    peak[j] = firing_map.shape[j] - 1
-
-            peak_coords[i, :] = peak
-
+    '''Part 2: find local maxima'''
+    # Based on the user-requested search method, find the co-ordinates of local maxima
+    if search_method == default.search_method:
+        fmap, peak_coords = _peak_search_skimage(peak_coords, firing_map)        
+    elif search_method == "sep":
+        fmap, peak_coords = _peak_search_sep(peak_coords, firing_map, occupancy_mask)
+    else:
+        raise NotImplemented("The search method you have requested (%s) is not yet implemented" % search_method)
+        
     # obtain value of found peaks
     found_peaks = firing_map[peak_coords[:, 0], peak_coords[:, 1]]
 
@@ -134,19 +126,19 @@ def placefield(firing_map, **kwargs):
 
 
     '''Part 3: From local maxima, get fields by expanding around maxima'''
-    max_value = np.max(Iobr)
+    max_value = np.max(fmap)
     # prevent peaks with small values from being detected
     # SWB - This causes problems where a local peak is next to a cell that the animal never went
     # As that risks the field becoming the entire null region
     # Therefore, adding 2nd criterion to avoid adding information where none was actually known. 
-    Iobr[np.logical_and(Iobr < min_peak, Iobr > 0.01)] = max_value * 1.5
+    fmap[np.logical_and(fmap < min_peak, fmap > 0.01)] = max_value * 1.5
 
     # this can be confusing, but this variable is just an index for the vector
     # peak_linear_ind
     peaks_index = np.arange(len(peak_coords))
 
 
-    fields_map = np.zeros(Iobr.shape, dtype=np.integer)
+    fields_map = np.zeros(fmap.shape, dtype=np.integer)
     field_id = 1
 
     for i, peak_rc in enumerate(peak_coords):
@@ -157,19 +149,19 @@ def placefield(firing_map, **kwargs):
         if other_fields.size > 0:
             other_fields_linear = np.ravel_multi_index(
                     multi_index=(other_fields[:, 0], other_fields[:, 1]),
-                    dims=Iobr.shape, order='F')
+                    dims=fmap.shape, order='F')
         else:
             other_fields_linear = []
 
-        used_th = 0.96
-        res = _area_change(Iobr, occupancy_mask, peak_rc, 0.96, 0.94, other_fields_linear)
+        used_th = init_thresh
+        res = _area_change(fmap, occupancy_mask, peak_rc, used_th, used_th-0.02, other_fields_linear)
         initial_change = res['acceleration']
         area2 = res['area2']
         first_pixels = np.nan
         if np.isnan(initial_change):
-            for j in np.linspace(0.97, 1., 4):
+            for j in np.linspace(used_th+0.01, 1., 4):
                 # Thresholds get higher, area should tend downwards to 1 (i.e. only including the actual peak)
-                res = _area_change(Iobr, occupancy_mask, peak_rc, j, j-0.01, other_fields_linear)
+                res = _area_change(fmap, occupancy_mask, peak_rc, j, j-0.01, other_fields_linear)
                 initial_change = res['acceleration']
                 area1 = res['area1']
                 area2 = res['area2']
@@ -188,8 +180,8 @@ def placefield(firing_map, **kwargs):
 
             if np.isnan(initial_change) and not np.isnan(area1):
                 # For the final change
-                pixels = np.unravel_index(first_pixels, Iobr.shape, 'F')
-                Iobr[pixels] = max_value * 1.5
+                pixels = np.unravel_index(first_pixels, fmap.shape, 'F')
+                fmap[pixels] = max_value * 1.5
                 fields_map[pixels] = field_id
                 field_id = field_id + 1
 
@@ -198,17 +190,17 @@ def placefield(firing_map, **kwargs):
                 # Do nothing and continue for-loop
                 pass
 
-        pixel_list = _expand_field(Iobr, occupancy_mask, peak_rc, initial_change, area2,
+        pixel_list = _expand_field(fmap, occupancy_mask, peak_rc, initial_change, area2,
                                    other_fields_linear, used_th)
         if np.any(np.isnan(pixel_list)):
             # nu - not used
-            nu, pixel_list, nu = _area_for_threshold(Iobr, occupancy_mask, peak_rc, used_th+0.01, other_fields_linear)
+            nu, pixel_list, nu = _area_for_threshold(fmap, occupancy_mask, peak_rc, used_th+0.01, other_fields_linear)
         if len(pixel_list)>0:
-            pixels = np.unravel_index(pixel_list, Iobr.shape, 'F')
+            pixels = np.unravel_index(pixel_list, fmap.shape, 'F')
         else:
             pixels = []
             
-        Iobr[pixels] = max_value * 1.5
+        fmap[pixels] = max_value * 1.5
         fields_map[pixels] = field_id
         field_id = field_id + 1
     
@@ -260,6 +252,70 @@ def placefield(firing_map, **kwargs):
 
     return (fields, fields_map)
 
+
+def _peak_search_skimage(peak_coords, firing_map):
+    '''Default peak detection method:erode and then dilate map to remove minor-most peaks
+    Then use skimage.morphology.local_maxima to identify peaks
+        '''
+    se = morphology.disk(1)
+    Ie = morphology.erosion(firing_map, se)
+    Iobr = morphology.reconstruction(Ie, firing_map)
+    # The effect of this erosion/reconstruction is to reduce value of cells 
+    # around local maxima of the firing map. This can be shown, for instance, by
+    # plt.imshow(np.ma.masked_where(firing_map-Iobr!=0, firing_map))
+    # Also well explained here 
+    # https://se.mathworks.com/help/images/understanding-morphological-reconstruction.html
+    # Not 100% clear on the exact purpose -Simon
+    # However, it *seems* as if it may act to suppress very small local maxima
+    regionalMaxMap = morphology.local_maxima(Iobr)
+    labeled_max = measure.label(regionalMaxMap, connectivity=2)
+    
+    regions = measure.regionprops(labeled_max)
+    fmap = Iobr
+    
+    if peak_coords is None:
+        peak_coords = np.zeros(shape=(len(regions), 2), dtype=np.int)
+
+        for i, props in enumerate(regions):
+            y0, x0 = props.centroid
+            peak = np.array([y0, x0])
+            
+            # ensure that there are no peaks off the map (due to rounding)
+            peak[peak < 0] = 0
+            for j in range(firing_map.ndim):
+                if peak[j] > firing_map.shape[j]:
+                    peak[j] = firing_map.shape[j] - 1
+
+            peak_coords[i, :] = peak
+    return fmap, peak_coords
+
+def _peak_search_sep(peak_coords, firing_map, firing_map_mask):
+    '''Peak search using sep, a Python wrapper for a standard astronomy library.
+    sep is typically used to identify astonomical objects in telescope images
+    '''
+    tmp_firing_map = firing_map.copy('C')
+    tmp_mask = firing_map_mask.copy(order='C')
+    bkg = sep.Background(tmp_firing_map, mask=tmp_mask, fw=2, fh=2, \
+                     bw=int(tmp_firing_map.shape[0]), bh=int(tmp_firing_map.shape[1]))
+    init_fields = sep.extract(tmp_firing_map-bkg, mask=tmp_mask, thresh=2, \
+                          err=bkg.globalrms) 
+    
+    fmap = firing_map.copy()
+    
+    if peak_coords is None:
+        peak_coords = np.zeros(shape=(len(init_fields), 2), dtype=np.int)
+
+        for i, props in enumerate(init_fields):
+            peak = np.array([props['y'], props['x']])
+            peak = np.round(peak)
+            # ensure that there are no peaks off the map (due to rounding)
+            peak[peak < 0] = 0
+            for j in range(firing_map.ndim):
+                if peak[j] > firing_map.shape[j]:
+                    peak[j] = firing_map.shape[j] - 1
+
+            peak_coords[i, :] = peak
+    return fmap, peak_coords
 
 def _expand_field(I, occupancy_mask, peak_rc, initial_change, initial_area, other_fields_linear, initial_th):
     '''
@@ -434,4 +490,3 @@ def _area_for_threshold(I, occupancy_mask, peak_rc, th, other_fields_linear):
         is_bad = len(np.intersect1d(area_linear_indices, other_fields_linear)) > 0 # True if any other local maxima occur within this field
 
     return (ar, area_linear_indices, is_bad)
-

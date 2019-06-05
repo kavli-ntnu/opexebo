@@ -19,10 +19,13 @@ mask_fill = 0         # Used to define the behaviour of smoothing around masked 
 
 
 # Firing field related
+initial_search_threshold = 0.96 
 firing_field_min_bins = 9   # Minimum number of bins for a firing field to be valid [bins]
 firing_field_min_peak = 1   # Minimum peak firing rate for a firing field to be valid [Hz]
 firing_field_min_mean = 0   # Minimum mean firing rate for a firing field to be valid [Hz]
-
+search_method = 'default'   # The method used to find local maxima
+all_methods = (search_method, "sep")    # All implemented means of finding local maxima. 
+                                        # These should all be lowercase
 
 # Grid Score
 min_orientation = 15    # minimum orientation before a field is considered for Gridness Score  [degrees]
