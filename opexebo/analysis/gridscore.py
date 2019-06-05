@@ -165,6 +165,7 @@ def _grid_score_stats(bestCorr, **kwargs):
     if np.max(labelled_img) >= 7:
         properties = measure.regionprops(labelled_img, cache=True)
         
+        # Typical shape is 71x71 -> central bin is 35,35
         centre = -0.5 + np.array(bestCorr.shape)/2 # centre : also [y, x]
         all_coords = np.array([region.centroid for region in properties])
         # x-coords are all_coords[:,1], y are [:,0].
@@ -187,6 +188,7 @@ def _grid_score_stats(bestCorr, **kwargs):
         all_coords = np.delete(all_coords, centre_index, axis=0)
         orientation = np.delete(orientation, centre_index)
         distance = np.delete(distance, centre_index)
+        
 
         
         # Where two fields have a very similar orientation, discard the more distant one
@@ -205,10 +207,12 @@ def _grid_score_stats(bestCorr, **kwargs):
                 j = c
             to_del[i] = int(j)
         to_del = np.unique(to_del).astype(int) # this gets rid of all the zeros
-        distance[to_del] = np.nanmax(distance)
-        # filter out the undesirable fields by setting their values such that 
-        #they must be excluded by the sorting
-
+        distance = np.delete(distance, to_del)
+        all_coords = np.delete(all_coords, to_del, axis=0)
+        orientation = np.delete(orientation, to_del)
+        # Actual deletion instead of substituting values - this handles cases 
+        # where there are fewer than 6 fields remaining after filtering
+        
         
         # Consider the 6 closest fields -> sort by distance
         # The central point has already been deleted.
@@ -220,7 +224,18 @@ def _grid_score_stats(bestCorr, **kwargs):
         positions = all_coords[sorted_ids,:]
         gs_spacing = distance[sorted_ids[::2]]
         gs_orientation = orientation[sorted_ids[::2]]
-        gs_orientation = np.degrees(gs_orientation) # convert from rad to deg
+        gs_orientation = np.degrees(gs_orientation)%180 # convert from rad to deg and wrap into [0-180]°
+        
+        # Sometimes there are not sufficient fields to yield 3 spacing, orientation
+        # In these cases, pad the arrays out tot he expected length with NaN
+        if gs_spacing.size < 3:
+            tmp = np.full(3, fill_value = np.nan, dtype=float)       
+            tmp[:gs_spacing.size] = gs_spacing
+            gs_spacing = tmp
+        if gs_orientation.size < 3:
+            tmp = np.full(3, fill_value = np.nan, dtype=float) 
+            tmp[:gs_orientation.size] = gs_orientation            
+            gs_orientation = tmp
         
         # Fit an ellipse to those remaining fields:
         gs_ellipse =  opexebo.general.fitellipse(positions[:,1], positions[:,0])
@@ -366,7 +381,7 @@ if __name__ == '__main__':
     #bnt = spio.loadmat(bnt_output)
     print("Data loaded")
     
-    i = 9
+    i = 199
     acorr = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['aCorr'][0,0]
     gscore = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['gridScore'][0,0][0,0]
     
