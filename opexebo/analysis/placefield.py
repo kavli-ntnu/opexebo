@@ -103,8 +103,8 @@ def placefield(firing_map, **kwargs):
         occupancy_mask = firing_map.mask
         firing_map = firing_map.data
     else:
-        occupancy_mask = np.ones_like(firing_map).astype('bool')
-        occupancy_mask[np.isnan(firing_map)] = False
+        occupancy_mask = np.zeros_like(firing_map).astype('bool')
+        occupancy_mask[np.isnan(firing_map)] = True
         firing_map = np.nan_to_num(firing_map, copy=True)
     
     
@@ -136,11 +136,8 @@ def placefield(firing_map, **kwargs):
     # this can be confusing, but this variable is just an index for the vector
     # peak_linear_ind
     peaks_index = np.arange(len(peak_coords))
-
-
     fields_map = np.zeros(fmap.shape, dtype=np.integer)
     field_id = 1
-
     for i, peak_rc in enumerate(peak_coords):
         # peak_rc == [row, col]
 
@@ -249,7 +246,7 @@ def placefield(firing_map, **kwargs):
             # Field too small and debugging information not needed
             # Do nothing
             pass
-
+    fields_map = np.ma.masked_where(occupancy_mask, fields_map)
     return (fields, fields_map)
 
 
@@ -490,3 +487,4 @@ def _area_for_threshold(I, occupancy_mask, peak_rc, th, other_fields_linear):
         is_bad = len(np.intersect1d(area_linear_indices, other_fields_linear)) > 0 # True if any other local maxima occur within this field
 
     return (ar, area_linear_indices, is_bad)
+
