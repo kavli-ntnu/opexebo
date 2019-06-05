@@ -17,6 +17,7 @@ def bordercoverage(fields, **kwargs):
     is a better way to do this - it only tells you that *a* field (it doesn't tell 
     you which one) has coverage of *a* border (it doesn't tell you which one)).
     
+    
     It seems like there should be a better way of doing this
         (e.g. return a vector of coverage, i.e. a value for each border checked, and 
         return an index of the best field for each border, or something similar)
@@ -75,17 +76,17 @@ def bordercoverage(fields, **kwargs):
     for field in fields:
         fmap = field['map'] # binary image of field: values are 1 inside field, 0 outside
         if "l" in walls:
-            aux_map = fmap[:,:sw]
+            aux_map = fmap[:,:sw].copy()
             c = _wall_field(aux_map)
             if c > coverage:
-                coverage = c   
+                coverage = c
         
         if "r" in walls:
-            aux_map = fmap[:, -sw:]
+            aux_map = fmap[:, -sw:].copy()
             aux_map = np.fliplr(aux_map) # Mirror image to match the expectations in _wall_field, i.e. border adjacent to left-most column
             c = _wall_field(aux_map)
             if c > coverage:
-                coverage = c  
+                coverage = c
         
         # since we are dealing with data that came from a camera
         #'bottom' is actually at the top of the matrix fmap
@@ -96,18 +97,18 @@ def bordercoverage(fields, **kwargs):
         # arrays that are upside-down compared to Vadim's version, 
         # BUT the left/right is correct.
         if "b" in walls:
-            aux_map = fmap[:sw, :]
+            aux_map = fmap[:sw, :].copy()
             aux_map = np.rot90(aux_map) # Rotate counterclockwise - top of image moves to left of image
             c = _wall_field(aux_map)
             if c > coverage:
                 coverage = c
         
         if "t" in walls:
-            aux_map = fmap[-sw:, :]
+            aux_map = fmap[-sw:, :].copy()
             aux_map = np.fliplr(np.rot90(aux_map)) # rotate 90 deg counter clockwise (bottom to right), then mirror image
             c = _wall_field(aux_map)
             if c > coverage:
-                coverage = c  
+                coverage = c
             
     return coverage
     
@@ -131,6 +132,7 @@ def _wall_field(wfmap):
     if type(wfmap) != np.ma.MaskedArray:
         wfmap = np.ma.asanyarray(wfmap)
     N = wfmap.shape[0]
+    wfmap[wfmap>1] = 1 # Just in case a still-labelled map has crept in
     inverted_wfmap = 1-wfmap 
     distance = distance_transform_edt(inverted_wfmap)
     distance = np.ma.masked_where(wfmap.mask, distance) # Preserve masking
