@@ -4,7 +4,7 @@
 
 # spatial/angular occupancy
 bin_width = 2.5         # Standard spatial resolution, [cm]
-bin_angle = 15        # Standard angular bin **quantity**, integer
+bin_angle = 15        # Standard angular bin width [degree]
 bin_speed = 5 			# Standard speed bin, [cm/s]
 speed_cutoff = 0   # Standard speed cutoff below which to ignore positions [cm/s]
 

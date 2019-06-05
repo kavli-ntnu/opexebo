@@ -85,7 +85,7 @@ def accumulatespatial(pos, **kwargs):
     
     
     arena_size, is_2d = validatekeyword__arena_size(arena_size, dims)
-    num_bins = np.ceil(arena_size / bin_width)
+    num_bins = int(np.ceil(arena_size / bin_width))
     
     
 
