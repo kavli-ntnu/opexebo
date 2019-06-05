@@ -50,6 +50,8 @@ def fitellipse(X, Y, **kwargs):
     
     See also
     --------
+    BNT.+general.fitEllipse
+    opexebo.analysis.gridscore
     '''
     debug = kwargs.get('debug', False)
     if X.size != Y.size:
