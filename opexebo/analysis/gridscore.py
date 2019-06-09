@@ -40,6 +40,8 @@ def gridscore(aCorr, **kwargs):
             Method passed to opexebo.analysis.placefield for detecting the central
             peak of aCorr.
             Default and all possible values are stored in opexebo.defaults
+        'min_orientation' : int
+            See function "grid_score_stats"
 
 
     Returns:
@@ -85,7 +87,7 @@ def gridscore(aCorr, **kwargs):
         print("Center radius is {}".format(cFieldRadius))
 
     if cFieldRadius in [-1, 0, 1]:
-        return (np.nan, _grid_score_stats(np.zeros(aCorr.shape)))
+        return (np.nan, grid_score_stats(np.zeros(aCorr.shape)))
 
     halfHeight = np.ceil(aCorr.shape[0]/2)
     halfWidth  = np.ceil(aCorr.shape[1]/2)
