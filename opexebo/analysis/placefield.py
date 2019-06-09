@@ -49,17 +49,16 @@ def placefield(firing_map, **kwargs):
     Returns
     -------
     fields      : list (of dict)
-        'coords'        : np.ndarray    : Co-ordinates of all bins in the firing field
-        'peak_coords'   : np.ndarray    : Co-ordinates of the cell with the peak firing rate
-        'area'          : int           : Number of bins in firing field. [bins]
-        'bbox'          : tuple         : Co-ordinates of bounding box including the firing field (y_min, x_min, y_max, y_max)
-        'x'             : float         : x co-ordinate of centroid. (decimal) [bins]
-        'y'             : float         : y co-ordinate of centroid. (decimal) [bins]
-        'mean_rate'     : float         : mean firing rate [Hz]
-        'peak_rate'     : float         : peak firing rate [Hz]
-        'map'           : np.ndarray    : Binary map of arena. Cells inside firing field have value 1, all other cells have value 0
+        'coords'         : np.ndarray    : Coordinates of all bins in the firing field
+        'peak_coords'    : np.ndarray    : Coordinates peak firing rate [y,x]
+        'centroid_coords': np.ndarray    : Coordinates of centroid (decimal) [y,x]
+        'area'           : int           : Number of bins in firing field. [bins]
+        'bbox'           : tuple         : Coordinates of bounding box including the firing field (y_min, x_min, y_max, y_max)
+        'mean_rate'      : float         : mean firing rate [Hz]
+        'peak_rate'      : float         : peak firing rate [Hz]
+        'map'            : np.ndarray    : Binary map of arena. Cells inside firing field have value 1, all other cells have value 0
     fields_map  : np.ndarray
-        labelled integer image (i.e. background = 0, field 1 = 1, field2 = 2, etc)
+        labelled integer image (i.e. background = 0, field1 = 1, field2 = 2, etc.)
 
     See also
     --------
@@ -224,10 +223,7 @@ def placefield(firing_map, **kwargs):
             field['peak_coords'] = peak_coords
             field['area'] = region.area
             field['bbox'] = region.bbox
-
-            field['x'] = region.centroid[0]
-            field['y'] = region.centroid[1]
-
+            field['centroid_coords'] = region.centroid
             field['mean_rate'] = mean_rate
             field['peak_rate'] = peak_rate
             mask = np.zeros(firing_map.shape)
