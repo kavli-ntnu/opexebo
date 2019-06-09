@@ -87,7 +87,7 @@ def gridscore(aCorr, **kwargs):
         print("Center radius is {}".format(cFieldRadius))
 
     if cFieldRadius in [-1, 0, 1]:
-        return (np.nan, grid_score_stats(np.zeros(aCorr.shape)))
+        return (np.nan, grid_score_stats(np.zeros(aCorr.shape), cFieldRadius))
 
     halfHeight = np.ceil(aCorr.shape[0]/2)
     halfWidth  = np.ceil(aCorr.shape[1]/2)
@@ -209,7 +209,7 @@ def grid_score_stats(bestCorr, cFieldRadius, **kwargs):
 
     centre = -0.5 + np.array(bestCorr.shape)/2 # centre : also [y, x]
     # Mask center field
-    mask = _circular_mask(bestCorr, cFieldRadius*1.5, 'inwards', centre)
+    mask = _circular_mask(bestCorr, cFieldRadius*1.5, 'inwards', centre) # CONSIDER MAKING THIS AN ARGUMENT
     bestCorr_masked = bestCorr.copy()
     bestCorr_masked[mask] = 0
 
@@ -220,10 +220,10 @@ def grid_score_stats(bestCorr, cFieldRadius, **kwargs):
     labelled_img = morphology.label(dilated_img)
 
     # Filter local maxima
-    properties = measure.regionprops(labelled_img, intensity_image=bestCorr)
+    properties = measure.regionprops(labelled_img, intensity_image=bestCorr_masked)
     all_coords = np.array([region.centroid for region in properties])
     all_intens = np.array([region.mean_intensity for region in properties])
-    all_coords = all_coords[all_intens >= .25] # Filter out fields with < 25% intensity of max
+    all_coords = all_coords[all_intens >= .1] # Filter out fields with < 10% intensity of max # CONSIDER MAKING THIS AN ARGUMENT
 
     # Calculate orientation and distance of all local maxima to center
     orientation = np.arctan2(all_coords[:,0] - centre[0], all_coords[:,1] - centre[1]) # in radians
