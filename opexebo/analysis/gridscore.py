@@ -142,21 +142,65 @@ def gridscore(aCorr, **kwargs):
 
     '''Then calculate stats about the autocorrelogram'''
     bestCorr = (mainCircle < radii[gscoreInd]*1.25) * aCorr
-    gstats = _grid_score_stats(bestCorr, cFieldRadius,  **kwargs)
+    gstats = grid_score_stats(bestCorr, cFieldRadius,  **kwargs)
 
     return (gscore, gstats)
 
+#########################################################
+################        Helper Functions
+#########################################################
 
-def _grid_score_stats(bestCorr, cFieldRadius, **kwargs):
+def grid_score_stats(bestCorr, cFieldRadius, **kwargs):
+    '''
+    Calculate spatial characteristics of grid based on 2D autocorr
+
+    Arguments:
+    ----------
+    bestCorr : np.array
+        2D Autocorrelation, masked beyond radius of best grid score
+    cFieldRadius : int
+        Center field radius as returned by "_findCentreRadius"
+    **kwargs :
+        'debug' : bool
+            Print debug information / create figure
+        'min_orientation' : int
+            Minimum difference in degrees that two neighbouring fields
+            detected in 2D autocorrelation must have. If difference is
+            below this threshold, discard the field that has larger
+            distance from center
+
+    Returns:
+    --------
+    grid_stats : dictionary
+        'spacings' : np.array
+            Spacing of three adjacent fields closest to center in autocorr (in [bins])
+        'spacing' : float
+            Nanmean of spacings in [bins]
+        'orientations' : np.array
+            Orientation of three adjacent fields closest to center in autocorr (in degrees)
+        'orientations_std' : float
+            Standard deviation of orientations % 60
+        'orientation' : float
+            Orientation of grid in degrees (mean of fields of 3 main axes)
+        'positions' : np.array
+            [y,x] coordinates of six fields closest to center
+        'ellipse' : np.array
+            Ellipse fit returning [x coordinate, y coordinate, major radius, minor radius, theta]
+        'ellipse_aspect_ratio' : float
+            Ellipse aspect ratio (major radius / minor radius)
+        'ellipse_theta' : float
+            Ellipse theta (corrected according to previous BNT standard) in [degrees]
+    '''
+
     # Get kwargs
     debug = kwargs.get('debug', False)
     min_orientation = kwargs.get('min_orientation', default.min_orientation)
-    if debug: print('Min orientation: {}'.format(min_orientation))
+    if debug: print('Min orientation: {} degrees'.format(min_orientation))
     min_orientation = np.radians(min_orientation)
 
     # Initialise default output in case stats are uncalculable
     gs_ellipse_theta, gs_ellipse, gs_aspect_ratio = np.nan, np.nan, np.nan
-    grid_orientation_std, grid_orientation  = np.nan, np.nan
+    gs_orientations_std, gs_orientation = np.nan, np.nan
     gs_positions = np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])
     gs_orientations = np.array([np.nan, np.nan, np.nan])
     gs_spacings = np.array([np.nan, np.nan, np.nan])
@@ -228,32 +272,34 @@ def _grid_score_stats(bestCorr, cFieldRadius, **kwargs):
             plt.scatter(centre[1],centre[0], s=600, marker='x', color='white')
             for field_no, coord in enumerate(gs_positions):
                 plt.scatter(coord[1], coord[0], s=300, marker='x', color='blue')
-                plt.text(coord[1]+3, coord[0], field_no)
+                plt.text(coord[1]+3, coord[0], field_no, label='Center')
+            plt.title('Masked autocorr + 6 remaining fields')
 
         # Fit an ellipse to those remaining fields:
         gs_ellipse =  opexebo.general.fitellipse(gs_positions[:,1], gs_positions[:,0])
         gs_ellipse_theta = np.degrees(gs_ellipse[4]+np.pi)%360
         # The +pi term was included in the original BNT, I have kept it to
         # maintain consistency with past results.
+        gs_aspect_ratio = gs_ellipse[2]/gs_ellipse[3] # Major radius / Minor radius
 
-        gs_aspect_ratio = gs_ellipse[2]/gs_ellipse[3]
-        grid_orientation     = np.nanmean(gs_orientations % 60)
-        grid_orientation_std = np.nanstd(gs_orientations % 60)
+        # Work out mean orientation of grid. Take standard deviation as quality marker
+        gs_orientation       = np.nanmean(gs_orientations % 60)
+        gs_orientations_std  = np.nanstd(gs_orientations % 60)
         # Find out polarity of rotation
-        if np.argmin([np.abs(grid_orientation-60), np.abs(grid_orientation)]) == 0:
-            grid_orientation = grid_orientation-60
+        if np.argmin([np.abs(gs_orientation-60), np.abs(gs_orientation)]) == 0:
+            gs_orientation -= 60
 
     else:
         if debug: print('Not enough fields detected ({})'.format(len(all_coords)))
 
-    grid_stats = {'gs_spacings':          gs_spacings,
-                  'gs_spacing':           np.nanmean(gs_spacings),
-                  'gs_orientations':      gs_orientations,
-                  'gs_orientation':       grid_orientation,
-                  'gs_orientations_std':  grid_orientation_std,
-                  'gs_positions':         gs_positions,
-                  'gs_aspect_ratio':      gs_aspect_ratio,
+    grid_stats = {'spacings':             gs_spacings,
+                  'spacing':              np.nanmean(gs_spacings),
+                  'orientations':         gs_orientations,
+                  'orientations_std':     gs_orientations_std,
+                  'orientation':          gs_orientation,
+                  'positions':            gs_positions,
                   'ellipse':              gs_ellipse,
+                  'ellipse_aspect_ratio': gs_aspect_ratio,
                   'ellipse_theta':        gs_ellipse_theta}
 
     return grid_stats
