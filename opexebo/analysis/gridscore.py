@@ -243,6 +243,9 @@ def _grid_score_stats(bestCorr, cFieldRadius, **kwargs):
         if np.argmin([np.abs(grid_orientation-60), np.abs(grid_orientation)]) == 0:
             grid_orientation = grid_orientation-60
 
+    else:
+        if debug: print('Not enough fields detected ({})'.format(len(all_coords)))
+
     grid_stats = {'gs_spacings':          gs_spacings,
                   'gs_spacing':           np.nanmean(gs_spacings),
                   'gs_orientations':      gs_orientations,
