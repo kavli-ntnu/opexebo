@@ -10,6 +10,6 @@ from opexebo.analysis.ratemapcoherence import ratemapcoherence
 from opexebo.analysis.spatialOccupancy import spatialoccupancy
 from opexebo.analysis.speedscore import speedscore
 
-__all__ = ["gridscore", "autocorrelation", "placefield", "angularoccupancy",
+__all__ = ["gridscore", "grid_score_stats", "autocorrelation", "placefield", "angularoccupancy",
            "bordercoverage", "borderscore", "ratemap", "ratemapstats",
            "ratemapcoherence", "spatialoccupancy", "speedscore"]
