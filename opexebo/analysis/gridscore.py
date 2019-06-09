@@ -142,9 +142,9 @@ def gridscore(aCorr, **kwargs):
 
     '''Then calculate stats about the autocorrelogram'''
     bestCorr = (mainCircle < radii[gscoreInd]*1.25) * aCorr
-    gstats = grid_score_stats(bestCorr, cFieldRadius,  **kwargs)
+    grid_stats = grid_score_stats(bestCorr, cFieldRadius,  **kwargs)
 
-    return (gscore, gstats)
+    return gscore, grid_stats
 
 #########################################################
 ################        Helper Functions
@@ -175,13 +175,13 @@ def grid_score_stats(bestCorr, cFieldRadius, **kwargs):
         'spacings' : np.array
             Spacing of three adjacent fields closest to center in autocorr (in [bins])
         'spacing' : float
-            Nanmean of spacings in [bins]
+            Nanmean of 'spacings' in [bins]
         'orientations' : np.array
-            Orientation of three adjacent fields closest to center in autocorr (in degrees)
+            Orientation of three adjacent fields closest to center in autocorr (in [degrees])
         'orientations_std' : float
             Standard deviation of orientations % 60
         'orientation' : float
-            Orientation of grid in degrees (mean of fields of 3 main axes)
+            Orientation of grid in [degrees] (mean of fields of 3 main axes)
         'positions' : np.array
             [y,x] coordinates of six fields closest to center
         'ellipse' : np.array

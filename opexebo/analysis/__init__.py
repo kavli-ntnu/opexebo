@@ -1,4 +1,4 @@
-from opexebo.analysis.gridscore import gridscore
+from opexebo.analysis.gridscore import gridscore, grid_score_stats
 from opexebo.analysis.autocorrelation import autocorrelation
 from opexebo.analysis.placefield import placefield
 from opexebo.analysis.angularOccupancy import angularoccupancy
