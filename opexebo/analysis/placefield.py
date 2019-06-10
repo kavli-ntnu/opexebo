@@ -93,7 +93,7 @@ def placefield(firing_map, **kwargs):
 
     global_peak = np.nanmax(firing_map)
     if np.isnan(global_peak) or global_peak == 0:
-        return None
+        return [], np.zeros_like(firing_map)
 
     # Get details of where the animal spent zero time, then discard NaNs (if any)
     # This is a binary image - False if the animal visited that bin,
