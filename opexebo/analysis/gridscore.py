@@ -5,15 +5,14 @@ Provide function for gridness score calculation.
 import os  # TODO TODO
 os.environ['HOMESHARE'] = r'C:\temp\astropy'   #TODO TODO
 
-
 import matplotlib.pyplot as plt
 import numpy as np
 
 from scipy.spatial.distance import cdist
 from scipy.stats import pearsonr
 from skimage.transform import rotate
-from skimage import morphology, measure
 
+import sep
 import opexebo
 import opexebo.defaults as default
 
@@ -37,17 +36,19 @@ def gridscore(aCorr, **kwargs):
         'debug' : bool
             if true, output debugging information. Default False
         'search_method' : str
-            Method passed to opexebo.analysis.placefield for detecting the central 
+            Method passed to opexebo.analysis.placefield for detecting the central
             peak of aCorr.
             Default and all possible values are stored in opexebo.defaults
-   
+        'min_orientation' : int
+            See function "grid_score_stats"
+
 
     Returns:
     -------
     grid_score : float
-        Always returns a gridness score value. It ranges from -2 to 2. 2 is 
-        more of a theoretical bound for a perfect grid. More practical value for 
-        a good grid is around 1.3. If function can not calculate a gridness 
+        Always returns a gridness score value. It ranges from -2 to 2. 2 is
+        more of a theoretical bound for a perfect grid. More practical value for
+        a good grid is around 1.3. If function can not calculate a gridness
         score, NaN value is returned.
     grid_stats : dict
         'ellipse' : np.ndarray
@@ -56,19 +57,19 @@ def gridscore(aCorr, **kwargs):
             Output is determined by opexebo.general.fitellipse
             [centre_x, centre_y, radius_major, radius_minor, angle (rad)]
         'ellipse_theta' : float
-            Angle of ellipse in degrees. 
+            Angle of ellipse in degrees.
         'spacing' : np.ndarray
-            3x1 array giving distance (in bins) to closest fields. 
+            3x1 array giving distance (in bins) to closest fields.
         'orientation' : np.ndarray
-            3x1 array giving orientation (in degrees) to closest fields. 
-        
+            3x1 array giving orientation (in degrees) to closest fields.
+
     See Also
     --------
     BNT.+analyses.gridnessScore
     opexebo.analysis.placefield
-    
+
     Copyright (C) 2018 by Vadim Frolov, (C) 2019 by Simon Ball, Horst Obenhaus
-    
+
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 3 of the License, or
@@ -78,58 +79,56 @@ def gridscore(aCorr, **kwargs):
 #    fieldThreshold = kwargs.get("field_threshold", default.field_threshold)
 #    minOrientation = kwargs.get("min_orientation", default.min_orientation)
     debug = kwargs.get("debug", False)
-    
-    
     # normalize aCorr in order to find contours
     aCorr = aCorr / aCorr.max()
-    cFieldRadius = int( np.floor(_findCentreRadius(aCorr, **kwargs)) )
+    centre = -0.5 + np.array(aCorr.shape)/2 # centre : also [y, x]
+    cFieldRadius = int( np.floor(_findCentreRadius(aCorr)) )
     if debug:
         print("Center radius is {}".format(cFieldRadius))
 
-    if cFieldRadius in [-1, 0, 1]:# or cFieldRadius[0] > .8*aCorr.shape[0]/2 or cFieldRadius[0] > .8*aCorr.shape[1]/2:
-        return (np.nan, _grid_score_stats(np.zeros(aCorr.shape)))
+    if cFieldRadius in [-1, 0, 1]:
+        return (np.nan, grid_score_stats(np.zeros_like(aCorr), \
+                                    np.zeros_like(aCorr), centre))
 
     halfHeight = np.ceil(aCorr.shape[0]/2)
-    halfWidth = np.ceil(aCorr.shape[1]/2)
+    halfWidth  = np.ceil(aCorr.shape[1]/2)
     heightIndices = np.arange(aCorr.shape[0])
-    widthIndices = np.arange(aCorr.shape[1])
+    widthIndices  = np.arange(aCorr.shape[1])
 
     # Define radii that will be iterated over for the gridness score
     # outer bound is defined by the minimum of autocorrelogram's dimensions
     # this is need for rectangular autocorrelograms.
-    outerBound = int(np.ceil(np.min(np.array(aCorr.shape)/2)))
+    outerBound = int(np.floor(np.min(np.array(aCorr.shape)/2)))
     radii = np.linspace(cFieldRadius+1, outerBound, outerBound-cFieldRadius).astype(int)
     numSteps = len(radii)
+    if numSteps < 1:
+        return (np.nan, grid_score_stats(np.zeros_like(aCorr), \
+                                    np.zeros_like(aCorr), centre))
+
     rotAngles_deg = np.arange(30, 151, 30)  # 30, 60, 90, 120, 150
     rotatedACorr = np.zeros(
             shape=(aCorr.shape[0], aCorr.shape[1], len(rotAngles_deg)),
             dtype=float)
-
     # we get rotated maps here as it is a heavy operation
     for n, angle in enumerate(rotAngles_deg):
         rotatedACorr[:, :, n] = rotate(aCorr, angle, preserve_range=True, clip=False)
-
-    rr, cc = np.meshgrid(heightIndices, widthIndices, sparse=False)
-
+    rr, cc = np.meshgrid(widthIndices, heightIndices, sparse=False)
     # This is needed for compatibility with Matlab's code
-    rr = rr + 1
-    cc = cc + 1
-
-    mainCircle = np.sqrt(np.power((cc - halfWidth), 2) + np.power(rr-halfHeight, 2))
+    rr += 1; cc += 1
+    mainCircle = np.sqrt(np.power((rr - halfWidth), 2) + np.power(cc-halfHeight, 2))
     innerCircle = mainCircle > cFieldRadius
+
+
     GNS = np.zeros(shape=(numSteps, 2), dtype=float)
     for i, radius in enumerate(radii):
         mask = innerCircle & (mainCircle < radius)
         aCorrValues = aCorr[mask]
 
-        rotCorr = np.zeros(len(rotAngles_deg, ), dtype=float)
+        rotCorr = np.zeros_like(rotAngles_deg).astype(float)
         for j, angle in enumerate(rotAngles_deg):
             rotatedValues = rotatedACorr[mask, j]
             r, p = pearsonr(aCorrValues, rotatedValues)
             rotCorr[j] = r
-            if debug:
-                print("Step {}, angle {}, corr value {}".format(i, angle, r))
-
         GNS[i, 0] = np.min(rotCorr[[1, 3]]) - np.max(rotCorr[[0, 2, 4]])
         GNS[i, 1] = radius
 
@@ -148,124 +147,191 @@ def gridscore(aCorr, **kwargs):
         gscore = np.max(meanGridness)
 
     '''Then calculate stats about the autocorrelogram'''
-    bestCorr = (mainCircle < radii[gscoreInd]*1.25) * aCorr
-    gstats = _grid_score_stats(bestCorr, **kwargs)    
-    
-    return (gscore, gstats)
+    # Mask center field and fringes of autocorrelogram > best grid score radius
+    mask_outwards = _circular_mask(aCorr, radii[gscoreInd]*1.25, 'outwards', centre)
+    mask_center   = _circular_mask(aCorr, cFieldRadius*1.5, 'inwards', centre)
+    mask = mask_outwards + mask_center
 
+    grid_stats = grid_score_stats(aCorr, mask, centre, **kwargs)
 
-def _grid_score_stats(bestCorr, **kwargs):
+    return gscore, grid_stats
+
+#########################################################
+################        Helper Functions
+#########################################################
+
+def grid_score_stats(aCorr, mask, centre, **kwargs):
+    '''
+    Calculate spatial characteristics of grid based on 2D autocorr
+
+    Arguments:
+    ----------
+    aCorr : np.array
+        2D Autocorrelation
+    mask : np.array
+        Mask (masked=True) of shape aCorr for masking center field and
+        fringes of aCorr above best grid score radius
+    centre : np.array
+        Centre coordinate [y,x]
+    **kwargs :
+        'debug' : bool
+            Print debug information / create figure
+        'min_orientation' : int
+            Minimum difference in degrees that two neighbouring fields
+            detected in 2D autocorrelation must have. If difference is
+            below this threshold, discard the field that has larger
+            distance from center
+
+    Returns:
+    --------
+    grid_stats : dictionary
+        'spacings' : np.array
+            Spacing of three adjacent fields closest to center in autocorr (in [bins])
+        'spacing' : float
+            Nanmean of 'spacings' in [bins]
+        'orientations' : np.array
+            Orientation of three adjacent fields closest to center in autocorr (in [degrees])
+        'orientations_std' : float
+            Standard deviation of orientations % 60
+        'orientation' : float
+            Orientation of grid in [degrees] (mean of fields of 3 main axes)
+        'positions' : np.array
+            [y,x] coordinates of six fields closest to center
+        'ellipse' : np.array
+            Ellipse fit returning [x coordinate, y coordinate, major radius, minor radius, theta]
+        'ellipse_aspect_ratio' : float
+            Ellipse aspect ratio (major radius / minor radius)
+        'ellipse_theta' : float
+            Ellipse theta (corrected according to previous BNT standard) in [degrees]
+    '''
+
     # Get kwargs
     debug = kwargs.get('debug', False)
     min_orientation = kwargs.get('min_orientation', default.min_orientation)
+    if debug: print('Min orientation: {} degrees'.format(min_orientation))
     min_orientation = np.radians(min_orientation)
-    
+
     # Initialise default output in case stats are uncalculable
-    gs_ellipse_theta = np.nan
-    gs_ellipse = np.nan
-    gs_orientation = np.array([np.nan, np.nan, np.nan])
-    gs_spacing = np.array([np.nan, np.nan, np.nan])
-    
-    
-    # Identify local maxima    
-    regionalMax = morphology.local_maxima(bestCorr, connectivity=4, indices=False)
-    selem = morphology.square(3)
-    dilated_img = morphology.dilation(regionalMax, selem)
-    labelled_img = morphology.label(dilated_img)
-    #labelled_img[labelled_img==int(np.max(labelled_img)/2)+1] = 0
-    
-    if np.max(labelled_img) >= 7:
-        properties = measure.regionprops(labelled_img, cache=True)
-        
-        # Typical shape is 71x71 -> central bin is 35,35
-        centre = -0.5 + np.array(bestCorr.shape)/2 # centre : also [y, x]
-        all_coords = np.array([region.centroid for region in properties])
-        # x-coords are all_coords[:,1], y are [:,0].
-        
-        if debug:
-            plt.figure()
-            plt.title("Labelled autocorrelogram and ellipse")
-            plt.imshow(labelled_img)
-            plt.scatter(all_coords[:,1], all_coords[:,0])
-        
-        
-        # Bearing from field to centre
+    gs_ellipse_theta, gs_ellipse, gs_aspect_ratio = np.nan, np.nan, np.nan
+    gs_orientations_std, gs_orientation = np.nan, np.nan
+    gs_positions = np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])
+    gs_orientations = np.array([np.nan, np.nan, np.nan])
+    gs_spacings = np.array([np.nan, np.nan, np.nan])
+
+    # Find fields in autocorrelogram
+    acorr_fields = sep.extract(aCorr, mask=mask, thresh=.1) # CONSIDER MAKING THRESHOLD AN ARGUMENT
+
+    if len(acorr_fields) >= 6:
+        all_coords = np.array([[props['y'],props['x']] for props in acorr_fields])
+        all_intens = np.array([props['peak'] for props in acorr_fields])
+
+        # Calculate orientation and distance of all local maxima to center
         orientation = np.arctan2(all_coords[:,0] - centre[0], all_coords[:,1] - centre[1]) # in radians
         distance = np.sqrt(np.square(all_coords[:,0]-centre[0]) + np.square(all_coords[:,1]-centre[1]))
 
-        # The centre field really mucks up the later min_orientation filtering
-        # Deleting it here is the best solution I found, but I'm not entirely happy
-        # It's both inefficient and inelegant
-        centre_index = np.where(distance==0)
-        all_coords = np.delete(all_coords, centre_index, axis=0)
-        orientation = np.delete(orientation, centre_index)
-        distance = np.delete(distance, centre_index)
-        
         # Where two fields have a very similar orientation, discard the more distant one
         orient_distsq = np.abs(_circ_dist2(orientation))
-        close_fields = orient_distsq < min_orientation  
+        close_fields = orient_distsq < min_orientation
         close_fields = np.triu(close_fields, 1) # Upper triangle only - set lower triangle to zero
                                                 # k=1: +1 offset from diagonal: set diagonal to zero too
-        row, col = np.where(close_fields)
-        to_del = np.zeros(row.size) # this is more efficient than appending to a list
-        for i in range(row.size):
-            r = row[i]
-            c = col[i]
-            if distance[r] > distance[c]:
-                j = r
+        to_del = []
+        for row,col in np.argwhere(close_fields):
+            if distance[row] > distance[col]:
+                to_del.append(row)
             else:
-                j = c
-            to_del[i] = int(j)
-        to_del = np.unique(to_del).astype(int) # this gets rid of all the zeros
-        distance = np.delete(distance, to_del)
-        all_coords = np.delete(all_coords, to_del, axis=0)
+                to_del.append(col)
+
+        distance    = np.delete(distance, to_del)
         orientation = np.delete(orientation, to_del)
-        # Actual deletion instead of substituting values - this handles cases 
-        # where there are fewer than 6 fields remaining after filtering        
-        
-        # Consider the 6 closest fields -> sort by distance
-        # The central point has already been deleted.
-        # Positions needs all 6 indicies, in order to calculate the ellipse
-        # Discard the duplicate values -> because they're floating point, don't use np.unique()
-        # Instead, use array slicing: sort by size, and then take every 2nd value
-        # Numpy slicing: [start:stop:step]
-        sorted_ids = np.argsort(distance)[:6]
-        positions = all_coords[sorted_ids,:]
-        gs_spacing = distance[sorted_ids[::2]]
-        gs_orientation = orientation[sorted_ids[::2]]
-        gs_orientation = np.degrees(gs_orientation)%180 # convert from rad to deg and wrap into [0-180]°
-        
+        all_coords  = np.delete(all_coords, to_del, axis=0)
+
+        # First sort by distance and take first 6 fields
+        sorted_ids_dist = np.argsort(distance)[:6] # 6 closest fields
+        positions, distance, orientation = all_coords[sorted_ids_dist], distance[sorted_ids_dist], orientation[sorted_ids_dist]
+        # ... then re-sort remaining fields by angle
+        sorted_ids_ang = np.argsort(orientation)
+
+        ################# GATHER OUTPUT #################
+        gs_positions = positions[sorted_ids_ang]
+        # For grid orientation and spacing take only 3 out of 6 neighbouring fields
+        gs_spacings = distance[sorted_ids_ang][:3]
+        gs_orientations = np.degrees(orientation[sorted_ids_ang][:3]) % 180
+
         # Sometimes there are not sufficient fields to yield 3 spacing, orientation
         # In these cases, pad the arrays out tot he expected length with NaN
-        if gs_spacing.size < 3:
-            tmp = np.full(3, fill_value = np.nan, dtype=float)       
-            tmp[:gs_spacing.size] = gs_spacing
-            gs_spacing = tmp
-        if gs_orientation.size < 3:
-            tmp = np.full(3, fill_value = np.nan, dtype=float) 
-            tmp[:gs_orientation.size] = gs_orientation            
-            gs_orientation = tmp
-        
-        # Fit an ellipse to those remaining fields:
-        gs_ellipse =  opexebo.general.fitellipse(positions[:,1], positions[:,0])
-        gs_ellipse_theta = np.degrees(gs_ellipse[4]+np.pi)%360
-        # The +pi term was included in the original BNT, I have kept it to 
-        # maintain consistency with past results. 
-        
-        
+        if gs_spacings.size < 3:
+            tmp = np.full(3, fill_value = np.nan, dtype=float)
+            tmp[:gs_spacings.size] = gs_spacings
+            gs_spacings = tmp
+        if gs_orientations.size < 3:
+            tmp = np.full(3, fill_value = np.nan, dtype=float)
+            tmp[:gs_orientations.size] = gs_orientations
+            gs_orientations = tmp
+
         if debug:
-            a, b, c, d, e = gs_ellipse
-            _draw_ellipse(a, b, c, d, e)
-            plt.scatter(positions[:,1], positions[:,0])
-    
-    # Not sure whether a list or dictionary is preferred here.
-    grid_stats = {'ellipse':gs_ellipse, 'ellipse_theta':gs_ellipse_theta,
-                  'spacing':gs_spacing, 'orientation':gs_orientation}
-    #grid_stats = [gs_ellipse, gs_ellipse_theta, gs_spacing, gs_orientation]
+            aCorr_masked = aCorr.copy()
+            aCorr_masked[mask] = 0
+            plt.imshow(aCorr_masked)
+            plt.scatter(centre[1],centre[0], s=600, marker='x', color='white')
+            for field_no, coord in enumerate(gs_positions):
+                plt.scatter(coord[1], coord[0], s=300, marker='x', color='blue')
+                plt.text(coord[1]+3, coord[0], field_no, label='Center')
+            plt.title('Masked autocorr + 6 remaining fields')
+
+        # Fit an ellipse to those remaining fields:
+        if len(gs_positions) > 2:
+            gs_ellipse =  opexebo.general.fitellipse(gs_positions[:,1], gs_positions[:,0])
+            gs_ellipse_theta = np.degrees(gs_ellipse[4]+np.pi)%360
+            # The +pi term was included in the original BNT, I have kept it to
+            # maintain consistency with past results.
+            gs_aspect_ratio = gs_ellipse[2]/gs_ellipse[3] # Major radius / Minor radius
+
+        # Work out mean orientation of grid. Take standard deviation as quality marker
+        gs_orientation       = np.nanmean(gs_orientations % 60)
+        gs_orientations_std  = np.nanstd(gs_orientations % 60)
+        # Find out polarity of rotation
+        if np.argmin([np.abs(gs_orientation-60), np.abs(gs_orientation)]) == 0:
+            gs_orientation -= 60
+
+    else:
+        if debug: print('Not enough fields detected ({})'.format(len(all_coords)))
+
+    grid_stats = {'spacings':             gs_spacings,
+                  'spacing':              np.nanmean(gs_spacings),
+                  'orientations':         gs_orientations,
+                  'orientations_std':     gs_orientations_std,
+                  'orientation':          gs_orientation,
+                  'positions':            gs_positions,
+                  'ellipse':              gs_ellipse,
+                  'ellipse_aspect_ratio': gs_aspect_ratio,
+                  'ellipse_theta':        gs_ellipse_theta}
+
     return grid_stats
-        
-    
-    
+
+def _circular_mask(image, radius, polarity='outwards', center=None):
+        '''
+        Given height and width, create circular mask around point with defined radius
+        Polarity:
+            'inwards' : True inside,  False outside
+            'outwards': True outside, False inside
+
+        '''
+        h = image.shape[0]
+        w = image.shape[1]
+
+        if center is None:
+            center = [int(h/2), int(w/2)]
+
+        Y, X = np.ogrid[:h, :w]
+        dist_from_center = np.sqrt(np.power(X - center[1],2) + np.power(Y-center[0],2))
+        if polarity == 'inwards':
+            mask = dist_from_center <= radius
+        elif polarity == 'outwards':
+            mask = dist_from_center >= radius
+        else:
+            raise ValueError('Polarity "{}" not defined'.format(polarity))
+        return mask
+
 def _draw_ellipse(x, y, rl, rs, theta):
     from matplotlib.patches import Ellipse
     from matplotlib import transforms
@@ -276,7 +342,7 @@ def _draw_ellipse(x, y, rl, rs, theta):
     transf = transforms.Affine2D().rotate(theta+np.pi/2).translate(x, y)
     ell.set_transform(transf + ax.transData)
     ax.add_patch(ell)
-    
+
 
 def _plotContours(img, contours):
     fig, ax = plt.subplots()
@@ -328,17 +394,17 @@ def _contourArea(contours, i):
     return area
 
 
-def _findCentreRadius(aCorr, **kwargs):
+def _findCentreRadius(aCorr):
     centroids = []
     radii = []
-    
 
     halfHeight = np.ceil(aCorr.shape[0]/2)
     halfWidth = np.ceil(aCorr.shape[1]/2)
     peak_coords = np.ones(shape=(1, 2), dtype=np.int)
     peak_coords[0, 0] = halfHeight-1
     peak_coords[0, 1] = halfWidth-1
-    fields = opexebo.analysis.placefield(aCorr, min_bins=2, min_peak=0, peak_coords=peak_coords, **kwargs)[0]
+    fields = opexebo.analysis.placefield(aCorr, min_bins=2, min_peak=0, min_mean=0, init_thresh=.8, \
+                                         search_method='default', peak_coords=peak_coords)[0] # Fix all input args for now
     if fields is None or len(fields) == 0:
         return 0
 
@@ -385,15 +451,15 @@ if __name__ == '__main__':
     os.environ['HOMESHARE'] = r'C:\temp\astropy'
     import scipy.io as spio
     import matplotlib.pyplot as plt
-    
+
     bnt_output = r'C:\Users\simoba\Documents\_work\Kavli\bntComp\Output\auto_input_file_vars.mat'
     print("Loading data")
     #bnt = spio.loadmat(bnt_output)
     print("Data loaded")
-    
+
     i = 199
     acorr = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['aCorr'][0,0]
     gscore = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['gridScore'][0,0][0,0]
-    
+
     gsop = gridscore(acorr, debug=True, search_method='default')
     print(gsop)

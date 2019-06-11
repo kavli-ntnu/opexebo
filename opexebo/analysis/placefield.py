@@ -13,17 +13,17 @@ import opexebo.defaults as default
 def placefield(firing_map, **kwargs):
     """Locate place fields on a firing map.
 
-    Identifies place fields in 2D firing map. Placefields are identified by 
-    using an adaptive threshold. The idea is that we start with a peak value as 
-    the threshold. Then we gradually decrease the threshold until the field 
-    area doesn't change any more or the area explodes (this means the threshold 
+    Identifies place fields in 2D firing map. Placefields are identified by
+    using an adaptive threshold. The idea is that we start with a peak value as
+    the threshold. Then we gradually decrease the threshold until the field
+    area doesn't change any more or the area explodes (this means the threshold
     is too low).
-    
-   
+
+
     Parameters
     ----------
     firing_map : np.ndarray or np.ma.MaskedArray
-        smoothed rate map. 
+        smoothed rate map.
         If supplied as an np.ndarray, it is assumed that the map takes values of np.nan at locations of zero occupancy
         If supplied as an np.ma.MaskedArray, it is assumed that the map is masked at locations of zero occupancy
     **kwargs
@@ -31,10 +31,10 @@ def placefield(firing_map, **kwargs):
             Fields containing fewer than this many bins will be discarded.
             Default 9
         min_peak : float
-            Fields with a peak firing rate lower than this absolute value will 
+            Fields with a peak firing rate lower than this absolute value will
             be discarded. Default 1 Hz
         min_mean : float
-            Fields with a mean firing rate lower than this absolute value will 
+            Fields with a mean firing rate lower than this absolute value will
             be discarded. Default 0 Hz
         init_thresh : float
             Initial threshold to search for fields from. Must be in the range [0, 1].
@@ -45,34 +45,33 @@ def placefield(firing_map, **kwargs):
         peak_coords : array-like
             List of peak co-ordinates to consider instead of auto detection
             Default None
-            
+
     Returns
     -------
     fields      : list (of dict)
-        'coords'        : np.ndarray    : Co-ordinates of all bins in the firing field
-        'peak_coords'   : np.ndarray    : Co-ordinates of the cell with the peak firing rate
-        'area'          : int           : Number of bins in firing field. [bins]
-        'bbox'          : tuple         : Co-ordinates of bounding box including the firing field (y_min, x_min, y_max, y_max)
-        'x'             : float         : x co-ordinate of centroid. (decimal) [bins]
-        'y'             : float         : y co-ordinate of centroid. (decimal) [bins]
-        'mean_rate'     : float         : mean firing rate [Hz]
-        'peak_rate'     : float         : peak firing rate [Hz]
-        'map'           : np.ndarray    : Binary map of arena. Cells inside firing field have value 1, all other cells have value 0
+        'coords'         : np.ndarray    : Coordinates of all bins in the firing field
+        'peak_coords'    : np.ndarray    : Coordinates peak firing rate [y,x]
+        'centroid_coords': np.ndarray    : Coordinates of centroid (decimal) [y,x]
+        'area'           : int           : Number of bins in firing field. [bins]
+        'bbox'           : tuple         : Coordinates of bounding box including the firing field (y_min, x_min, y_max, y_max)
+        'mean_rate'      : float         : mean firing rate [Hz]
+        'peak_rate'      : float         : peak firing rate [Hz]
+        'map'            : np.ndarray    : Binary map of arena. Cells inside firing field have value 1, all other cells have value 0
     fields_map  : np.ndarray
-        labelled integer image (i.e. background = 0, field 1 = 1, field2 = 2, etc)
-        
+        labelled integer image (i.e. background = 0, field1 = 1, field2 = 2, etc.)
+
     See also
     --------
     BNT.+analyses.placefieldAdaptive
     https://se.mathworks.com/help/images/understanding-morphological-reconstruction.html
-    
+
     Copyright (C) 2018 by Vadim Frolov, (C) 2019 by Simon Ball, Horst Obenhaus
-    
+
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
-    
+
     """
     ''' Part 1: handle inputs'''
     # Get keyword arguments
@@ -83,19 +82,19 @@ def placefield(firing_map, **kwargs):
     search_method = kwargs.get("search_method", default.search_method).lower()
     peak_coords = kwargs.get("peak_coords", None)
     debug = kwargs.get("debug", False)
-    
+
     if not 0 <= init_thresh <= 1:
         raise ValueError("Keyword 'init_thresh' must be in the range [0, 1]. \
                          You provided %.2f" % init_thresh)
     if search_method not in default.all_methods:
         raise ValueError("Keyword 'search_method' must be left blank or given a \
-                         value from the following list: %s. You provided '%s'."\
+                         value from the following list: %s. You provided '%s'." \
                          % (default.all_methods, search_method) )
-    
+
     global_peak = np.nanmax(firing_map)
     if np.isnan(global_peak) or global_peak == 0:
-        return None
-    
+        return [], np.zeros_like(firing_map)
+
     # Get details of where the animal spent zero time, then discard NaNs (if any)
     # This is a binary image - False if the animal visited that bin,
     # True if the animal did NOT visit that bin
@@ -106,18 +105,18 @@ def placefield(firing_map, **kwargs):
         occupancy_mask = np.zeros_like(firing_map).astype('bool')
         occupancy_mask[np.isnan(firing_map)] = True
         firing_map = np.nan_to_num(firing_map, copy=True)
-    
-    
+
+
     '''Part 2: find local maxima'''
     # Based on the user-requested search method, find the co-ordinates of local maxima
     if search_method == default.search_method:
-        fmap, peak_coords = _peak_search_skimage(peak_coords, firing_map)        
+        fmap, peak_coords = _peak_search_skimage(peak_coords, firing_map)
     elif search_method == "sep":
         fmap, peak_coords = _peak_search_sep(peak_coords, firing_map, occupancy_mask)
     else:
         raise NotImplementedError("The search method you have requested (%s) is \
                                   not yet implemented" % search_method)
-        
+
     # obtain value of found peaks
     found_peaks = firing_map[peak_coords[:, 0], peak_coords[:, 1]]
 
@@ -131,7 +130,7 @@ def placefield(firing_map, **kwargs):
     # prevent peaks with small values from being detected
     # SWB - This causes problems where a local peak is next to a cell that the animal never went
     # As that risks the field becoming the entire null region
-    # Therefore, adding 2nd criterion to avoid adding information where none was actually known. 
+    # Therefore, adding 2nd criterion to avoid adding information where none was actually known.
     fmap[np.logical_and(fmap < min_peak, fmap > 0.01)] = max_value * 1.5
 
     # this can be confusing, but this variable is just an index for the vector
@@ -197,12 +196,12 @@ def placefield(firing_map, **kwargs):
             pixels = np.unravel_index(pixel_list, fmap.shape, 'F')
         else:
             pixels = []
-            
+
         fmap[pixels] = max_value * 1.5
         fields_map[pixels] = field_id
         field_id = field_id + 1
-    
-    
+
+
     '''Part 4: Determine which, if any, fields meet filtering criteria'''
     regions = measure.regionprops(fields_map)
 
@@ -224,18 +223,15 @@ def placefield(firing_map, **kwargs):
             field['peak_coords'] = peak_coords
             field['area'] = region.area
             field['bbox'] = region.bbox
-    
-            field['x'] = region.centroid[0]
-            field['y'] = region.centroid[1]
-    
+            field['centroid_coords'] = region.centroid
             field['mean_rate'] = mean_rate
             field['peak_rate'] = peak_rate
             mask = np.zeros(firing_map.shape)
             mask[region.coords[:, 0], region.coords[:, 1]] = 1
             field['map'] = mask
-    
+
             fields.append(field)
-    
+
             fields_map[region.coords[:, 0], region.coords[:, 1]] = len(fields)
         elif debug:
             # Print out some information about *why* the field failed
@@ -251,13 +247,9 @@ def placefield(firing_map, **kwargs):
     return (fields, fields_map)
 
 
-
-
 #########################################################
 ################        Helper Functions
 #########################################################
-
-
 
 
 def _peak_search_skimage(peak_coords, firing_map, **kwargs):
@@ -267,26 +259,26 @@ def _peak_search_skimage(peak_coords, firing_map, **kwargs):
     se = morphology.disk(1)
     Ie = morphology.erosion(firing_map, se)
     Iobr = morphology.reconstruction(Ie, firing_map)
-    # The effect of this erosion/reconstruction is to reduce value of cells 
+    # The effect of this erosion/reconstruction is to reduce value of cells
     # around local maxima of the firing map. This can be shown, for instance, by
     # plt.imshow(np.ma.masked_where(firing_map-Iobr!=0, firing_map))
-    # Also well explained here 
+    # Also well explained here
     # https://se.mathworks.com/help/images/understanding-morphological-reconstruction.html
     # Not 100% clear on the exact purpose -Simon
     # However, it *seems* as if it may act to suppress very small local maxima
     regionalMaxMap = morphology.local_maxima(Iobr)
     labeled_max = measure.label(regionalMaxMap, connectivity=2)
-    
+
     regions = measure.regionprops(labeled_max)
     fmap = Iobr
-    
+
     if peak_coords is None:
         peak_coords = np.zeros(shape=(len(regions), 2), dtype=np.int)
 
         for i, props in enumerate(regions):
             y0, x0 = props.centroid
             peak = np.array([y0, x0])
-            
+
             # ensure that there are no peaks off the map (due to rounding)
             peak[peak < 0] = 0
             for j in range(firing_map.ndim):
@@ -305,10 +297,10 @@ def _peak_search_sep(peak_coords, firing_map, firing_map_mask, **kwargs):
     bkg = sep.Background(tmp_firing_map, mask=tmp_mask, fw=2, fh=2, \
                      bw=int(tmp_firing_map.shape[0]), bh=int(tmp_firing_map.shape[1]))
     init_fields = sep.extract(tmp_firing_map-bkg, mask=tmp_mask, thresh=2, \
-                          err=bkg.globalrms) 
-    
+                          err=bkg.globalrms)
+
     fmap = firing_map.copy()
-    
+
     if peak_coords is None:
         peak_coords = np.zeros(shape=(len(init_fields), 2), dtype=np.int)
 
@@ -334,8 +326,8 @@ def _expand_field(I, occupancy_mask, peak_rc, initial_change, initial_area, othe
         If field size has increased by less than 300% of initial_change AND the field has decreased in size fewer than 3 times in a row
             If the field size hasn't changed in 10 steps, return the current field size
         Else
-        
-        
+
+
     '''
     pixel_list = np.nan
     last_area = initial_area
@@ -383,13 +375,13 @@ def _expand_field(I, occupancy_mask, peak_rc, initial_change, initial_area, othe
 
 def _area_change(I, occupancy_mask, peak_rc, first, second, other_fields_linear):
     ''' Compare the change in field area based on two threshold values
-    
-    If either threshold results in an invalid field (based on criteria in 
+
+    If either threshold results in an invalid field (based on criteria in
     _area_for_threshold() ), then return NaNs to signal this fact
-    
+
     Otherwise return information about the results from the two thresholds, and
     the % change in area
-    
+
     Params
     ------
     I : np.ndarray                      : Image
@@ -426,19 +418,19 @@ def _area_change(I, occupancy_mask, peak_rc, first, second, other_fields_linear)
 def _area_for_threshold(I, occupancy_mask, peak_rc, th, other_fields_linear):
     '''Calculate the area of the field defined by the local maxima 'peak_rc' and
     the relative thresholding value 'th'
-    
+
     In addition, determine:
         * is the field contiguous (good), or does it contain voids? (bad)
         * Does the field extend to include other local maxima?
-    
+
     1 - Based on the threshold, find the binary map of the field
     2 - Determine if there are any voids
         If there are any voids, then return an area of np.nan
-    3 - Determine the co-ordinates of all cells inside the field. The area is 
+    3 - Determine the co-ordinates of all cells inside the field. The area is
         given by the number of cells
         If any included cell ALSO appears in the list of 'other_fields_linear'
         then another local maxima has been included. In that case, return is_bad=True
-        
+
     returns
     -------
     ar : int
@@ -455,17 +447,17 @@ def _area_for_threshold(I, occupancy_mask, peak_rc, th, other_fields_linear):
     peak_value = I[peak_rc[0], peak_rc[1]]
     th_value = peak_value * th
     mask = (I >= th_value)
-    
+
     # Mask includes all pixels above the desired threshold, including other disconnected fields
     # use morphology.label to exclude disconnected fields
     # connectivity=1 means only consider vertical/horizontal connections
-    labeled_img = morphology.label(mask, connectivity=1) 
+    labeled_img = morphology.label(mask, connectivity=1)
 
     # we need to leave only one label that corresponds to the peak
     target_label = labeled_img[peak_rc[0], peak_rc[1]]
     labeled_img[labeled_img != target_label] = 0
     labeled_img[labeled_img == target_label] = 1
-    
+
     #labelled_img only includes cells that are:
     #   Above the current threshold
     #   Connected (V/H) to the currently considered local maxima
@@ -475,11 +467,11 @@ def _area_for_threshold(I, occupancy_mask, peak_rc, th, other_fields_linear):
     # NOTE - this uses scipy.ndimage.morphology, while most else uses skimage.morphology
     filled_image = ndimage.morphology.binary_fill_holes(labeled_img)
     euler_array = (filled_image != labeled_img)  # True where holes were filled in
-    
+
     euler_array = np.maximum((euler_array*1) - (occupancy_mask*1), 0)
     # Ignore filled-in holes at bins that the animal never visited
     # Convert both arrays to integer, subtract one from the other, and replace resulting -1 values with 0
-    
+
     euler_objects = morphology.label(euler_array, connectivity=2) # connectivity=2 : vertical, horizontal, and diagonal
     num = np.max(euler_objects) # How many holes were filled in
     euler_number = -num + 1
@@ -512,7 +504,7 @@ if __name__ == '__main__':
     print("Loading data")
     #bnt = spio.loadmat(bnt_output)
     print("Data loaded")
-    
+
     i = 16
     rmap = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['map'][0,0]['z'][0,0]
     fields, field_map = placefield(rmap, min_peak=0.4, search_method='default')
@@ -531,4 +523,3 @@ if __name__ == '__main__':
     plt.title("sep")
     plt.imshow(field_map)
     plt.colorbar()
-    
