@@ -502,7 +502,7 @@ if __name__ == '__main__':
     os.environ['HOMESHARE'] = r'C:\temp\astropy'
     bnt_output = r'C:\Users\simoba\Documents\_work\Kavli\bntComp\Output\auto_input_file_vars.mat'
     print("Loading data")
-    #bnt = spio.loadmat(bnt_output)
+    bnt = spio.loadmat(bnt_output)
     print("Data loaded")
 
     i = 16
