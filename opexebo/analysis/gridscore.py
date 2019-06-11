@@ -114,7 +114,8 @@ def gridscore(aCorr, **kwargs):
         rotatedACorr[:, :, n] = rotate(aCorr, angle, preserve_range=True, clip=False)
     rr, cc = np.meshgrid(widthIndices, heightIndices, sparse=False)
     # This is needed for compatibility with Matlab's code
-    rr += 1; cc += 1
+    rr += 1
+    cc += 1
     mainCircle = np.sqrt(np.power((rr - halfWidth), 2) + np.power(cc-halfHeight, 2))
     innerCircle = mainCircle > cFieldRadius
 
@@ -208,23 +209,26 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
     # Get kwargs
     debug = kwargs.get('debug', False)
     min_orientation = kwargs.get('min_orientation', default.min_orientation)
-    if debug: print('Min orientation: {} degrees'.format(min_orientation))
     min_orientation = np.radians(min_orientation)
+    if debug:
+        print('Min orientation: {} degrees'.format(np.degrees(min_orientation)))
+    
 
     # Initialise default output in case stats are uncalculable
-    gs_ellipse_theta, gs_ellipse, gs_aspect_ratio = np.nan, np.nan, np.nan
-    gs_orientations_std, gs_orientation = np.nan, np.nan
-    gs_positions = np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])
-    gs_orientations = np.array([np.nan, np.nan, np.nan])
-    gs_spacings = np.array([np.nan, np.nan, np.nan])
+    gs_ellipse_theta    = np.nan
+    gs_ellipse          = np.nan
+    gs_aspect_ratio     = np.nan
+    gs_orientations_std = np.nan
+    gs_orientation      = np.nan
+    gs_positions        = np.full(6, fill_value = np.nan, dtype=float)
+    gs_orientations     = np.full(3, fill_value = np.nan, dtype=float)
+    gs_spacings         = np.full(3, fill_value = np.nan, dtype=float)
 
     # Find fields in autocorrelogram
-    acorr_fields = sep.extract(aCorr, mask=mask, thresh=.1) # CONSIDER MAKING THRESHOLD AN ARGUMENT
+    acorr_fields = sep.extract(aCorr.copy(order="C"), mask=mask, thresh=.1) # CONSIDER MAKING THRESHOLD AN ARGUMENT
+    all_coords = np.array([[props['y'],props['x']] for props in acorr_fields])
 
     if len(acorr_fields) >= 6:
-        all_coords = np.array([[props['y'],props['x']] for props in acorr_fields])
-        all_intens = np.array([props['peak'] for props in acorr_fields])
-
         # Calculate orientation and distance of all local maxima to center
         orientation = np.arctan2(all_coords[:,0] - centre[0], all_coords[:,1] - centre[1]) # in radians
         distance = np.sqrt(np.square(all_coords[:,0]-centre[0]) + np.square(all_coords[:,1]-centre[1]))
@@ -247,7 +251,10 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
 
         # First sort by distance and take first 6 fields
         sorted_ids_dist = np.argsort(distance)[:6] # 6 closest fields
-        positions, distance, orientation = all_coords[sorted_ids_dist], distance[sorted_ids_dist], orientation[sorted_ids_dist]
+        positions = all_coords[sorted_ids_dist]
+        distance = distance[sorted_ids_dist]
+        orientation = orientation[sorted_ids_dist]
+        
         # ... then re-sort remaining fields by angle
         sorted_ids_ang = np.argsort(orientation)
 
@@ -257,17 +264,7 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
         gs_spacings = distance[sorted_ids_ang][:3]
         gs_orientations = np.degrees(orientation[sorted_ids_ang][:3]) % 180
 
-        # Sometimes there are not sufficient fields to yield 3 spacing, orientation
-        # In these cases, pad the arrays out tot he expected length with NaN
-        if gs_spacings.size < 3:
-            tmp = np.full(3, fill_value = np.nan, dtype=float)
-            tmp[:gs_spacings.size] = gs_spacings
-            gs_spacings = tmp
-        if gs_orientations.size < 3:
-            tmp = np.full(3, fill_value = np.nan, dtype=float)
-            tmp[:gs_orientations.size] = gs_orientations
-            gs_orientations = tmp
-
+        
         if debug:
             aCorr_masked = aCorr.copy()
             aCorr_masked[mask] = 0
@@ -294,7 +291,9 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
             gs_orientation -= 60
 
     else:
-        if debug: print('Not enough fields detected ({})'.format(len(all_coords)))
+        if debug: 
+            print('Not enough fields detected ({})'.format(len(all_coords)))
+            
 
     grid_stats = {'spacings':             gs_spacings,
                   'spacing':              np.nanmean(gs_spacings),
@@ -305,7 +304,6 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
                   'ellipse':              gs_ellipse,
                   'ellipse_aspect_ratio': gs_aspect_ratio,
                   'ellipse_theta':        gs_ellipse_theta}
-
     return grid_stats
 
 def _circular_mask(image, radius, polarity='outwards', center=None):
@@ -324,9 +322,9 @@ def _circular_mask(image, radius, polarity='outwards', center=None):
 
         Y, X = np.ogrid[:h, :w]
         dist_from_center = np.sqrt(np.power(X - center[1],2) + np.power(Y-center[0],2))
-        if polarity == 'inwards':
+        if polarity.lower() == 'inwards':
             mask = dist_from_center <= radius
-        elif polarity == 'outwards':
+        elif polarity.lower() == 'outwards':
             mask = dist_from_center >= radius
         else:
             raise ValueError('Polarity "{}" not defined'.format(polarity))
@@ -395,9 +393,6 @@ def _contourArea(contours, i):
 
 
 def _findCentreRadius(aCorr):
-    centroids = []
-    radii = []
-
     halfHeight = np.ceil(aCorr.shape[0]/2)
     halfWidth = np.ceil(aCorr.shape[1]/2)
     peak_coords = np.ones(shape=(1, 2), dtype=np.int)
@@ -457,9 +452,7 @@ if __name__ == '__main__':
     #bnt = spio.loadmat(bnt_output)
     print("Data loaded")
 
-    i = 199
+    i = 20
     acorr = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['aCorr'][0,0]
     gscore = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['gridScore'][0,0][0,0]
-
     gsop = gridscore(acorr, debug=True, search_method='default')
-    print(gsop)
