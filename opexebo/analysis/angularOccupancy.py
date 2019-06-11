@@ -37,7 +37,7 @@ def angularoccupancy(angle,**kwargs):
                          dimensions" % ndim)
     if np.nanmax(angle) > 2*np.pi:
         raise Warning("Angles greater than 2pi detected. Please check that your \
-                      angle array is in radiansIf it is in degrees, you can \
+                      angle array is in radians. If it is in degrees, you can \
                       convert with 'np.radians(array)'")
         
     
