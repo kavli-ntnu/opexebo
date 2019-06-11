@@ -5,7 +5,7 @@ Provide function for 2D placefield detection.
 import numpy as np
 
 from scipy import ndimage
-from skimage import measure, morphology             # scikit-image package
+from skimage import measure, morphology
 import sep
 import opexebo.defaults as default
 

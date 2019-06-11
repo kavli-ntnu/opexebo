@@ -4,25 +4,26 @@ import numpy as np
 from scipy.ndimage import distance_transform_edt
 import opexebo.defaults as default
 
+
 def bordercoverage(fields, **kwargs):
     '''
     Calculate border coverage for detected fields.
     
     This function calculates firing map border coverage that is further
     used in calculation of a border score.
-    
-    
+
+
     TODO
     I have copied the approach used in BNT, but I want to double check whether there 
     is a better way to do this - it only tells you that *a* field (it doesn't tell 
     you which one) has coverage of *a* border (it doesn't tell you which one)).
-    
-    
+
+
     It seems like there should be a better way of doing this
         (e.g. return a vector of coverage, i.e. a value for each border checked, and 
         return an index of the best field for each border, or something similar)
-    
-    
+
+
     Parameters
     ----------
     fields      :   dict
@@ -47,11 +48,12 @@ def bordercoverage(fields, **kwargs):
                       Characters are case insensitive. Default value is 'TRBL' meaning that border
                       score is calculated along all walls. Any combination is possible, e.g.
                       'R' to calculate along right wall, 'BL' to calculate along two walls, e.t.c.
+
     Returns
     -------
     coverage    : float
         Border coverage, ranges from 0 to 1.
-        
+
     See also
     --------
     BNT.+analyses.placefield
@@ -60,17 +62,15 @@ def bordercoverage(fields, **kwargs):
     opexebo.analysis.placefield
     opexebo.analysis.borderscore
     '''
-    
+
     # Extract keyword arguments or set defaults
     sw = kwargs.get('search_width', default.search_width)
     walls = kwargs.get('walls', default.walls)
-    
+
     # Check that the wall definition is valid
     _validate_wall_definition(walls)
     walls = walls.lower()
-    
-   
-    
+
     # Check coverage of each field in turn
     coverage = 0
     for field in fields:
@@ -80,19 +80,19 @@ def bordercoverage(fields, **kwargs):
             c = _wall_field(aux_map)
             if c > coverage:
                 coverage = c
-        
+
         if "r" in walls:
             aux_map = fmap[:, -sw:].copy()
             aux_map = np.fliplr(aux_map) # Mirror image to match the expectations in _wall_field, i.e. border adjacent to left-most column
             c = _wall_field(aux_map)
             if c > coverage:
                 coverage = c
-        
+
         # since we are dealing with data that came from a camera
         #'bottom' is actually at the top of the matrix fmap
         # i.e. in a printed array (think Excel spreadheet), [0,0] is at top-left.
         # in a figure (think graph) (0,0) is at bottom-left
-        
+
         # Note: because I use rotations instead of transposition, this yields 
         # arrays that are upside-down compared to Vadim's version, 
         # BUT the left/right is correct.
@@ -102,31 +102,30 @@ def bordercoverage(fields, **kwargs):
             c = _wall_field(aux_map)
             if c > coverage:
                 coverage = c
-        
+
         if "t" in walls:
             aux_map = fmap[-sw:, :].copy()
             aux_map = np.fliplr(np.rot90(aux_map)) # rotate 90 deg counter clockwise (bottom to right), then mirror image
             c = _wall_field(aux_map)
             if c > coverage:
                 coverage = c
-            
     return coverage
-    
-    
+
+
 def _wall_field(wfmap):
     '''Evaluate what fraction of the border area is covered by a single field
-    
+
     Border coverage is provided as two values: 
         covered : the sum of the values across all sites immediately adjacent to the border, where the values
                 are calculated from the distance of those sites to the firing field, excluding NaN, inf, and masked values
         norm    : the number of non nan, inf, masked values considered in the above sum
-    
+
     The border area is defined by wfmap - this is the subsection of the binary firing map of a 
     single field that lies within search_width of a border. wfmap is must be of size NxM where
         N : arena_size / bin_size
         M : search_width
     and where the 0th column (wfmap[:,0], len()=N) repsents the sites closest to the border
-    
+
     wfmap: has value 1 inside the field and 0 outside the field
     '''
     if type(wfmap) != np.ma.MaskedArray:
@@ -139,7 +138,7 @@ def _wall_field(wfmap):
     # distance_transform_edt(1-map) is the Python equivalent to (Matlab bwdist(map))
     # Cells in map with value 1 go to value 0
     # Cells in map with value 0 go to the geometric distance to the nearest value 1 in map
-    
+
     adjacent_sites = distance[:,0]
     # Identify sites which are NaN, inf, or masked
     # Replace them with the next cell along the row, closest to the wall, that is not masked, nan, or inf
@@ -154,15 +153,12 @@ def _wall_field(wfmap):
                         break
     covered = np.ma.sum(adjacent_sites==0)
     contributing_cells = N - np.sum(adjacent_sites.mask) # The sum gives the number of remaining inf, nan or masked cells
-    
-    coverage = covered / contributing_cells
-    
-    return coverage
-    
-                        
-                
 
-    
+    coverage = covered / contributing_cells
+
+    return coverage
+
+
 def _validate_wall_definition(walls):
     '''Parse the walls argument for invalid entry'''
     if type(walls) != str:
@@ -176,8 +172,8 @@ def _validate_wall_definition(walls):
         for char in walls:
             if char.lower() not in ["t","r","b","l"]:
                 raise ValueError("Character %s is not a valid entry in wall definition. Valid characters are [t, r, b, l]" % char)
-    
-    
+
+
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     test_data = [[0,0,0,0,0,5,0,4],

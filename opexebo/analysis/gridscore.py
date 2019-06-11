@@ -1,20 +1,16 @@
 """
 Provide function for gridness score calculation.
 """
-
-import os  # TODO TODO
-os.environ['HOMESHARE'] = r'C:\temp\astropy'   #TODO TODO
-
 import matplotlib.pyplot as plt
 import numpy as np
 
 from scipy.spatial.distance import cdist
 from scipy.stats import pearsonr
-from skimage.transform import rotate
-
+from skimage import transform
 import sep
 import opexebo
 import opexebo.defaults as default
+
 
 def gridscore(aCorr, **kwargs):
     """Calculate gridness score for an autocorrelogram.
@@ -41,7 +37,6 @@ def gridscore(aCorr, **kwargs):
             Default and all possible values are stored in opexebo.defaults
         'min_orientation' : int
             See function "grid_score_stats"
-
 
     Returns:
     -------
@@ -82,12 +77,12 @@ def gridscore(aCorr, **kwargs):
     # normalize aCorr in order to find contours
     aCorr = aCorr / aCorr.max()
     centre = -0.5 + np.array(aCorr.shape)/2 # centre : also [y, x]
-    cFieldRadius = int( np.floor(_findCentreRadius(aCorr)) )
+    cFieldRadius = int(np.floor(_findCentreRadius(aCorr)))
     if debug:
         print("Center radius is {}".format(cFieldRadius))
 
     if cFieldRadius in [-1, 0, 1]:
-        return (np.nan, grid_score_stats(np.zeros_like(aCorr), \
+        return (np.nan, grid_score_stats(np.zeros_like(aCorr), 
                                     np.zeros_like(aCorr), centre))
 
     halfHeight = np.ceil(aCorr.shape[0]/2)
@@ -99,10 +94,11 @@ def gridscore(aCorr, **kwargs):
     # outer bound is defined by the minimum of autocorrelogram's dimensions
     # this is need for rectangular autocorrelograms.
     outerBound = int(np.floor(np.min(np.array(aCorr.shape)/2)))
-    radii = np.linspace(cFieldRadius+1, outerBound, outerBound-cFieldRadius).astype(int)
+    radii = np.linspace(cFieldRadius+1, outerBound, outerBound-cFieldRadius)
+    radii = radii.astype(int)
     numSteps = len(radii)
     if numSteps < 1:
-        return (np.nan, grid_score_stats(np.zeros_like(aCorr), \
+        return (np.nan, grid_score_stats(np.zeros_like(aCorr), 
                                     np.zeros_like(aCorr), centre))
 
     rotAngles_deg = np.arange(30, 151, 30)  # 30, 60, 90, 120, 150
@@ -111,7 +107,8 @@ def gridscore(aCorr, **kwargs):
             dtype=float)
     # we get rotated maps here as it is a heavy operation
     for n, angle in enumerate(rotAngles_deg):
-        rotatedACorr[:, :, n] = rotate(aCorr, angle, preserve_range=True, clip=False)
+        rotatedACorr[:, :, n] = transform.rotate(aCorr, angle,
+                                            preserve_range=True, clip=False)
     rr, cc = np.meshgrid(widthIndices, heightIndices, sparse=False)
     # This is needed for compatibility with Matlab's code
     rr += 1
@@ -160,6 +157,7 @@ def gridscore(aCorr, **kwargs):
 #########################################################
 ################        Helper Functions
 #########################################################
+
 
 def grid_score_stats(aCorr, mask, centre, **kwargs):
     '''
@@ -306,13 +304,13 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
                   'ellipse_theta':        gs_ellipse_theta}
     return grid_stats
 
+
 def _circular_mask(image, radius, polarity='outwards', center=None):
         '''
         Given height and width, create circular mask around point with defined radius
         Polarity:
             'inwards' : True inside,  False outside
             'outwards': True outside, False inside
-
         '''
         h = image.shape[0]
         w = image.shape[1]
@@ -369,7 +367,6 @@ def _plotContours(img, contours):
     return radii, centroids
 
 
-
 def _circ_dist2(X):
     '''Given a 1D array of angles, find the 2D array of pairwise differences
     Based on https://github.com/circstat/circstat-matlab/blob/master/circ_dist2.m'''
@@ -378,9 +375,11 @@ def _circ_dist2(X):
     return np.angle(x/y)
 
 
-# Polygon area, from https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
-# Seems to be the same as Matlab's polyarea
+
 def _polyArea(x, y):
+    '''Polygon area, from 
+    https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
+    Seems to be the same as Matlab's polyarea'''
     return 0.5*np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
 
 
@@ -442,8 +441,7 @@ def _findCentreRadius(aCorr):
 if __name__ == '__main__':
     plt.close("all")
     print("Loading modules")
-    import os
-    os.environ['HOMESHARE'] = r'C:\temp\astropy'
+
     import scipy.io as spio
     import matplotlib.pyplot as plt
 

@@ -6,11 +6,10 @@ from opexebo.analysis import bordercoverage
 import opexebo.defaults as default
 
 
-
 def borderscore(rate_map, fields_map, fields, **kwargs):
     '''
     Calculate border score for a firing map
-    
+
     Calculates a border score for a firing rate map according to the article "Representation of Geometric
     Borders in the Entorhinal Cortex" by Solstad et. al. (Science 2008).
     Border score ranges from -1 to +1 with +1 being "a perfect border cell". If the firing map contains
@@ -18,8 +17,6 @@ def borderscore(rate_map, fields_map, fields, **kwargs):
     The score reflects not only how close a field is to a border and how big the coverage of this field is,
     but also it reflects spreadness of a field. The best border score (+1) will be calculated for a thin
     line (1 px, bin) that lies along the wall and fully covers this wall.
-    
-    
     
     Parameters
     ----------
@@ -52,14 +49,14 @@ def borderscore(rate_map, fields_map, fields, **kwargs):
                       Characters are case insensitive. Default value is 'TRBL' meaning that border
                       score is calculated along all walls. Any combination is possible, e.g.
                       'R' to calculate along right wall, 'BL' to calculate along two walls, e.t.c.
-    
+
     Returns
     -------
     score   : float
         Border score in the range [-1, 1].
         A value of -1 is given when no fields are provided
-    
-    
+
+
     See also
     --------
     BNT.+analyses.placefield
@@ -68,11 +65,11 @@ def borderscore(rate_map, fields_map, fields, **kwargs):
     opexebo.analysis.placefield
     opexebo.analysis.bordercoverage
     '''
-    
+
     # Extract keyword arguments or set defaults
     sw = kwargs.get('search_width', default.search_width)
     walls = kwargs.get('walls', default.walls)
-    
+
     # Check that fields exist
     if np.ma.max(fields_map) == 0:
         # No fields exist
@@ -86,10 +83,9 @@ def borderscore(rate_map, fields_map, fields, **kwargs):
         fields_rate_map = np.ma.masked_invalid(fields_rate_map)
         wfd = _weighted_firing_distance(fields_rate_map)
         score = (coverage - wfd)/(coverage + wfd)
-        
     return score
-        
-    
+
+
 def _weighted_firing_distance(rmap):
     '''
     parameters
@@ -105,18 +101,17 @@ def _weighted_firing_distance(rmap):
     # Check that the provided array is properly masked
     if type(rmap != np.ma.MaskedArray):
         rmap = np.ma.masked_invalid(rmap)
-        
+
     # Normalise firing map by the sum of the firing map, such that it resembles a PDF
     rmap /= np.ma.sum(rmap)
-    
+
     # Create an array, same size as rmap, where the cell value is the distance (in bins) from the edge of the array:
     x = np.ones(rmap.shape) # define area same size as ratemap
     x = np.pad(x, 1, mode='constant') # Pad outside with zeros, we calculate distance from nearest zero
     dist = distance_transform_cdt(x, metric='taxicab') # taxicab metric: distance along axes, not diagonal distance. 
     #wfd = np.ma.sum( np.ma.dot(dist[1:-1, 1:-1], rmap) )
     wfd = np.ma.sum( dist[1:-1, 1:-1] * rmap )
-    
+
     # Normalise by half of the smallest arena dimensions
     wfd = 2 * wfd / np.min(rmap.shape)
     return wfd
-    
