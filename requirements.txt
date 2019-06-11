@@ -1,13 +1,4 @@
-pip==18.0.0
-bumpversion==0.5.3
-wheel==0.31.x
-watchdog==0.9.x
-flake8==3.5.0
-tox==3.2.x
-coverage==4.5.x
-Sphinx==1.7.x
 sep>=1.0.0
-twine==1.11.x
 astropy==3.1.2
 numpy==1.16.x
 scipy==1.1.0
