@@ -4,7 +4,7 @@ import astropy.stats.circstats as cs
 import opexebo.defaults as default
 
 
-def turningcurvestats(turning_curve, **kwargs):
+def tuningcurvestats(tuning_curve, **kwargs):
     """ Calculate statistics about a turning curve
 
     Calculates various statistics for a turning curve.
@@ -18,7 +18,7 @@ def turningcurvestats(turning_curve, **kwargs):
 
     Parameters
     ----------
-    turning_curve : np.ma.MaskedArray
+    tuning_curve : np.ma.MaskedArray
         Smoothed turning curve of firing rate as a function of angle
         Nx1 array
     kwargs
@@ -62,7 +62,7 @@ def turningcurvestats(turning_curve, **kwargs):
     See also
     --------
     BNT.+analyses.tcStatistics
-    opexebo.analysis.turningcurve
+    opexebo.analysis.tuningcurve
 
     Copyright (C) 2019 by Simon Ball
 
@@ -74,15 +74,15 @@ def turningcurvestats(turning_curve, **kwargs):
 
     debug = kwargs.get("debug", False)
     percentile = kwargs.get('percentile', default.hd_percentile)
-    ndim = turning_curve.ndim
+    ndim = tuning_curve.ndim
     if ndim != 1:
-        raise ValueError("turning_curve should be a 1D array. You have provided\
+        raise ValueError("tuning_curve should be a 1D array. You have provided\
                          %d dimensions" % ndim)
     if not 0 <= percentile <= 1:
         raise ValueError("Keyword 'percentile' should be in the range [0, 1]. \
                          You provided  %.2f. " % percentile)
 
-    num_bin = turning_curve.size
+    num_bin = tuning_curve.size
     bin_width = 2 * np.pi / num_bin
     hb = bin_width / 2
 
@@ -93,21 +93,21 @@ def turningcurvestats(turning_curve, **kwargs):
 
     # Calculate the simple values
     tcstat = {}
-    mean_dir = cs.circmean(turning_curve)
-    peak_dir_index = np.argmax(turning_curve)
+    mean_dir = cs.circmean(tuning_curve)
+    peak_dir_index = np.argmax(tuning_curve)
     tcstat['mean_direction_rad'] = mean_dir
     tcstat['peak_direction_rad'] = _index_to_angle(peak_dir_index, bin_width)
     tcstat['mean_direction_deg'] = np.degrees(mean_dir)
     tcstat['peak_direction_deg'] = np.degrees(_index_to_angle(peak_dir_index,
                                                               bin_width))
-    tcstat['peak_rate'] = np.nanmax(turning_curve)
-    tcstat['mean_rate'] = np.nanmean(turning_curve)
+    tcstat['peak_rate'] = np.nanmax(tuning_curve)
+    tcstat['mean_rate'] = np.nanmean(tuning_curve)
 
     # Calculate the more complex ones:
     # mvl
     bin_centres = np.linspace(hb, (2*np.pi)-hb, num_bin)
-    mvl = np.sum(turning_curve * np.exp(1j*bin_centres))
-    mvl = np.abs(mvl)/np.sum(turning_curve)
+    mvl = np.sum(tuning_curve * np.exp(1j*bin_centres))
+    mvl = np.abs(mvl)/np.sum(tuning_curve)
     tcstat['mvl'] = mvl
 
     # stdev
@@ -115,7 +115,7 @@ def turningcurvestats(turning_curve, **kwargs):
     tcstat['stdev'] = np.sqrt(2*(1-mvl))
 
     # Percentile arc
-    peak_index = np.nanargmax(turning_curve)
+    peak_index = np.nanargmax(tuning_curve)
     peak = tcstat['peak_rate']
     half_peak = peak * percentile
 
@@ -123,14 +123,14 @@ def turningcurvestats(turning_curve, **kwargs):
     # the peak rate occurs at the centre of the array - thendon't have to worry
     # about whether the arc goes off one edge of the array or not
     # Must be careful to keep track of the array to which the indicies point
-    turning_curve_re = np.zeros_like(turning_curve)
+    tuning_curve_re = np.zeros_like(tuning_curve)
     centre_index = int(num_bin / 2)
     offset = centre_index - peak_index
-    turning_curve_re[offset:] = turning_curve[:-offset]
-    turning_curve_re[:offset] = turning_curve[-offset:]
+    tuning_curve_re[offset:] = tuning_curve[:-offset]
+    tuning_curve_re[:offset] = tuning_curve[-offset:]
     # A positive offset means that the peak angle was in the range [0, pi], and
     # is now at the central index. Therefore, to get the "proper" index,
-    # subtract offset from index in turning_curve_re
+    # subtract offset from index in tuning_curve_re
 
     if debug:
         print("Centre index: %d, value" % centre_index)
@@ -139,8 +139,8 @@ def turningcurvestats(turning_curve, **kwargs):
 
     # Clockwise and counter-clockwise edges of arc around peak defined by
     # percentile. ccw index +1 to account for width of central peak
-    cw_hp_index = np.where(turning_curve_re >= (half_peak))[0][0] - offset
-    ccw_hp_index = np.where(turning_curve_re >= (half_peak))[0][-1] - offset+1
+    cw_hp_index = np.where(tuning_curve_re >= (half_peak))[0][0] - offset
+    ccw_hp_index = np.where(tuning_curve_re >= (half_peak))[0][-1] - offset+1
 
     cw_hp_ang = _index_to_angle(cw_hp_index, bin_width)
     ccw_hp_ang = _index_to_angle(ccw_hp_index, bin_width)
@@ -179,5 +179,5 @@ if __name__=='__main__':
     tc = np.exp(-1*np.square(x-x0)/w) + np.exp(-1*np.square(x-x0-(2*np.pi))/w)
 
     perc = 0.8
-    stats = turningcurvestats(tc, percentile=perc, debug=True)
+    stats = tuningcurvestats(tc, percentile=perc, debug=True)
     print(stats['score'])

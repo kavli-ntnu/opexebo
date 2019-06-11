@@ -5,7 +5,7 @@ import opexebo
 import opexebo.defaults as default
 
 
-def turningcurve(angular_occupancy, spike_angles, **kwargs):
+def tuningcurve(angular_occupancy, spike_angles, **kwargs):
     """Analogous to a RateMap - i.e. mapping spike activity to spatial position
     map spike rate as a function of angle
 
@@ -25,7 +25,7 @@ def turningcurve(angular_occupancy, spike_angles, **kwargs):
 
     Returns
     -------
-    turning_curve : np.ma.MaskedArray
+    tuning_curve : np.ma.MaskedArray
         unsmoothed array of firing rate as a function of angle
         Nx1 array
 
@@ -64,6 +64,6 @@ def turningcurve(angular_occupancy, spike_angles, **kwargs):
     spike_histogram = opexebo.general.accumulatespatial(spike_angles,
                 arena_size=2*np.pi, limits=(0, 2*np.pi), bin_width=bin_width)
 
-    turning_curve = spike_histogram / angular_occupancy
+    tuning_curve = spike_histogram / (angular_occupancy + np.spacing(1))
 
-    return turning_curve
+    return tuning_curve
