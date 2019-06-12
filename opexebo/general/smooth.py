@@ -74,7 +74,7 @@ def smooth(data, sigma, **kwargs):
     (at your option) any later version.
     '''
     d = data.ndim
-    if  d== 2:
+    if  d == 2:
         kernel = Gaussian2DKernel(x_stddev=sigma)
     elif d == 1:
         kernel = Gaussian1DKernel(stddev=sigma)
@@ -95,7 +95,7 @@ def smooth(data, sigma, **kwargs):
     # The padding values are based on reflecting at the border
     # mode='symmetrical' results in
     # [0, 1, 2, 3, 4] -> [1,0  ,0,1,2,3,4,  4,3]
-    # mode='reflect results in
+    # mode='reflect' results in
     # [0, 1, 2, 3, 4] -> [2,1  ,0,1,2,3,4,  3,2]
     # i.e. changing whether the reflection axis is outside the original data
     # or overlaid on the outermost row
