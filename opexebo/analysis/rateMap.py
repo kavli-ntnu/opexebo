@@ -63,19 +63,24 @@ def ratemap(occupancy_map, spikes, **kwargs):
     '''
 
     # Check correct inputs
-    dims_p = occupancy_map.ndim
-    dims_s, num_samples_s = spikes.shape
-    if dims_s-1 != dims_p:
-        raise ValueError("Spikes must have the same number of columns as\
-            positions ([t,x] or [t, x, y]). You have provided %d columns of\
-            spikes, and %d columns of positions" % (dims_s, dims_p))
-        
     if type(occupancy_map) not in (np.ndarray, np.ma.MaskedArray) :
         raise ValueError("Occupancy Map not provided in usable format. Please\
             provide either a Numpy ndarray or Numpy MaskedArray. You provided\
             %s." % type(occupancy_map))
+    if type(spikes) not in (np.ndarray, np.ma.MaskedArray) :
+        raise ValueError("spikes not provided in usable format. Please\
+            provide either a Numpy ndarray or Numpy MaskedArray. You provided\
+            %s." % type(spikes))
+    
+    dims_p = occupancy_map.ndim
+    dims_s, num_samples_s = spikes.shape
+    if dims_s-1 != dims_p:
+        raise ValueError("Spikes must have the same number of spatial\
+            dimensions as positions ([t,x] or [t, x, y]). You have provided %d\
+            columns of spikes, and %d columns of positions" % (dims_s, dims_p))
+    
     if "arena_size" not in kwargs:
-        raise ValueError("No arena dimensions provided. Please provide the\
+        raise KeyError("No arena dimensions provided. Please provide the\
                     dimensions of the arena by using keyword 'arena_size'.")
 
     if type(occupancy_map) == np.ndarray:

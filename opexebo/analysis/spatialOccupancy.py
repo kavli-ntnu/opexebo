@@ -78,7 +78,7 @@ def spatialoccupancy(positions, speed, **kwargs):
     if speed.shape[0] != 2:
         raise ValueError("Speed array has the wrong number of columns")
     if "arena_size" not in kwargs:
-        raise ValueError("Arena dimensions not provided. Please provide dimensions using keyword 'arena_size'.")
+        raise KeyError("Arena dimensions not provided. Please provide dimensions using keyword 'arena_size'.")
     
     
     # Handle NaN positions by converting to a Masked Array
