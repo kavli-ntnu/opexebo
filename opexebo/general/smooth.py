@@ -79,8 +79,8 @@ def smooth(data, sigma, **kwargs):
     elif d == 1:
         kernel = Gaussian1DKernel(stddev=sigma)
     else:
-        raise ValueError("This function can only smooth 1D or 2D data. You\
-                         provided data with %d dimensions" % d)
+        raise NotImplementedError("This function currently supports smoothing\
+                1D, 2D data. You have provided %d dimensional data" % d)
     
     mask_fill = kwargs.get('mask_fill', default.mask_fill)
 
@@ -88,7 +88,7 @@ def smooth(data, sigma, **kwargs):
     if type(data) == np.ma.MaskedArray:
         working_data[data.mask] = mask_fill
 
-    width = int(3*sigma)
+    width = int(4*sigma)
 
     working_data = np.pad(working_data, pad_width=width, mode='symmetric')
     # pad the outer boundary to depth "width
@@ -110,8 +110,8 @@ def smooth(data, sigma, **kwargs):
     elif d == 1: 
         smoothed_data = smoothed_data[width:-width]
     else: # This condition should never happen, due to checking above
-        raise ValueError("This function can only smooth 1D or 2D data. You\
-                         provided data with %d dimensions" % d)
+        raise NotImplementedError("This function currently supports smoothing\
+                1D, 2D data. You have provided %d dimensional data" % d)
     # We have to get rid of the padding that we previously added, and the only 
     # way to do that is slicing, which is NOT dimensional-agnostic
     # There may be a more elegant solution than if/else, but this will do now
