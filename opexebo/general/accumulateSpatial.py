@@ -75,7 +75,7 @@ def accumulatespatial(pos, **kwargs):
             (x_min, x_max, y_min, y_max). You provided type %s" % type(limits))
 
     arena_size, is_2d = validatekeyword__arena_size(arena_size, dims)
-    num_bins = int(np.ceil(arena_size / bin_width))
+    num_bins = np.ceil(arena_size / bin_width).astype(int)
 
     # Histogram of positions
     x = pos[0,:]
@@ -91,8 +91,15 @@ def accumulatespatial(pos, **kwargs):
         else:
             limits = ( [limits[0], limits[1]], # change from a 4 element list to a list of lists
                              [limits[2], limits[3]] )
-        in_range = np.logical_and( np.logical_and(x>=limits[0][0], x<limits[0][1]),
-                                    np.logical_and(y>=limits[1][0], y<limits[1][1]) )
+        in_range = np.logical_and( 
+                np.logical_and(
+                        np.ma.masked_greater_equal(x, limits[0][0]), np.ma.masked_less(x, limits[0][1])),
+                np.logical_and(
+                        np.ma.masked_greater_equal(y, limits[1][0]), np.ma.masked_less(y, limits[1][1])) )
+        # the simple operator ">= doesn't respect Masked Arrays
+        # As of 2019, it does actually behave correctly (NaN is invalid and so
+        # is removed), but I would prefer to be seplicit
+        
         in_range_x = x[in_range]
         in_range_y = y[in_range]
 
@@ -107,7 +114,8 @@ def accumulatespatial(pos, **kwargs):
         elif len(limits) != 2: 
             raise ValueError("You must provide a 2-element 'limits' value for a \
                              1D map. You provided %d elements" % len(limits))
-        in_range = np.logical_and(x>=limits[0], x<limits[1])
+        in_range = np.logical_and(np.ma.masked_greater_equal(x, limits[0]),
+                                  np.ma.masked_less(y, limits[1]))
         in_range_x = x[in_range]
 
         hist, edges = np.histogram(x, bins=num_bins, range=limits)
