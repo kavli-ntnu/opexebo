@@ -74,7 +74,7 @@ def single():
     plt.show()
     
 if __name__ == '__main__':
-    #data = spio.loadmat(r'C:\Users\simoba\Documents\_work\Kavli\bntComp\Output_2\auto_input_file_vars.mat')
+    data = spio.loadmat(r'C:\Users\simoba\Documents\_work\Kavli\bntComp\Output_2\auto_input_file_vars.mat')
     #data = spio.loadmat(r"N:\simoba\opexebo_working_area\test_data\generic\simple_square_input_vars.mat")
     test_invalid_inputs()
     test_smoothing_simple()
