@@ -77,7 +77,7 @@ def gridscore(aCorr, **kwargs):
     # normalize aCorr in order to find contours
     aCorr = aCorr / aCorr.max()
     centre = -0.5 + np.array(aCorr.shape)/2 # centre : also [y, x]
-    cFieldRadius = int(np.floor(_findCentreRadius(aCorr)))
+    cFieldRadius = int(np.floor(_findCentreRadius(aCorr, **kwargs)))
     if debug:
         print("Center radius is {}".format(cFieldRadius))
 
@@ -223,10 +223,10 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
     gs_spacings         = np.full(3, fill_value = np.nan, dtype=float)
 
     # Find fields in autocorrelogram
-    acorr_fields = sep.extract(aCorr.copy(order="C"), mask=mask, thresh=.1) # CONSIDER MAKING THRESHOLD AN ARGUMENT
-    all_coords = np.array([[props['y'],props['x']] for props in acorr_fields])
+    all_coords = opexebo.general.peak_search(aCorr, mask=mask, search_method="sep", null_background=True, threshold=0.1)
+    
 
-    if len(acorr_fields) >= 6:
+    if all_coords.shape[0] >= 6:
         # Calculate orientation and distance of all local maxima to center
         orientation = np.arctan2(all_coords[:,0] - centre[0], all_coords[:,1] - centre[1]) # in radians
         distance = np.sqrt(np.square(all_coords[:,0]-centre[0]) + np.square(all_coords[:,1]-centre[1]))
@@ -264,12 +264,11 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
 
         
         if debug:
-            aCorr_masked = aCorr.copy()
-            aCorr_masked[mask] = 0
+            aCorr_masked = np.ma.masked_where(mask, aCorr.copy())
             plt.imshow(aCorr_masked)
-            plt.scatter(centre[1],centre[0], s=600, marker='x', color='white')
+            plt.scatter(centre[1],centre[0], s=600, marker='x', color='black')
             for field_no, coord in enumerate(gs_positions):
-                plt.scatter(coord[1], coord[0], s=300, marker='x', color='blue')
+                plt.scatter(coord[1], coord[0], s=300, marker='x', color='red')
                 plt.text(coord[1]+3, coord[0], field_no, label='Center')
             plt.title('Masked autocorr + 6 remaining fields')
 
@@ -391,14 +390,15 @@ def _contourArea(contours, i):
     return area
 
 
-def _findCentreRadius(aCorr):
+def _findCentreRadius(aCorr, **kwargs):
+    sm = kwargs.get("search_method", default.search_method)
     halfHeight = np.ceil(aCorr.shape[0]/2)
     halfWidth = np.ceil(aCorr.shape[1]/2)
     peak_coords = np.ones(shape=(1, 2), dtype=np.int)
     peak_coords[0, 0] = halfHeight-1
     peak_coords[0, 1] = halfWidth-1
     fields = opexebo.analysis.placefield(aCorr, min_bins=2, min_peak=0, min_mean=0, init_thresh=.8, \
-                                         search_method='default', peak_coords=peak_coords)[0] # Fix all input args for now
+                                         search_method=sm, peak_coords=peak_coords)[0] # Fix all input args for now
     if fields is None or len(fields) == 0:
         return 0
 
@@ -439,7 +439,7 @@ def _findCentreRadius(aCorr):
 
 
 if __name__ == '__main__':
-    plt.close("all")
+    #plt.close("all")
     print("Loading modules")
 
     import scipy.io as spio
@@ -450,7 +450,7 @@ if __name__ == '__main__':
     #bnt = spio.loadmat(bnt_output)
     print("Data loaded")
 
-    i = 20
+    i = 100
     acorr = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['aCorr'][0,0]
     gscore = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['gridScore'][0,0][0,0]
     gsop = gridscore(acorr, debug=True, search_method='default')

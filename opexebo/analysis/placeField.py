@@ -3,11 +3,13 @@ Provide function for 2D placefield detection.
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from scipy import ndimage
 from skimage import measure, morphology
 import sep
 import opexebo.defaults as default
+import opexebo
 
 
 def placefield(firing_map, **kwargs):
@@ -106,16 +108,20 @@ def placefield(firing_map, **kwargs):
         occupancy_mask[np.isnan(firing_map)] = True
         firing_map = np.nan_to_num(firing_map, copy=True)
 
-
+    se = morphology.disk(1)
+    Ie = morphology.erosion(firing_map, se)
+    fmap = morphology.reconstruction(Ie, firing_map)
     '''Part 2: find local maxima'''
     # Based on the user-requested search method, find the co-ordinates of local maxima
-    if search_method == default.search_method:
-        fmap, peak_coords = _peak_search_skimage(peak_coords, firing_map)
-    elif search_method == "sep":
-        fmap, peak_coords = _peak_search_sep(peak_coords, firing_map, occupancy_mask)
-    else:
-        raise NotImplementedError("The search method you have requested (%s) is \
-                                  not yet implemented" % search_method)
+    if peak_coords is None:
+        if search_method == default.search_method:
+            peak_coords = opexebo.general.peak_search(fmap, **kwargs)
+        elif search_method == "sep":
+            #fmap = firing_map
+            peak_coords = opexebo.general.peak_search(fmap, **kwargs)
+        else:
+            raise NotImplementedError("The search method you have requested (%s) is \
+                                      not yet implemented" % search_method)
 
     # obtain value of found peaks
     found_peaks = firing_map[peak_coords[:, 0], peak_coords[:, 1]]
@@ -247,74 +253,11 @@ def placefield(firing_map, **kwargs):
     return (fields, fields_map)
 
 
+
 #########################################################
 ################        Helper Functions
 #########################################################
 
-
-def _peak_search_skimage(peak_coords, firing_map, **kwargs):
-    '''Default peak detection method:erode and then dilate map to remove minor-most peaks
-    Then use skimage.morphology.local_maxima to identify peaks
-        '''
-    se = morphology.disk(1)
-    Ie = morphology.erosion(firing_map, se)
-    Iobr = morphology.reconstruction(Ie, firing_map)
-    # The effect of this erosion/reconstruction is to reduce value of cells
-    # around local maxima of the firing map. This can be shown, for instance, by
-    # plt.imshow(np.ma.masked_where(firing_map-Iobr!=0, firing_map))
-    # Also well explained here
-    # https://se.mathworks.com/help/images/understanding-morphological-reconstruction.html
-    # Not 100% clear on the exact purpose -Simon
-    # However, it *seems* as if it may act to suppress very small local maxima
-    regionalMaxMap = morphology.local_maxima(Iobr)
-    labeled_max = measure.label(regionalMaxMap, connectivity=2)
-
-    regions = measure.regionprops(labeled_max)
-    fmap = Iobr
-
-    if peak_coords is None:
-        peak_coords = np.zeros(shape=(len(regions), 2), dtype=np.int)
-
-        for i, props in enumerate(regions):
-            y0, x0 = props.centroid
-            peak = np.array([y0, x0])
-
-            # ensure that there are no peaks off the map (due to rounding)
-            peak[peak < 0] = 0
-            for j in range(firing_map.ndim):
-                if peak[j] > firing_map.shape[j]:
-                    peak[j] = firing_map.shape[j] - 1
-
-            peak_coords[i, :] = peak
-    return fmap, peak_coords
-
-def _peak_search_sep(peak_coords, firing_map, firing_map_mask, **kwargs):
-    '''Peak search using sep, a Python wrapper for a standard astronomy library.
-    sep is typically used to identify astonomical objects in telescope images
-    '''
-    tmp_firing_map = firing_map.copy('C')
-    tmp_mask = firing_map_mask.copy(order='C')
-    bkg = sep.Background(tmp_firing_map, mask=tmp_mask, fw=2, fh=2, \
-                     bw=int(tmp_firing_map.shape[0]), bh=int(tmp_firing_map.shape[1]))
-    init_fields = sep.extract(tmp_firing_map-bkg, mask=tmp_mask, thresh=2, \
-                          err=bkg.globalrms)
-
-    fmap = firing_map.copy()
-
-    if peak_coords is None:
-        peak_coords = np.zeros(shape=(len(init_fields), 2), dtype=np.int)
-
-        for i, props in enumerate(init_fields):
-            peak = np.array([props['y'], props['x']])
-            peak = np.round(peak)
-            # ensure that there are no peaks off the map (due to rounding)
-            peak[peak < 0] = 0
-            for j in range(firing_map.ndim):
-                if peak[j] > firing_map.shape[j]:
-                    peak[j] = firing_map.shape[j] - 1
-
-            peak_coords[i, :] = peak
-    return fmap, peak_coords
 
 def _expand_field(I, occupancy_mask, peak_rc, initial_change, initial_area, other_fields_linear, initial_th):
     '''
@@ -326,8 +269,6 @@ def _expand_field(I, occupancy_mask, peak_rc, initial_change, initial_area, othe
         If field size has increased by less than 300% of initial_change AND the field has decreased in size fewer than 3 times in a row
             If the field size hasn't changed in 10 steps, return the current field size
         Else
-
-
     '''
     pixel_list = np.nan
     last_area = initial_area
@@ -469,8 +410,9 @@ def _area_for_threshold(I, occupancy_mask, peak_rc, th, other_fields_linear):
     euler_array = (filled_image != labeled_img)  # True where holes were filled in
 
     euler_array = np.maximum((euler_array*1) - (occupancy_mask*1), 0)
-    # Ignore filled-in holes at bins that the animal never visited
+    # Ignore filled-in holes if it is due to the animal never visiting that location
     # Convert both arrays to integer, subtract one from the other, and replace resulting -1 values with 0
+    # NOTE! np.maximum is element-wise, i.e. it returns an array. This is DIFFERENT to np.max, which returns a float.
 
     euler_objects = morphology.label(euler_array, connectivity=2) # connectivity=2 : vertical, horizontal, and diagonal
     num = np.max(euler_objects) # How many holes were filled in
@@ -500,26 +442,36 @@ if __name__ == '__main__':
     import scipy.io as spio
     import matplotlib.pyplot as plt
     os.environ['HOMESHARE'] = r'C:\temp\astropy'
-    bnt_output = r'C:\Users\simoba\Documents\_work\Kavli\bntComp\Output\auto_input_file_vars.mat'
+    bnt_output = r'C:\Users\simoba\Documents\_work\Kavli\bntComp\Output_2\auto_input_file_vars.mat'
     print("Loading data")
-    bnt = spio.loadmat(bnt_output)
+    #bnt = spio.loadmat(bnt_output)
     print("Data loaded")
 
-    i = 16
+    i = 324
     rmap = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['map'][0,0]['z'][0,0]
     fields, field_map = placefield(rmap, min_peak=0.4, search_method='default')
+    lm = opexebo.general.peak_search(rmap, search_method="default")
+    y, x = lm.T
+    lms = opexebo.general.peak_search(rmap, search_method="sep")
+    ys, xs = lms.T
+    
     plt.rcParams['figure.figsize'] = [12,12]
     plt.figure()
     plt.subplot(2,2,1)
     plt.title("Ratemap")
-    plt.imshow(rmap)
+    plt.imshow(rmap.data)
     plt.colorbar()
+    plt.scatter(x, y, color="red")
+    plt.scatter(xs, ys, marker="x", color="orange")
     plt.subplot(2,2,2)
     plt.title("Default")
     plt.imshow(field_map)
-    plt.colorbar()
-    fields, field_map = placefield(rmap, min_peak=0.4, search_method='sep')
+    plt.scatter(x, y, color="red")
+    plt.scatter(xs, ys, marker="x", color="orange")
+    fields, field_map = placefield(rmap, min_peak=0.4, search_method='sep', threshold=0.2,null_background=True, debug=True)
     plt.subplot(2,2,4)
     plt.title("sep")
     plt.imshow(field_map)
-    plt.colorbar()
+    plt.scatter(x, y, color="red")
+    plt.scatter(xs, ys, marker="x", color="orange")
+    
