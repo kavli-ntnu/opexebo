@@ -7,7 +7,6 @@ import numpy as np
 from scipy.spatial.distance import cdist
 from scipy.stats import pearsonr
 from skimage import transform
-import sep
 import opexebo
 import opexebo.defaults as default
 
