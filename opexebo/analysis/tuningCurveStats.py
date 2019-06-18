@@ -31,22 +31,22 @@ def tuning_curve_stats(tuning_curve, **kwargs):
     Returns
     -------
     tcstat : dict
-        'score'         : float
+        'hd_score'         : float
             Score for how strongly modulated by angle the cell is
-        'mvl'           : float
+        'hd_mvl'           : float
             mean vector length
-        'stdev'         : float
-            Circular standard deviation [degrees]
-        'peak_rate'     : float
+        'hd_peak_rate'     : float
             ' Peak firing rate  [Hz]
-        'mean_rate'     : float
+        'hd_mean_rate'     : float
             Mean firing rate [Hz]
-        'peak_direction_deg' : float
-        'peak_direction_rad' : float
-            Direction of peak firing rate
-        'mean_direction_deg': float
-        'mean_direction_rad': float
-            Direction of mean firing rate [degrees]
+        'hd_peak_direction' : float
+        'hd_peak_direction_rad' : float
+            Direction of peak firing rate [degrees, radians]
+        'hd_mean_direction': float
+        'hd_mean_direction_rad': float
+            Direction of mean firing rate [degrees, radians]
+        'hd_stdev'         : float
+            Circular standard deviation [degrees]
         'halfCwInd'  : int
         'halfCcwInd' : int
             Indicies of at the start, end of the range defined by percentile
@@ -95,28 +95,28 @@ def tuning_curve_stats(tuning_curve, **kwargs):
     tcstat = {}
     mean_dir = cs.circmean(tuning_curve)
     peak_dir_index = np.argmax(tuning_curve)
-    tcstat['mean_direction_rad'] = mean_dir
-    tcstat['peak_direction_rad'] = _index_to_angle(peak_dir_index, bin_width)
-    tcstat['mean_direction_deg'] = np.degrees(mean_dir)
-    tcstat['peak_direction_deg'] = np.degrees(_index_to_angle(peak_dir_index,
+    tcstat['hd_mean_direction_rad'] = mean_dir
+    tcstat['hd_peak_direction_rad'] = _index_to_angle(peak_dir_index, bin_width)
+    tcstat['hd_mean_direction'] = np.degrees(mean_dir)
+    tcstat['hd_peak_direction'] = np.degrees(_index_to_angle(peak_dir_index,
                                                               bin_width))
-    tcstat['peak_rate'] = np.nanmax(tuning_curve)
-    tcstat['mean_rate'] = np.nanmean(tuning_curve)
+    tcstat['hd_peak_rate'] = np.nanmax(tuning_curve)
+    tcstat['hd_mean_rate'] = np.nanmean(tuning_curve)
 
     # Calculate the more complex ones:
     # mvl
     bin_centres = np.linspace(hb, (2*np.pi)-hb, num_bin)
     mvl = np.sum(tuning_curve * np.exp(1j*bin_centres))
     mvl = np.abs(mvl)/np.sum(tuning_curve)
-    tcstat['mvl'] = mvl
+    tcstat['hd_mvl'] = mvl
 
-    # stdev
+    # hd_stdev
     # Eq. 26.20 from J. H. Zar
-    tcstat['stdev'] = np.sqrt(2*(1-mvl))
+    tcstat['hd_stdev'] = np.sqrt(2*(1-mvl))
 
     # Percentile arc
     peak_index = np.nanargmax(tuning_curve)
-    peak = tcstat['peak_rate']
+    peak = tcstat['hd_peak_rate']
     half_peak = peak * percentile
 
     # Because Python doesn't natively handle circular arrays, reshape such that
@@ -158,7 +158,7 @@ def tuning_curve_stats(tuning_curve, **kwargs):
     tcstat['halfCcwRad'] = ccw_hp_ang
     tcstat['arc_angle_rad'] = arc_angle
     tcstat['arc_angle_deg'] = np.degrees(arc_angle)
-    tcstat['score'] = score
+    tcstat['hd_score'] = score
 
     return tcstat
 

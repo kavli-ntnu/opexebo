@@ -21,6 +21,8 @@ def tuning_curve(angular_occupancy, spike_angles, **kwargs):
         associated with the m'th spike
     kwargs
         bin_width : float
+            width of histogram bin in degrees
+            Must match that used in calculating angular_occupancy
 
 
     Returns
@@ -61,7 +63,7 @@ def tuning_curve(angular_occupancy, spike_angles, **kwargs):
         raise ValueError("Keyword 'bin_width' must match the value used to \
                          generate angular_occupancy")
 
-    spike_histogram = opexebo.general.accumulate_spatial(spike_angles,
+    spike_histogram, bin_edges = opexebo.general.accumulate_spatial(spike_angles,
                 arena_size=2*np.pi, limits=(0, 2*np.pi), bin_width=bin_width)
 
     tuning_curve = spike_histogram / (angular_occupancy + np.spacing(1))
