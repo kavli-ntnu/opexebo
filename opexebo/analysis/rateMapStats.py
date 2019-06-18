@@ -28,16 +28,20 @@ def rate_map_stats(rate_map, time_map, debug=False):
     
     Returns
     ---
-    information_rate    : float
-        information rate [bits/sec]
-    information_content : float
-        spatial information content [bits/spike]
-    sparsity            : float
-        see relevant literature (above)
-    selectivity         : float
-        see relevant literature (above)
-    coherence           : float
-        see relevant literature (above)
+    rms : dict
+        spatial_information_rate    : float
+            information rate [bits/sec]
+        spatial_information_content : float
+            spatial information content [bits/spike]
+        sparsity            : float
+            see relevant literature (above)
+        selectivity         : float
+            see relevant literature (above)
+        peak_rate : float
+            peak firing rate of smoothed map [Hz]
+        mean_rate : float
+            mean firing rate of smoothed map [Hz]
+
     See:
     ---
     BNT.+analyses.mapStatsPDF(map)
@@ -55,8 +59,9 @@ def rate_map_stats(rate_map, time_map, debug=False):
 
     sparsity = np.nan
     selectivity = np.nan
-    information_rate = np.nan
-    information_content = np.nan
+    inf_rate = np.nan
+    inf_content = np.nan
+
     
     mean_rate = np.ma.sum( rate_map * position_PDF )
     mean_rate_sq = np.ma.sum( np.ma.power(rate_map, 2) * position_PDF )
@@ -81,10 +86,15 @@ def rate_map_stats(rate_map, time_map, debug=False):
         if debug:
             print(log_argument.shape)
             #print("log argument: %.4f" % log_argument)
-        information_rate = np.ma.sum(position_PDF * rate_map * np.ma.log2(log_argument))
-        information_content = information_rate / mean_rate
-    
-    return information_rate, information_content, sparsity, selectivity
+        inf_rate = np.ma.sum(position_PDF * rate_map * np.ma.log2(log_argument))
+        inf_content = inf_rate / mean_rate
+        
+    rmap_mean = np.mean(rate_map)
+    rmap_peak = np.max(rate_map)
+        
+    return {"spatial_information_rate":inf_rate, "spatial_information_content":inf_content,
+            "sparsity":sparsity, "selectivity":selectivity, "peak_rate":rmap_peak,
+            "mean_rate":rmap_mean}
 
     
     
