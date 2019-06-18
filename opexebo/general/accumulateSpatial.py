@@ -5,7 +5,7 @@ from opexebo.general import validatekeyword__arena_size
 import opexebo.defaults as default
 
 
-def accumulatespatial(pos, **kwargs):
+def accumulate_spatial(pos, **kwargs):
     """
     Accumulate repeated observations of a variable into a binned representation
     by means of a histogram. 
@@ -44,9 +44,9 @@ def accumulatespatial(pos, **kwargs):
         Dimensions given by arena_size/bin_width
         Not normalised - each cell gives the integer number of occurrences of 
         the observation in that cell
-    edges : :np.ndarray
-        Array of bin edges used in calculating the histogram
-        Either 1D or 2D. 
+    edges : list-like
+        x, or (x, y), where x, y are 1d np.ndarrays
+        Here x, y correspond to the output histogram
 
     See also
     --------

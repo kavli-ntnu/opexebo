@@ -7,12 +7,11 @@ import matplotlib.pyplot as plt
 
 from scipy import ndimage
 from skimage import measure, morphology
-import sep
 import opexebo.defaults as default
 import opexebo
 
 
-def placefield(firing_map, **kwargs):
+def place_field(firing_map, **kwargs):
     """Locate place fields on a firing map.
 
     Identifies place fields in 2D firing map. Placefields are identified by

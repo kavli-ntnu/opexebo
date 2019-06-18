@@ -8,7 +8,7 @@ Created on Tue Jun  4 11:37:57 2019
 import numpy as np
 
 
-def fitellipse(X, Y, **kwargs):
+def fit_ellipse(X, Y, **kwargs):
     '''
     Fit an ellipse to the provided set of X, Y co-ordinates
 

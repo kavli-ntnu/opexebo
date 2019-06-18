@@ -1,7 +1,7 @@
 """ Tests for spatial occupancy"""
 
-import opexebo
-from opexebo.analysis import spatialoccupancy as func
+
+from opexebo.analysis import spatial_occupancy as func
 
 import scipy.io as spio
 import numpy as np
@@ -24,7 +24,7 @@ def get_time_map_opexebo(data, key, arena_size = 80, bin_width=2.0):
     positions = np.ma.masked_where(np.isnan(positions), positions)
     speeds = np.ones((2, positions.shape[1]))
     spc = 0
-    ma = opexebo.analysis.spatialoccupancy(positions, speeds, arena_size=arena_size, 
+    ma = func(positions, speeds, arena_size=arena_size, 
                                            bin_width=bin_width, speed_cutoff=spc, limits=lim)
     return ma
 
@@ -49,7 +49,7 @@ def test_square_arena():
     for key in np.arange(20):
     
         bnt = get_time_map_bnt(data, key)[1] # raw map only
-        ope = get_time_map_opexebo(data, key, arena_size=arena_size, bin_width=bin_width)
+        ope = get_time_map_opexebo(data, key, arena_size=arena_size, bin_width=bin_width)[0]
 
         #  Test that the binning and arena size is valid
         assert(bnt.shape == ope.shape)
@@ -76,7 +76,7 @@ def test_rectangular_arena():
     for key in np.arange(5):
     
         bnt = get_time_map_bnt(data, key)[1] # raw map only
-        ope = get_time_map_opexebo(data, key, arena_size=arena_size, bin_width=bin_width)
+        ope = get_time_map_opexebo(data, key, arena_size=arena_size, bin_width=bin_width)[0]
         
         #  Test that the binning and arena size is valid
         assert(bnt.shape == ope.shape)
@@ -144,8 +144,8 @@ def test_invalid_inputs():
 
 if __name__ == '__main__':
     
-    #test_square_arena()
-    #test_rectangular_arena()
-    #test_circular_arena()
-    #test_linear_arena()
+    test_square_arena()
+    test_rectangular_arena()
+    test_circular_arena()
+    test_linear_arena()
     test_invalid_inputs()

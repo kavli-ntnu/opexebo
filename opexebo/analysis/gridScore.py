@@ -11,7 +11,7 @@ import opexebo
 import opexebo.defaults as default
 
 
-def gridscore(aCorr, **kwargs):
+def grid_score(aCorr, **kwargs):
     """Calculate gridness score for an autocorrelogram.
 
     Calculates a gridness score by expanding a circle around the centre field
@@ -273,7 +273,7 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
 
         # Fit an ellipse to those remaining fields:
         if len(gs_positions) > 2:
-            gs_ellipse =  opexebo.general.fitellipse(gs_positions[:,1], gs_positions[:,0])
+            gs_ellipse =  opexebo.general.fit_ellipse(gs_positions[:,1], gs_positions[:,0])
             gs_ellipse_theta = np.degrees(gs_ellipse[4]+np.pi)%360
             # The +pi term was included in the original BNT, I have kept it to
             # maintain consistency with past results.

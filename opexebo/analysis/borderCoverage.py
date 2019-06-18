@@ -5,7 +5,7 @@ from scipy.ndimage import distance_transform_edt
 import opexebo.defaults as default
 
 
-def bordercoverage(fields, **kwargs):
+def border_coverage(fields, **kwargs):
     '''
     Calculate border coverage for detected fields.
     

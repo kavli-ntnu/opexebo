@@ -5,7 +5,7 @@ import opexebo
 import opexebo.defaults as default
 
 
-def tuningcurve(angular_occupancy, spike_angles, **kwargs):
+def tuning_curve(angular_occupancy, spike_angles, **kwargs):
     """Analogous to a RateMap - i.e. mapping spike activity to spatial position
     map spike rate as a function of angle
 
@@ -61,7 +61,7 @@ def tuningcurve(angular_occupancy, spike_angles, **kwargs):
         raise ValueError("Keyword 'bin_width' must match the value used to \
                          generate angular_occupancy")
 
-    spike_histogram = opexebo.general.accumulatespatial(spike_angles,
+    spike_histogram = opexebo.general.accumulate_spatial(spike_angles,
                 arena_size=2*np.pi, limits=(0, 2*np.pi), bin_width=bin_width)
 
     tuning_curve = spike_histogram / (angular_occupancy + np.spacing(1))

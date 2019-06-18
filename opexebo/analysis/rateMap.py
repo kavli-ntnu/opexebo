@@ -2,11 +2,11 @@
 Occupancy Map and positioned Spike Times"""
 
 import numpy as np
-from opexebo.general import accumulatespatial
+import opexebo
 
 
 
-def ratemap(occupancy_map, spikes, **kwargs):
+def rate_map(occupancy_map, spikes, **kwargs):
     ''' Calculate the spatially correlated firing rate map
     
     The rate map is calculated by the number of spikes in a bin divided by the
@@ -46,7 +46,7 @@ def ratemap(occupancy_map, spikes, **kwargs):
 
     Returns
     -------
-    rate_map : np.ma.MaskedArray
+    rmap : np.ma.MaskedArray
         2D array, masked at locations of very low occupancy (t<1ms).
         Each cell gives the rate of neuron firing at that location.
 
@@ -87,17 +87,17 @@ def ratemap(occupancy_map, spikes, **kwargs):
         occupancy_map = np.ma.MaskedArray(occupancy_map)
 
     # Histogram of spike positions
-    spike_map = accumulatespatial(spikes[1:,:], **kwargs)[0]
+    spike_map = opexebo.general.accumulate_spatial(spikes[1:,:], **kwargs)[0]
 
     if spike_map.shape != occupancy_map.shape:
         raise ValueError("Rate Map and Occupancy Map must have the same\
                     dimensions. Provided: %s, %s" % (spike_map.shape, 
                                                     occupancy_map.shape))
     # Convert to rate map
-    rate_map = spike_map / (occupancy_map + np.spacing(1)) 
+    rmap = spike_map / (occupancy_map + np.spacing(1)) 
     # spacing adds floating point precision to avoid DivideByZero errors
     # These should be impossible due to masking, but included nevertheless
 
-    return rate_map
+    return rmap
     
     

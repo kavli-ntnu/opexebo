@@ -4,7 +4,7 @@ import astropy.stats.circstats as cs
 import opexebo.defaults as default
 
 
-def tuningcurvestats(tuning_curve, **kwargs):
+def tuning_curve_stats(tuning_curve, **kwargs):
     """ Calculate statistics about a turning curve
 
     Calculates various statistics for a turning curve.

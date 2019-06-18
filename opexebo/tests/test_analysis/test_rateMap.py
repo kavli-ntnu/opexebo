@@ -1,7 +1,7 @@
 """Tests for RateMap"""
 
-import opexebo
-from opexebo.analysis import ratemap as func
+
+from opexebo.analysis import rate_map as func
 
 import scipy.io as spio
 import numpy as np
@@ -23,7 +23,7 @@ def get_ratemap_opexebo(data, key, arena_size = 80, bin_width=2.0):
 
     time_map = data['cellsData'][key,0]['epochs'][0,0][0,0]['map'][0,0]['timeRaw'][0,0]
     spikes = data['cellsData'][key,0]['epochs'][0,0][0,0]['spikes2Pos'][0,0].transpose()
-    rmap_raw = opexebo.analysis.ratemap(time_map, spikes, arena_size=arena_size, 
+    rmap_raw = func(time_map, spikes, arena_size=arena_size, 
                                            bin_width=bin_width, limits=lim)
     return rmap_raw
 

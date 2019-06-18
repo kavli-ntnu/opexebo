@@ -2,11 +2,11 @@
 
 import numpy as np
 from scipy.ndimage import distance_transform_cdt
-from opexebo.analysis import bordercoverage
+from opexebo.analysis import border_coverage
 import opexebo.defaults as default
 
 
-def borderscore(rate_map, fields_map, fields, **kwargs):
+def border_score(rate_map, fields_map, fields, **kwargs):
     '''
     Calculate border score for a firing map
 
@@ -78,7 +78,7 @@ def borderscore(rate_map, fields_map, fields, **kwargs):
         # 1 or more fields exist
         fields_map_unlabelled = np.copy(fields_map)
         fields_map_unlabelled[fields_map>0] = 1
-        coverage = bordercoverage(fields, search_width = sw, walls = walls)
+        coverage = border_coverage(fields, search_width = sw, walls = walls)
         fields_rate_map = fields_map_unlabelled * rate_map
         fields_rate_map = np.ma.masked_invalid(fields_rate_map)
         wfd = _weighted_firing_distance(fields_rate_map)

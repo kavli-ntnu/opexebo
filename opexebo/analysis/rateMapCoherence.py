@@ -5,7 +5,7 @@ import numpy as np
 from astropy.convolution import convolve
 
 
-def ratemapcoherence(rate_map_raw, ):
+def rate_map_coherence(rate_map_raw):
     '''
     Calculate coherence of a rate map
     

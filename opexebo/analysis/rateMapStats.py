@@ -3,7 +3,7 @@
 import numpy as np
 
 
-def ratemapstats(rate_map, time_map, debug=False):
+def rate_map_stats(rate_map, time_map, debug=False):
     '''
     Calculate statistics of a rate map that depend on probability distribution function (PDF)
     

@@ -5,7 +5,7 @@ import opexebo.defaults as default
 import opexebo
 
 
-def speedscore(spike_times, tracking_speeds, **kwargs):
+def speed_score(spike_times, tracking_speeds, **kwargs):
     '''
     Calculate Speed score.
 

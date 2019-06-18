@@ -2,11 +2,12 @@
 Provides function to calculate the spatial occupancy of the arena
 '''
 import numpy as np
+import opexebo
 from opexebo import defaults as default
-from opexebo.general import accumulatespatial
 
 
-def spatialoccupancy(positions, speed, **kwargs):
+
+def spatial_occupancy(positions, speed, **kwargs):
     '''
     Generate an occpuancy map: how much time the animal spent in each location
     in the arena.    
@@ -29,8 +30,8 @@ def spatialoccupancy(positions, speed, **kwargs):
             Dimensions of arena (in cm)
             For a linear track, length
             For a circular arena, diameter
-            For a square arena, length
-            For a non-square rectangle, (length1, length2)
+            For a square arena, length or (x_length, y_length)
+            For a non-square rectangle, (x_length, y_length)
             In this function, a circle and a square are treated identically.
         bin_width       : float. 
             Bin size (in cm). Bins are always assumed square default 2.5 cm.
@@ -52,22 +53,19 @@ def spatialoccupancy(positions, speed, **kwargs):
     Returns
     -------
     masked_map : np.ma.MaskedArray
+        Unsmoothed map of time the animal spent in each bin.
+        Bins which the animal never visited are masked (i.e. the mask value is 
+        True at these locations)
+    coverage : float
+        Fraction of the bins that the animal visited. In range [0, 1]
+    bin_edges : list-like
+        x, or (x, y), where x, y are 1d np.ndarrays
+        Here x, y correspond to the output histogram
     
     
     See also
     --------
     BNT.+analyses.map
-    
-    Testing vs BNT
-    --------------
-    Given the same list of positions, the resulting 2D array from BNT.+analyses.map.timeRaw
-    and the output of spatialoccupancy() are compared:    
-        The mean difference between the two arrays, and the mean ratio between the two is evaluated
-        Over many possible sessions, the meanDiff and meanRatio are tabulated
-    Over 100 sessions, a difference of (0.8+-4)e-3 and a ratio of (1+)(2+-5)e-2 is observed
-    
-    maximum differences do not exceed single digit milliseconds. 
-
     '''
     # Check for correct shapes. 
     dimensionality, num_samples = positions.shape
@@ -102,7 +100,7 @@ def spatialoccupancy(positions, speed, **kwargs):
     y = positions[2,:][good]
     pos = np.array([x,y])
     
-    occupancy_map = accumulatespatial(pos, **kwargs)[0]
+    occupancy_map, bin_edges = opexebo.general.accumulatespatial(pos, **kwargs)
     if debug:
         print("Frames included in histogram: %d (%.3f)" % (np.sum(occupancy_map), np.sum(occupancy_map)/len(time_stamps)) )
 
@@ -117,7 +115,11 @@ def spatialoccupancy(positions, speed, **kwargs):
 
     masked_map = np.ma.masked_where(occupancy_map < 0.001, occupancy_map_time)
     
-    return masked_map
+    # Calculate the fractional coverage based on the mask. Since the mask is 
+    # False where the animal HAS gone, invert it first (just for this calculation)
+    coverage = np.sum(np.logical_not(masked_map.mask)) / masked_map.size
+    
+    return masked_map, coverage, bin_edges
     
     
      
