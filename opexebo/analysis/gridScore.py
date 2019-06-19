@@ -44,18 +44,25 @@ def grid_score(aCorr, **kwargs):
         more of a theoretical bound for a perfect grid. More practical value for
         a good grid is around 1.3. If function can not calculate a gridness
         score, NaN value is returned.
-    grid_stats : dict
-        'ellipse' : np.ndarray
-            Definition of the ellipse fitting the 6 fields in the autocorrelogram
-            closest to, but not at, the centre
-            Output is determined by opexebo.general.fitellipse
-            [centre_x, centre_y, radius_major, radius_minor, angle (rad)]
-        'ellipse_theta' : float
-            Angle of ellipse in degrees.
-        'spacing' : np.ndarray
-            3x1 array giving distance (in bins) to closest fields.
-        'orientation' : np.ndarray
-            3x1 array giving orientation (in degrees) to closest fields.
+    grid_stats : dictionary
+        'grid_spacings' : np.array
+            Spacing of three adjacent fields closest to center in autocorr (in [bins])
+        'grid_spacing' : float
+            Nanmean of 'spacings' in [bins]
+        'grid_orientations' : np.array
+            Orientation of three adjacent fields closest to center in autocorr (in [degrees])
+        'grid_orientations_std' : float
+            Standard deviation of orientations % 60
+        'grid_orientation' : float
+            Orientation of grid in [degrees] (mean of fields of 3 main axes)
+        'grid_positions' : np.array
+            [y,x] coordinates of six fields closest to center
+        'grid_ellipse' : np.array
+            Ellipse fit returning [x coordinate, y coordinate, major radius, minor radius, theta]
+        'grid_ellipse_aspect_ratio' : float
+            Ellipse aspect ratio (major radius / minor radius)
+        'grid_ellipse_theta' : float
+            Ellipse theta (corrected according to previous BNT standard) in [degrees]
 
     See Also
     --------
@@ -183,23 +190,23 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
     Returns:
     --------
     grid_stats : dictionary
-        'spacings' : np.array
+        'grid_spacings' : np.array
             Spacing of three adjacent fields closest to center in autocorr (in [bins])
-        'spacing' : float
+        'grid_spacing' : float
             Nanmean of 'spacings' in [bins]
-        'orientations' : np.array
+        'grid_orientations' : np.array
             Orientation of three adjacent fields closest to center in autocorr (in [degrees])
-        'orientations_std' : float
+        'grid_orientations_std' : float
             Standard deviation of orientations % 60
-        'orientation' : float
+        'grid_orientation' : float
             Orientation of grid in [degrees] (mean of fields of 3 main axes)
-        'positions' : np.array
+        'grid_positions' : np.array
             [y,x] coordinates of six fields closest to center
-        'ellipse' : np.array
+        'grid_ellipse' : np.array
             Ellipse fit returning [x coordinate, y coordinate, major radius, minor radius, theta]
-        'ellipse_aspect_ratio' : float
+        'grid_ellipse_aspect_ratio' : float
             Ellipse aspect ratio (major radius / minor radius)
-        'ellipse_theta' : float
+        'grid_ellipse_theta' : float
             Ellipse theta (corrected according to previous BNT standard) in [degrees]
     '''
 
@@ -291,15 +298,15 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
             print('Not enough fields detected ({})'.format(len(all_coords)))
             
 
-    grid_stats = {'spacings':             gs_spacings,
-                  'spacing':              np.nanmean(gs_spacings),
-                  'orientations':         gs_orientations,
-                  'orientations_std':     gs_orientations_std,
-                  'orientation':          gs_orientation,
-                  'positions':            gs_positions,
-                  'ellipse':              gs_ellipse,
-                  'ellipse_aspect_ratio': gs_aspect_ratio,
-                  'ellipse_theta':        gs_ellipse_theta}
+    grid_stats = {'grid_spacings':             gs_spacings,
+                  'grid_spacing':              np.nanmean(gs_spacings),
+                  'grid_orientations':         gs_orientations,
+                  'grid_orientations_std':     gs_orientations_std,
+                  'grid_orientation':          gs_orientation,
+                  'grid_positions':            gs_positions,
+                  'grid_ellipse':              gs_ellipse,
+                  'grid_ellipse_aspect_ratio': gs_aspect_ratio,
+                  'grid_ellipse_theta':        gs_ellipse_theta}
     return grid_stats
 
 
