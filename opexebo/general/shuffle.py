@@ -3,7 +3,7 @@
 import numpy as np
 import time
 
-def shuffle(times, t_min, t_max, iterations, **kwargs):
+def shuffle(times, offset_lim, iterations, **kwargs):
     '''
     Increment the provided time series by a random period of time in order to 
     destroy the correlation between spike times and animal behaviour.
@@ -21,22 +21,22 @@ def shuffle(times, t_min, t_max, iterations, **kwargs):
     has changed. 
     
     ** with 1 exception, at the gap between where the oldest times end and
-    the first times begin
+    the first times begin, if tracking_range not provided.
     
     The random numbers are drawn from a pseudorandom, uniform, distribution in 
-    the range [t_min, t_max], seeded 
+    the range [t_min, t_max]
         
     
     Parameters
     ----------
     times : np.ndarray
         Nx1 array of times
-    t_min : float
-        The minimum value that the time series can be incremented by
-    t_max : float
-        the maximum value that the time series can be incremented by
+    offset_lim : float
+        Defines the range of values by which each iteration can be offset. Each
+        iteration will have an offset in [offset_lim, max(times)-offset_lim]
     iterations : int
-        How many copies of times should be returned (each copy incremented by a random offset)
+        How many copies of times should be returned (each copy incremented by a
+        random offset limited by offset_lim)
     kwargs
         'debug' : bool
             Enable additional debugging output
@@ -53,7 +53,9 @@ def shuffle(times, t_min, t_max, iterations, **kwargs):
     Returns
     -------
     output : np.ndarray
-        N x iterations array of times. To access a single iteration, output[:, i]
+        iterations x N array of times. To access a single iteration, output[i,:] or output[i]
+    increments : np.ndarray
+        1xN array of offset values used.
     
     See also
     --------
@@ -65,19 +67,28 @@ def shuffle(times, t_min, t_max, iterations, **kwargs):
         times = np.array(times)
     if times.ndim != 1:
         raise ValueError("You must provide a 1D array of times. You provided a %d-dimensional array" % times.ndim)
-    
+    if np.isnan(times).any():
+        raise ValueError("You have NaN values in your times array")
     debug = kwargs.get('debug', False)
     tr = kwargs.get('tracking_range', None)
-    if tr:
-        t0 = np.min(tr)
-        t1 = np.max(tr)
+    if tr is not None:
+        t0 = np.nanmin(tr)
+        t1 = np.nanmax(tr)
+        if t0 > np.nanmin(times) or t1 < np.nanmax(times):
+            raise ValueError("Your times cover a larger span of time than your tracking information")
     else:
-        t0 = np.min(times)
-        t1 = np.max(times)
+        t0 = np.nanmin(times)
+        t1 = np.nanmax(times)
+        
+    
+    if offset_lim >= 0.5*(t1-t0):
+        raise ValueError("offset_lim must be less than half of the time-span covered. You provided %.2g and a time span of %.2g" % (offset_lim, t1-t0))
 
     
     # Initialise Numpy's random number generator with a new seed based on the 
     # user's local computer OS methods
+    t_min = t0 + offset_lim
+    t_max = t1 - offset_lim
     
     
     increments = np.random.RandomState().rand(iterations) # Uniformmly distrbuted in [0, 1]
@@ -137,14 +148,16 @@ def shuffle(times, t_min, t_max, iterations, **kwargs):
         print(np.diff(times))
         print(np.diff(output[:,0]))
     
-    return output
+    # Want to return such that each row of the output is a single time-shifted iteration
+    output = output.transpose()
+    
+    return output, increments
     
 if __name__ == '__main__':
     times = [2, 12, 27, 54, 82, 113, 115, 207, 300]
     t_min = 20
-    t_max = max(times)-t_min
-    iterations = 1
-    s = shuffle(times, t_min, t_max, iterations, debug=1, tracking_range=(0,349))
+    iterations = 3
+    s = shuffle(times, t_min, iterations, debug=False, tracking_range=(0,349))
     #print(s)
 
     
