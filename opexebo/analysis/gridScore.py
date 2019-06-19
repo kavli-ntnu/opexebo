@@ -403,7 +403,7 @@ def _findCentreRadius(aCorr, **kwargs):
     peak_coords = np.ones(shape=(1, 2), dtype=np.int)
     peak_coords[0, 0] = halfHeight-1
     peak_coords[0, 1] = halfWidth-1
-    fields = opexebo.analysis.placefield(aCorr, min_bins=2, min_peak=0, min_mean=0, init_thresh=.8, \
+    fields = opexebo.analysis.place_field(aCorr, min_bins=2, min_peak=0, min_mean=0, init_thresh=.8, \
                                          search_method=sm, peak_coords=peak_coords)[0] # Fix all input args for now
     if fields is None or len(fields) == 0:
         return 0

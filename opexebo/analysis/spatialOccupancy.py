@@ -107,7 +107,7 @@ def spatial_occupancy(positions, speed, **kwargs):
     y = positions[2,:][good]
     pos = np.array([x,y])
     
-    occupancy_map, bin_edges = opexebo.general.accumulatespatial(pos, **kwargs)
+    occupancy_map, bin_edges = opexebo.general.accumulate_spatial(pos, **kwargs)
     if debug:
         print("Frames included in histogram: %d (%.3f)" % (np.sum(occupancy_map), np.sum(occupancy_map)/len(time_stamps)) )
 
