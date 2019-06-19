@@ -1,11 +1,6 @@
 '''
 Provides function to calculate the angular occupancy, i.e. the frequency with 
 which the animal looked in each direction
-
-Closely based on code from Horst's initial imaging pipeline, tidied up and
-pythonised by Simon
-
-(C) 2019 Horst Oberhaus, Simon Ball
 '''
 import numpy as np
 import opexebo
@@ -35,6 +30,13 @@ def angular_occupancy(angle,**kwargs):
     bin_edges : list-like
         x, or (x, y), where x, y are 1d np.ndarrays
         Here x, y correspond to the output histogram
+        
+    Copyright (C) 2019 by Simon Ball, Horst Obenhaus
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
     '''
     ndim = angle.ndim
     if ndim != 1:

@@ -66,6 +66,13 @@ def spatial_occupancy(positions, speed, **kwargs):
     See also
     --------
     BNT.+analyses.map
+        
+    Copyright (C) 2019 by Simon Ball
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
     '''
     # Check for correct shapes. 
     dimensionality, num_samples = positions.shape

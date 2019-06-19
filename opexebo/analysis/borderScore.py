@@ -64,6 +64,13 @@ def border_score(rate_map, fields_map, fields, **kwargs):
     BNT.+analyses.borderCoverage
     opexebo.analysis.placefield
     opexebo.analysis.bordercoverage
+        
+    Copyright (C) 2019 by Simon Ball
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
     '''
 
     # Extract keyword arguments or set defaults

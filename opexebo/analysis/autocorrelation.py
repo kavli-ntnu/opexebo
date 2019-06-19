@@ -6,19 +6,34 @@ Calculates 2D autocorrelation (autocorrelogram) of a firing map.
 """
 
 import numpy as np
-
-from opexebo import general
+import opexebo
 
 
 def autocorrelation(firing_map):
     """Calculate 2D spatial autocorrelation of a firing map.
 
-    Arguments:
-    firing_map: NxM matrix, smoothed firing map. map is not necessary a numpy array. May
-         cnontain NaNs.
+    Parameters
+    ----------
+    firing_map: np.ndarray
+        NxM matrix, smoothed firing map. map is not necessary a numpy array. 
+        May contain NaNs.
 
-    Returns:
-    Resulting correlation matrix, which is a 2D numpy array.
+    Returns
+    -------
+    acorr : np.ndarray
+        Resulting correlation matrix, which is a 2D numpy array.
+        
+    See also
+    --------
+    BNT.+analyses.autocorrelation
+    opexebo.general.normxcorr2_general
+        
+    Copyright (C) 2018 by Vadim Frolov
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
     """
 
     # overlap_amount is a parameter that is intentionally not exposed to
@@ -38,7 +53,7 @@ def autocorrelation(firing_map):
     firing_map = np.nan_to_num(firing_map)
 
     # get full autocorrelgramn
-    aCorr = general.normxcorr2_general(firing_map)
+    aCorr = opexebo.general.normxcorr2_general(firing_map)
 
     # we are only interested in a portion of the autocorrelogram. Since the values
     # on edges are too noise (due to the fact that very small amount of elements

@@ -61,6 +61,13 @@ def speed_score(spike_times, tracking_speeds, **kwargs):
     See also
     --------
     BNT.+scripts.speedScore
+        
+    Copyright (C) 2019 by Simon Ball
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
     '''
     # Check that the provided functions have correct dimensions
     stn = spike_times.ndim

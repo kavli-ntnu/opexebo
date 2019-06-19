@@ -18,7 +18,6 @@ def rate_map_coherence(rate_map_raw):
     ---
     rate_map _raw       : np.ma.MaskedArray
         Non-smoothed rate map: n x m array where cell value is the firing rate, masked at locations with low occupancy
-
     
     Returns
     ---
@@ -27,10 +26,14 @@ def rate_map_coherence(rate_map_raw):
     See:
     ---
     BNT.+analyses.coherence(map)
-    '''
-    
-    
+        
+    Copyright (C) 2019 by Simon Ball
 
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
+    '''
     
     kernel = np.array([[0.125, 0.125, 0.125],
                       [0.125, 0,     0.125],

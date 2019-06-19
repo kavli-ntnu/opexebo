@@ -14,7 +14,7 @@ def border_coverage(fields, **kwargs):
 
 
     TODO
-    I have copied the approach used in BNT, but I want to double check whether there 
+    I havefollowed the approach used in BNT, but I want to double check whether there 
     is a better way to do this - it only tells you that *a* field (it doesn't tell 
     you which one) has coverage of *a* border (it doesn't tell you which one)).
 
@@ -22,7 +22,6 @@ def border_coverage(fields, **kwargs):
     It seems like there should be a better way of doing this
         (e.g. return a vector of coverage, i.e. a value for each border checked, and 
         return an index of the best field for each border, or something similar)
-
 
     Parameters
     ----------
@@ -61,6 +60,13 @@ def border_coverage(fields, **kwargs):
     BNT.+analyses.borderCoverage
     opexebo.analysis.placefield
     opexebo.analysis.borderscore
+        
+    Copyright (C) 2019 by Simon Ball
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
     '''
 
     # Extract keyword arguments or set defaults
