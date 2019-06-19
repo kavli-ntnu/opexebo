@@ -1,11 +1,17 @@
 """Tests for RateMap"""
 
+import os
+os.environ['HOMESHARE'] = r'C:\temp\astropy'
+import sys
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
-from opexebo.analysis import rate_map as func
 
 import scipy.io as spio
 import numpy as np
 import pytest
+
+import test_helpers as th
+from opexebo.analysis import rate_map as func
 
 print("=== tests_analysis_rateMap ===")
 
@@ -60,7 +66,7 @@ def test_rmap_invalid_inputs():
         tmap = np.ones(10)
         spikes = ([0.23,1], [0.5, 1.2], [0.75, -3]) #! spikes should be an ndarray
         func(tmap, spikes, arena_size=1)
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         tmap = np.ones((10,10))
         spikes = np.ones((3, 100)) # t, x, y
         func(tmap, spikes) #! missing arena_size
@@ -80,11 +86,12 @@ def test_rmap_invalid_inputs():
     
     
 def test_rmap_simple():
-    data = spio.loadmat(r"N:\simoba\opexebo_working_area\test_data\generic\simple_square_input_vars.mat")
+    data = spio.loadmat(th.test_data_square)
+    ds = np.arange(th.get_data_size(data))
     arena_size = 80
     bin_width = 2.0
     
-    for key in np.arange(20):
+    for key in ds:
     
         bnt = get_ratemap_bnt(data, key)[1] # raw map only
         ope = get_ratemap_opexebo(data, key, arena_size=arena_size, bin_width=bin_width)

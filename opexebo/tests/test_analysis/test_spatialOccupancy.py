@@ -1,13 +1,20 @@
 """ Tests for spatial occupancy"""
 
-
-from opexebo.analysis import spatial_occupancy as func
+import os
+os.environ['HOMESHARE'] = r'C:\temp\astropy'
+import sys
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 import scipy.io as spio
 import numpy as np
 import pytest
 
-print("=== tests_analysis_spatialOccupancy ===")
+import test_helpers as th
+from opexebo.analysis import spatial_occupancy as func
+
+print("=== tests_analysis_spatial_occupancy ===")
+
+
 
 ###############################################################################
 ################                HELPER FUNCTIONS
@@ -42,11 +49,12 @@ def rms(img):
 ###############################################################################
 
 def test_square_arena():
-    data = spio.loadmat(r"N:\simoba\opexebo_working_area\test_data\generic\simple_square_input_vars.mat")
+    data = spio.loadmat(th.test_data_square)
+    ds = np.arange(th.get_data_size(data))
     arena_size = 80
     bin_width = 2.0
     
-    for key in np.arange(20):
+    for key in ds:
     
         bnt = get_time_map_bnt(data, key)[1] # raw map only
         ope = get_time_map_opexebo(data, key, arena_size=arena_size, bin_width=bin_width)[0]
@@ -59,21 +67,22 @@ def test_square_arena():
         assert(np.isnan(bnt).all() == ope.mask.all())
         
         # Test that the map produces similar absolute times
-        assert(np.isclose(np.nanmean(bnt), np.nanmean(ope), rtol = 1e-5))
+        assert(np.isclose(np.nanmean(ope), np.nanmean(bnt), rtol = 1e-5))
         
         # Test that the maximum and minimum values are similar
-        assert(np.isclose(np.nanmax(bnt), np.nanmax(ope), rtol = 1e-5))
-        assert(np.isclose(np.nanmin(bnt), np.nanmin(ope), rtol = 1e-5))
+        assert(np.isclose(np.nanmax(ope), np.nanmax(bnt), rtol = 1e-5))
+        assert(np.isclose(np.nanmin(ope), np.nanmin(bnt), rtol = 1e-5))
         
     print("test_square_arena() passed")
     return True
 
 def test_rectangular_arena():
-    data = spio.loadmat(r"N:\simoba\opexebo_working_area\test_data\non-square\input_file_vars.mat")
+    data = spio.loadmat(th.test_data_nonsquare)
+    ds = np.arange(th.get_data_size(data))
     arena_size = (200,100)
     bin_width = 2.0
     
-    for key in np.arange(5):
+    for key in ds:
     
         bnt = get_time_map_bnt(data, key)[1] # raw map only
         ope = get_time_map_opexebo(data, key, arena_size=arena_size, bin_width=bin_width)[0]
@@ -86,11 +95,11 @@ def test_rectangular_arena():
         assert(np.isnan(bnt).all() == ope.mask.all())
         
         # Test that the map produces similar absolute times
-        assert(np.isclose(np.nanmean(bnt), np.nanmean(ope), rtol = 1e-5))
+        assert(np.isclose(np.nanmean(ope), np.nanmean(bnt), rtol = 1e-5))
         
         # Test that the maximum and minimum values are similar
-        assert(np.isclose(np.nanmax(bnt), np.nanmax(ope), rtol = 1e-5))
-        assert(np.isclose(np.nanmin(bnt), np.nanmin(ope), rtol = 1e-5))
+        assert(np.isclose(np.nanmax(ope), np.nanmax(bnt), rtol = 1e-5))
+        assert(np.isclose(np.nanmin(ope), np.nanmin(bnt), rtol = 1e-5))
         
     print("test_rectangular_arena() passed")
     return True

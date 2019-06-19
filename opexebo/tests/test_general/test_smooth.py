@@ -1,12 +1,16 @@
 """ Tests for smoothing"""
-
-import opexebo
-from opexebo.general import smooth as func
+import os
+os.environ['HOMESHARE'] = r'C:\temp\astropy'
+import sys
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 import scipy.io as spio
 import numpy as np
 import matplotlib.pyplot as plt
 import pytest
+
+from opexebo.general import smooth as func
+import test_helpers as th
 
 print("=== tests_general_smooth ===")
 
@@ -14,9 +18,6 @@ print("=== tests_general_smooth ===")
 ###############################################################################
 ################                HELPER FUNCTIONS
 ###############################################################################
-
-def get_sample_size():
-    return data['allStatistics'].size
 
 def get_time_map_bnt(data, key):
     time_smoothed = data['cellsData'][key,0]['epochs'][0,0][0,0]['map'][0,0]['time'][0,0]
@@ -43,8 +44,9 @@ def test_invalid_inputs():
     return True
 
 def test_smoothing_simple():
-    z = get_sample_size()
-    for key in np.arange(z):
+    data = spio.loadmat(th.test_data_square)
+    ds = np.arange(th.get_data_size(data))
+    for key in ds:
         bnt, tr = get_time_map_bnt(data, key)
         ope = func(tr, sigma=2, mask_fill=0)
         
@@ -73,11 +75,6 @@ def single():
     plt.colorbar()
     plt.show()
     
-if __name__ == '__main__':
-    #data = spio.loadmat(r'C:\Users\simoba\Documents\_work\Kavli\bntComp\Output_2\auto_input_file_vars.mat')
-    data = spio.loadmat(r"N:\simoba\opexebo_working_area\test_data\generic\auto_input_file_vars.mat")
-    test_invalid_inputs()
-    test_smoothing_simple()
-    single()
+
     
     
