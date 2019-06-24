@@ -21,8 +21,8 @@ setup_requirements = [ ]
 test_requirements = [ ]
 
 setup(
-    author="Vadim Frolov",
-    author_email='vadim.frolov@ntnu.no',
+    author="Simon Ball",
+    author_email='simon.ball@ntnu.no',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
