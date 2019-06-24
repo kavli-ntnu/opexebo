@@ -8,6 +8,8 @@ def shuffle(times, offset_lim, iterations, **kwargs):
     Increment the provided time series by a random period of time in order to 
     destroy the correlation between spike times and animal behaviour.
     
+    STATUS : EXPERIMENTAL
+    
     The increment behaves circularly: 
         * initially, we have two time series, Tracking and SpikeTimes, both with 
         values in the range [t0, t1]. 
@@ -66,7 +68,8 @@ def shuffle(times, offset_lim, iterations, **kwargs):
     if type(times) != np.ndarray:
         times = np.array(times)
     if times.ndim != 1:
-        raise ValueError("You must provide a 1D array of times. You provided a %d-dimensional array" % times.ndim)
+        raise ValueError("You must provide a 1D array of times. You provided a"\
+                         " %d-dimensional array" % times.ndim)
     if np.isnan(times).any():
         raise ValueError("You have NaN values in your times array")
     debug = kwargs.get('debug', False)
@@ -75,14 +78,17 @@ def shuffle(times, offset_lim, iterations, **kwargs):
         t0 = np.nanmin(tr)
         t1 = np.nanmax(tr)
         if t0 > np.nanmin(times) or t1 < np.nanmax(times):
-            raise ValueError("Your times cover a larger span of time than your tracking information")
+            raise ValueError("Your times cover a larger span of time than your"\
+                             " tracking information")
     else:
         t0 = np.nanmin(times)
         t1 = np.nanmax(times)
         
     
     if offset_lim >= 0.5*(t1-t0):
-        raise ValueError("offset_lim must be less than half of the time-span covered. You provided %.2g and a time span of %.2g" % (offset_lim, t1-t0))
+        raise ValueError("offset_lim must be less than half of the time-span"\
+                         " covered. You provided %.2g and a time span of %.2g"\
+                         % (offset_lim, t1-t0))
 
     
     # Initialise Numpy's random number generator with a new seed based on the 

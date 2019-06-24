@@ -2,6 +2,7 @@
 Occupancy Map and positioned Spike Times"""
 
 import numpy as np
+
 import opexebo
 
 
@@ -64,20 +65,20 @@ def rate_map(occupancy_map, spikes, **kwargs):
 
     # Check correct inputs
     if type(occupancy_map) not in (np.ndarray, np.ma.MaskedArray) :
-        raise ValueError("Occupancy Map not provided in usable format. Please\
-            provide either a Numpy ndarray or Numpy MaskedArray. You provided\
-            %s." % type(occupancy_map))
+        raise ValueError("Occupancy Map not provided in usable format. Please"\
+            " provide either a Numpy ndarray or Numpy MaskedArray. You"\
+            " provided %s." % type(occupancy_map))
     if type(spikes) not in (np.ndarray, np.ma.MaskedArray) :
-        raise ValueError("spikes not provided in usable format. Please\
-            provide either a Numpy ndarray or Numpy MaskedArray. You provided\
-            %s." % type(spikes))
+        raise ValueError("spikes not provided in usable format. Please"\
+            " provide either a Numpy ndarray or Numpy MaskedArray. You"\
+            " provided %s." % type(spikes))
     
     dims_p = occupancy_map.ndim
     dims_s, num_samples_s = spikes.shape
     if dims_s-1 != dims_p:
-        raise ValueError("Spikes must have the same number of spatial\
-            dimensions as positions ([t,x] or [t, x, y]). You have provided %d\
-            columns of spikes, and %d columns of positions" % (dims_s, dims_p))
+        raise ValueError("Spikes must have the same number of spatial"\
+            " dimensions as positions ([t,x] or [t, x, y]). You have provided"\
+            " %d columns of spikes, and %d columns of positions" % (dims_s, dims_p))
     
     if "arena_size" not in kwargs:
         raise KeyError("No arena dimensions provided. Please provide the\
@@ -90,8 +91,8 @@ def rate_map(occupancy_map, spikes, **kwargs):
     spike_map = opexebo.general.accumulate_spatial(spikes[1:,:], **kwargs)[0]
 
     if spike_map.shape != occupancy_map.shape:
-        raise ValueError("Rate Map and Occupancy Map must have the same\
-                    dimensions. Provided: %s, %s" % (spike_map.shape, 
+        raise ValueError("Rate Map and Occupancy Map must have the same"\
+                    " dimensions. Provided: %s, %s" % (spike_map.shape, 
                                                     occupancy_map.shape))
     # Convert to rate map
     rmap = spike_map / (occupancy_map + np.spacing(1)) 

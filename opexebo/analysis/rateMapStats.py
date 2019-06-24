@@ -5,25 +5,30 @@ import numpy as np
 
 def rate_map_stats(rate_map, time_map, debug=False):
     '''
-    Calculate statistics of a rate map that depend on probability distribution function (PDF)
+    Calculate statistics of a rate map that depend on probability distribution 
+    function (PDF)
     
-    Calculates information, sparsity and selectivity of a rate map. Calculations are done
-    according to 1993 Skaggs et al. "An Information-Theoretic Approach to Deciphering the Hippocampal Code"
-    paper. Another source of information is 1996 Skaggs et al. paper called
-    "Theta phase precession in hippocampal neuronal populations and the compression of temporal sequences".
+    Calculates information, sparsity and selectivity of a rate map. Calculations 
+    are done according to 1993 Skaggs et al. "An Information-Theoretic Approach
+    to Deciphering the Hippocampal Code" paper. Another source of information is
+    1996 Skaggs et al. paper called "Theta phase precession in hippocampal 
+    neuronal populations and the compression of temporal sequences".
     
-    Coherence is calculated based on RU Muller, JL Kubie "The firing of hippocampal place
-    cells predicts the future position of freely moving rats", Journal of Neuroscience, 1 December 1989,
-    9(12):4101-4110. The paper doesn't provide information about how to deal with border values
-    which do not have 8 well-defined neighbours. This function uses zero-padding technique.
+    Coherence is calculated based on RU Muller, JL Kubie "The firing of 
+    hippocampal place cells predicts the future position of freely moving rats",
+    Journal of Neuroscience, 1 December 1989, 9(12):4101-4110. The paper doesn't
+    provide information about how to deal with border values which do not have
+    8 well-defined neighbours. This function uses zero-padding technique.
     
     Parameters
     ---
     rate_map        : np.ma.MaskedArray
-        Smoothed rate map: n x m array where cell value is the firing rate, masked at locations with low occupancy
+        Smoothed rate map: n x m array where cell value is the firing rate, 
+        masked at locations with low occupancy
         
     time_map   : np.ma.MaskedArray
-        time map: n x m array where the cell value is the time the animal spent in each cell, masked at locations with low occupancy
+        time map: n x m array where the cell value is the time the animal spent
+        in each cell, masked at locations with low occupancy
         Already smoothed
     
     Returns
@@ -57,7 +62,8 @@ def rate_map_stats(rate_map, time_map, debug=False):
      
 
     duration = np.ma.sum(time_map)
-    position_PDF = time_map / (duration + np.spacing(1)) # Probability distribution of where the animal spent its time. 
+    position_PDF = time_map / (duration + np.spacing(1)) 
+    # Probability distribution of where the animal spent its time. 
     
     if debug:
         print("Duration = %ds" % duration)

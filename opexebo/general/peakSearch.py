@@ -46,19 +46,20 @@ def peak_search(image, **kwargs):
     get_maxima = kwargs.get("maxima", True)
     
     if search_method not in default.all_methods:
-        raise ValueError("Keyword 'search_method' must be left blank or given a \
-                         value from the following list: %s. You provided '%s'." \
-                         % (default.all_methods, search_method) )
+        raise ValueError("Keyword 'search_method' must be left blank or given a"\
+                    " value from the following list: %s. You provided '%s'."\
+                    % (default.all_methods, search_method) )
     if search_method != "default" and not get_maxima:
-        raise NotImplementedError("Local minima detection is currently only implemented for the 'default' search method")
+        raise NotImplementedError("Local minima detection is currently only"\
+                            " implemented for the 'default' search method")
         
     if search_method == default.search_method:
         peak_coords = _peak_search_skimage(image, **kwargs)
     elif search_method == "sep":
         peak_coords = _peak_search_sep(image, **kwargs)
     else:
-        raise NotImplementedError("The search method you have requested (%s) is \
-                                  not yet implemented" % search_method)
+        raise NotImplementedError("The search method you have requested (%s) is"\
+                                  " not yet implemented" % search_method)
         
     return peak_coords
         

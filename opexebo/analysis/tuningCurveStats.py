@@ -6,6 +6,8 @@ import opexebo.defaults as default
 
 def tuning_curve_stats(tuning_curve, **kwargs):
     """ Calculate statistics about a turning curve
+    
+    STATUS : EXPERIMENTAL
 
     Calculates various statistics for a turning curve.
     1. Mean vector length of a head direction rate map.
@@ -76,11 +78,11 @@ def tuning_curve_stats(tuning_curve, **kwargs):
     percentile = kwargs.get('percentile', default.hd_percentile)
     ndim = tuning_curve.ndim
     if ndim != 1:
-        raise ValueError("tuning_curve should be a 1D array. You have provided\
-                         %d dimensions" % ndim)
+        raise ValueError("tuning_curve should be a 1D array. You have provided" \
+                         " %d dimensions" % ndim)
     if not 0 <= percentile <= 1:
-        raise ValueError("Keyword 'percentile' should be in the range [0, 1]. \
-                         You provided  %.2f. " % percentile)
+        raise ValueError("Keyword 'percentile' should be in the range [0, 1]."\
+                         " You provided  %.2f. " % percentile)
 
     num_bin = tuning_curve.size
     bin_width = 2 * np.pi / num_bin

@@ -40,12 +40,12 @@ def angular_occupancy(angle,**kwargs):
     '''
     ndim = angle.ndim
     if ndim != 1:
-        raise ValueError("angle must be provided as a 1D array. You provided %d \
-                         dimensions" % ndim)
+        raise ValueError("angle must be provided as a 1D array. You provided %d"\
+                         " dimensions" % ndim)
     if np.nanmax(angle) > 2*np.pi:
-        raise Warning("Angles greater than 2pi detected. Please check that your \
-                      angle array is in radians. If it is in degrees, you can \
-                      convert with 'np.radians(array)'")
+        raise Warning("Angles greater than 2pi detected. Please check that your"\
+                      " angle array is in radians. If it is in degrees, you can"\
+                      " convert with 'np.radians(array)'")
 
     bin_width = kwargs.get('bin_width', default.bin_angle)
     bin_width = np.radians(bin_width)

@@ -61,10 +61,10 @@ def fit_ellipse(X, Y, **kwargs):
     the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
     '''
-    debug = kwargs.get('debug', False)
+
     if X.size != Y.size:
-        raise ValueError("X and Y must be the same length. You provided (%d, %d)\
-        values respectively" % (X.size, Y.size))
+        raise ValueError("X and Y must be the same length. You provided"\
+                         " (%d, %d) values respectively" % (X.size, Y.size))
     # Normalise the data and move it to the origin
     mx = np.mean(X)
     my = np.mean(Y)

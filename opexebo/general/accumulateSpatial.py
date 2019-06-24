@@ -8,7 +8,7 @@ import opexebo.defaults as default
 def accumulate_spatial(pos, **kwargs):
     """
     Accumulate repeated observations of a variable into a binned representation
-    by means of a histogram. 
+    by means of a histogram.
 
     Parameters
     ----------
@@ -19,9 +19,9 @@ def accumulate_spatial(pos, **kwargs):
         This matches the simplest input creation:
             pos = np.array( [x, y] )
    kwargs
-        bin_width       : float. 
+        bin_width       : float.
             Bin size (in cm). Bins are always assumed square default 2.5 cm.
-        arena_size      : float or tuple of floats. 
+        arena_size      : float or tuple of floats.
             Dimensions of arena (in cm)
             For a linear track, length
             For a circular arena, diameter
@@ -33,7 +33,7 @@ def accumulate_spatial(pos, **kwargs):
             Provide concrete limits to the range over which the histogram searches
             Any observations outside these limits are discarded
             If no limits are provided, then use np.nanmin(data), np.nanmax(data)
-            to generate default limits. 
+            to generate default limits.
             As is standard in python, acceptable values include the lower bound
             and exclude the upper bound
 
@@ -42,7 +42,7 @@ def accumulate_spatial(pos, **kwargs):
     hist : np.ndarray
         1D or 2D histogram of the occurrences of the input observations
         Dimensions given by arena_size/bin_width
-        Not normalised - each cell gives the integer number of occurrences of 
+        Not normalised - each cell gives the integer number of occurrences of
         the observation in that cell
     edges : list-like
         x, or (x, y), where x, y are 1d np.ndarrays
@@ -62,32 +62,32 @@ def accumulate_spatial(pos, **kwargs):
 
     # Check correct inputs:
     dims, num_samples = pos.shape
-    if dims not in (1,2):
-        raise ValueError("pos should have either 1 or 2 dimensions. You have \
-                         provided %d dimensions." % dims)
+    if dims not in (1, 2):
+        raise ValueError("pos should have either 1 or 2 dimensions. You have"\
+                         " provided %d dimensions." % dims)
 
     # Get kwargs values
     bin_width = kwargs.get("bin_width", default.bin_width)
     arena_size = kwargs.get("arena_size")
     limits = kwargs.get("limits", None)
     if type(limits) not in (tuple, list, np.ndarray, type(None)):
-        raise ValueError("You must provide an array-like 'limits' value, e.g. \
-            (x_min, x_max, y_min, y_max). You provided type %s" % type(limits))
+        raise ValueError("You must provide an array-like 'limits' value, e.g."\
+          " (x_min, x_max, y_min, y_max). You provided type %s" % type(limits))
 
     arena_size, is_2d = validatekeyword__arena_size(arena_size, dims)
     num_bins = np.ceil(arena_size / bin_width).astype(int)
 
     # Histogram of positions
-    x = pos[0,:]
+    x = pos[0, :]
 
     if is_2d:
-        y = pos[1,:]
-        if limits == None:
+        y = pos[1, :]
+        if limits is None:
             limits = ( [np.nanmin(x), np.nanmax(x)],
                          [np.nanmin(y), np.nanmax(y)] )
         elif len(limits) != 4:
-            raise ValueError("You must provide a 4-element 'limits' value for a \
-                             2D map. You provided %d elements" % len(limits))
+            raise ValueError("You must provide a 4-element 'limits' value for a"\
+                             " 2D map. You provided %d elements" % len(limits))
         else:
             limits = ( [limits[0], limits[1]], # change from a 4 element list to a list of lists
                              [limits[2], limits[3]] )
@@ -99,7 +99,7 @@ def accumulate_spatial(pos, **kwargs):
         # the simple operator ">= doesn't respect Masked Arrays
         # As of 2019, it does actually behave correctly (NaN is invalid and so
         # is removed), but I would prefer to be seplicit
-        
+
         in_range_x = x[in_range]
         in_range_y = y[in_range]
 
@@ -107,13 +107,13 @@ def accumulate_spatial(pos, **kwargs):
                                        bins=num_bins, range=limits)
         hist = hist.transpose() # Match the format that BNT traditionally used.
         edges = np.array([yedges, xedges]) # Note that due to the tranposition
-                                            # the label xedge, yedge is potentially misleading
+                            # the label xedge, yedge is potentially misleading
     else:
-        if limits == None:
+        if limits is None:
             limits = [np.nanmin(x), np.nanmax(x)]
         elif len(limits) != 2: 
-            raise ValueError("You must provide a 2-element 'limits' value for a \
-                             1D map. You provided %d elements" % len(limits))
+            raise ValueError("You must provide a 2-element 'limits' value for a"\
+                             " 1D map. You provided %d elements" % len(limits))
         in_range = np.logical_and(np.ma.masked_greater_equal(x, limits[0]),
                                   np.ma.masked_less(y, limits[1]))
         in_range_x = x[in_range]

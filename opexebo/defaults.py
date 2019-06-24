@@ -1,7 +1,6 @@
 """ Provide common default values for analysis parameters """
 
 
-
 # spatial/angular occupancy
 bin_width = 2.5         # Standard spatial resolution, [cm]
 bin_angle = 15        # Standard angular bin width [degree]

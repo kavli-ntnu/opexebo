@@ -8,6 +8,8 @@ import opexebo
 def speed_score(spike_times, tracking_speeds, **kwargs):
     '''
     Calculate Speed score.
+    
+    STATUS : EXPERIMENTAL
 
     Speed score is a correlation between cell firing *rate* and animal speed. 
     The Python version is based on BNT.+scripts.speedScore. At Edvard's request, 

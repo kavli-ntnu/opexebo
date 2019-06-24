@@ -9,14 +9,20 @@ import opexebo.defaults as default
 def border_score(rate_map, fields_map, fields, **kwargs):
     '''
     Calculate border score for a firing map
+    
+    STATUS : EXPERIMENTAL
+    
+    TODO: Update to account for the use of Vadim's placefield code
 
-    Calculates a border score for a firing rate map according to the article "Representation of Geometric
-    Borders in the Entorhinal Cortex" by Solstad et. al. (Science 2008).
-    Border score ranges from -1 to +1 with +1 being "a perfect border cell". If the firing map contains
-    no firing fields, then the returned score is -1.
-    The score reflects not only how close a field is to a border and how big the coverage of this field is,
-    but also it reflects spreadness of a field. The best border score (+1) will be calculated for a thin
-    line (1 px, bin) that lies along the wall and fully covers this wall.
+    Calculates a border score for a firing rate map according to the article 
+    "Representation of Geometric Borders in the Entorhinal Cortex" by Solstad 
+    et. al. (Science 2008).
+    Border score ranges from -1 to +1 with +1 being "a perfect border cell". If
+    the firing map contains no firing fields, then the returned score is -1.
+    The score reflects not only how close a field is to a border and how big 
+    the coverage of this field is, but also it reflects spreadness of a field. 
+    The best border score (+1) will be calculated for a thin line (1 px, bin) 
+    that lies along the wall and fully covers this wall.
     
     Parameters
     ----------
@@ -24,9 +30,9 @@ def border_score(rate_map, fields_map, fields, **kwargs):
         rate map: N x M array where each cell value is the firing rate of the cell
     fields_map  :   np.ma.MaskedArray
         Integer array of labelled fields. Each cell value is a positive integer. 
-        Cells that are members of field have the value corresponding to field_id (non-zero positive 
-        unique integers. Not necessarily contiguous (e.g. 1, 2, 3, 5))
-        Cells that are not members of fields have value zero
+        Cells that are members of field have the value corresponding to field_id 
+        (non-zero positive  unique integers. Not necessarily contiguous 
+        (e.g. 1, 2, 3, 5)). Cells that are not members of fields have value zero
     fields      :   dict
         Dictionary of all known firing fields
         The key is the field_id corresponding to the labelled fields_map
@@ -36,8 +42,9 @@ def border_score(rate_map, fields_map, fields, **kwargs):
             field_one = {'field_id':1, 'field_size':2.6, ...}
     kwargs
         search_width    :   int
-            rate_map and fields_map have masked values, which may occur within the region of border 
-            pixels. To mitigate this, we check rows/columns within search_width pixels of the border
+            rate_map and fields_map have masked values, which may occur within 
+            the region of border  pixels. To mitigate this, we check rows/columns
+            within search_width pixels of the border.
             If no value is supplied, default 8
         walls           :   str
             Definition of walls along which the border score is calculated. Provided by
@@ -46,9 +53,10 @@ def border_score(rate_map, fields_map, fields, **kwargs):
                       R - right wall
                       B - bottom wall
                       L - left wall
-                      Characters are case insensitive. Default value is 'TRBL' meaning that border
-                      score is calculated along all walls. Any combination is possible, e.g.
-                      'R' to calculate along right wall, 'BL' to calculate along two walls, e.t.c.
+                      Characters are case insensitive. Default value is 'TRBL' 
+                      meaning that border score is calculated along all walls.
+                      Any combination is possible, e.g.  'R' to calculate along
+                      right wall, 'BL' to calculate along two walls, e.t.c.
 
     Returns
     -------

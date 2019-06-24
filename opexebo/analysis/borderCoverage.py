@@ -9,6 +9,8 @@ def border_coverage(fields, **kwargs):
     '''
     Calculate border coverage for detected fields.
     
+    STATUS : EXPERIMENTAL
+    
     This function calculates firing map border coverage that is further
     used in calculation of a border score.
 
@@ -122,15 +124,19 @@ def _wall_field(wfmap):
     '''Evaluate what fraction of the border area is covered by a single field
 
     Border coverage is provided as two values: 
-        covered : the sum of the values across all sites immediately adjacent to the border, where the values
-                are calculated from the distance of those sites to the firing field, excluding NaN, inf, and masked values
-        norm    : the number of non nan, inf, masked values considered in the above sum
+        covered : the sum of the values across all sites immediately adjacent 
+            to the border, where the values are calculated from the distance of
+            those sites to the firing field, excluding NaN, inf, and masked values
+        norm    : the number of non nan, inf, masked values considered in the 
+            above sum
 
-    The border area is defined by wfmap - this is the subsection of the binary firing map of a 
-    single field that lies within search_width of a border. wfmap is must be of size NxM where
+    The border area is defined by wfmap - this is the subsection of the binary 
+    firing map of a  single field that lies within search_width of a border. 
+    wfmap is must be of size NxM where
         N : arena_size / bin_size
         M : search_width
-    and where the 0th column (wfmap[:,0], len()=N) repsents the sites closest to the border
+    and where the 0th column (wfmap[:,0], len()=N) repsents the sites closest 
+    to the border
 
     wfmap: has value 1 inside the field and 0 outside the field
     '''
@@ -168,16 +174,20 @@ def _wall_field(wfmap):
 def _validate_wall_definition(walls):
     '''Parse the walls argument for invalid entry'''
     if type(walls) != str:
-        raise ValueError("Wall definition must be given as a string, e.g. 'trbl'. %s is not a valid input." % str(walls))
+        raise ValueError("Wall definition must be given as a string, e.g." \
+                         "'trbl'. %s is not a valid input." % str(walls))
     elif len(walls) > 4:
-        raise ValueError("Wall definition may not exceed 4 characters. String '%s' contains %d characters." % (walls, len(walls)))
+        raise ValueError("Wall definition may not exceed 4 characters. String"\
+                         " '%s' contains %d characters." % (walls, len(walls)))
     elif len(walls) == 0:
-        raise ValueError("Wall definition must contain at least 1 character from the set [t, r, b, l]")
+        raise ValueError("Wall definition must contain at least 1 character"\
+                         "from the set [t, r, b, l]")
     else:
         walls = walls.lower()
         for char in walls:
             if char.lower() not in ["t","r","b","l"]:
-                raise ValueError("Character %s is not a valid entry in wall definition. Valid characters are [t, r, b, l]" % char)
+                raise ValueError("Character %s is not a valid entry in wall"\
+                                 "definition. Valid characters are [t, r, b, l]" % char)
 
 
 if __name__ == '__main__':

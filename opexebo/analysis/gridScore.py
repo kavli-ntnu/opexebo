@@ -46,11 +46,13 @@ def grid_score(aCorr, **kwargs):
         score, NaN value is returned.
     grid_stats : dictionary
         'grid_spacings' : np.array
-            Spacing of three adjacent fields closest to center in autocorr (in [bins])
+            Spacing of three adjacent fields closest to center in autocorr
+            (in [bins])
         'grid_spacing' : float
             Nanmean of 'spacings' in [bins]
         'grid_orientations' : np.array
-            Orientation of three adjacent fields closest to center in autocorr (in [degrees])
+            Orientation of three adjacent fields closest to center in autocorr
+            (in [degrees])
         'grid_orientations_std' : float
             Standard deviation of orientations % 60
         'grid_orientation' : float
@@ -58,7 +60,8 @@ def grid_score(aCorr, **kwargs):
         'grid_positions' : np.array
             [y,x] coordinates of six fields closest to center
         'grid_ellipse' : np.array
-            Ellipse fit returning [x coordinate, y coordinate, major radius, minor radius, theta]
+            Ellipse fit returning 
+            [x coordinate, y coordinate, major radius, minor radius, theta]
         'grid_ellipse_aspect_ratio' : float
             Ellipse aspect ratio (major radius / minor radius)
         'grid_ellipse_theta' : float
@@ -229,8 +232,8 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
     gs_spacings         = np.full(3, fill_value = np.nan, dtype=float)
 
     # Find fields in autocorrelogram
-    all_coords = opexebo.general.peak_search(aCorr, mask=mask, search_method="sep", null_background=True, threshold=0.1)
-    
+    all_coords = opexebo.general.peak_search(aCorr, mask=mask, search_method="sep",
+                                             null_background=True, threshold=0.1)
 
     if all_coords.shape[0] >= 6:
         # Calculate orientation and distance of all local maxima to center
@@ -443,20 +446,3 @@ def _findCentreRadius(aCorr, **kwargs):
     return radius
 
 
-
-if __name__ == '__main__':
-    #plt.close("all")
-    print("Loading modules")
-
-    import scipy.io as spio
-    import matplotlib.pyplot as plt
-
-    bnt_output = r'C:\Users\simoba\Documents\_work\Kavli\bntComp\Output\auto_input_file_vars.mat'
-    print("Loading data")
-    #bnt = spio.loadmat(bnt_output)
-    print("Data loaded")
-
-    i = 100
-    acorr = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['aCorr'][0,0]
-    gscore = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['gridScore'][0,0][0,0]
-    gsop = gridscore(acorr, debug=True, search_method='default')

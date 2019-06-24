@@ -3,12 +3,11 @@ Provide function for 2D placefield detection.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
-
 from scipy import ndimage
 from skimage import measure, morphology
-import opexebo.defaults as default
+
 import opexebo
+import opexebo.defaults as default
 
 
 def place_field(firing_map, **kwargs):
@@ -25,8 +24,9 @@ def place_field(firing_map, **kwargs):
     ----------
     firing_map : np.ndarray or np.ma.MaskedArray
         smoothed rate map.
-        If supplied as an np.ndarray, it is assumed that the map takes values of np.nan at locations of zero occupancy
-        If supplied as an np.ma.MaskedArray, it is assumed that the map is masked at locations of zero occupancy
+        If supplied as an np.ndarray, it is assumed that the map takes values 
+        of np.nan at locations of zero occupancy. If supplied as an np.ma.MaskedArray, 
+        it is assumed that the map is masked at locations of zero occupancy
     **kwargs
         min_bins : int
             Fields containing fewer than this many bins will be discarded.
@@ -54,10 +54,12 @@ def place_field(firing_map, **kwargs):
         'peak_coords'    : np.ndarray    : Coordinates peak firing rate [y,x]
         'centroid_coords': np.ndarray    : Coordinates of centroid (decimal) [y,x]
         'area'           : int           : Number of bins in firing field. [bins]
-        'bbox'           : tuple         : Coordinates of bounding box including the firing field (y_min, x_min, y_max, y_max)
+        'bbox'           : tuple         : Coordinates of bounding box including the 
+                                            firing field (y_min, x_min, y_max, y_max)
         'mean_rate'      : float         : mean firing rate [Hz]
         'peak_rate'      : float         : peak firing rate [Hz]
-        'map'            : np.ndarray    : Binary map of arena. Cells inside firing field have value 1, all other cells have value 0
+        'map'            : np.ndarray    : Binary map of arena. Cells inside firing 
+                                            field have value 1, all other cells have value 0
     fields_map  : np.ndarray
         labelled integer image (i.e. background = 0, field1 = 1, field2 = 2, etc.)
 
@@ -84,11 +86,11 @@ def place_field(firing_map, **kwargs):
     debug = kwargs.get("debug", False)
 
     if not 0 <= init_thresh <= 1:
-        raise ValueError("Keyword 'init_thresh' must be in the range [0, 1]. \
-                         You provided %.2f" % init_thresh)
+        raise ValueError("Keyword 'init_thresh' must be in the range [0, 1]."\
+                         " You provided %.2f" % init_thresh)
     if search_method not in default.all_methods:
-        raise ValueError("Keyword 'search_method' must be left blank or given a \
-                         value from the following list: %s. You provided '%s'." \
+        raise ValueError("Keyword 'search_method' must be left blank or given a"\
+                         " value from the following list: %s. You provided '%s'." \
                          % (default.all_methods, search_method) )
 
     global_peak = np.nanmax(firing_map)
@@ -118,8 +120,8 @@ def place_field(firing_map, **kwargs):
             #fmap = firing_map
             peak_coords = opexebo.general.peak_search(fmap, **kwargs)
         else:
-            raise NotImplementedError("The search method you have requested (%s) is \
-                                      not yet implemented" % search_method)
+            raise NotImplementedError("The search method you have requested (%s) is"\
+                                      " not yet implemented" % search_method)
 
     # obtain value of found peaks
     found_peaks = firing_map[peak_coords[:, 0], peak_coords[:, 1]]
@@ -155,14 +157,17 @@ def place_field(firing_map, **kwargs):
             other_fields_linear = []
 
         used_th = init_thresh
-        res = _area_change(fmap, occupancy_mask, peak_rc, used_th, used_th-0.02, other_fields_linear)
+        res = _area_change(fmap, occupancy_mask, peak_rc, used_th, 
+                           used_th-0.02, other_fields_linear)
         initial_change = res['acceleration']
         area2 = res['area2']
         first_pixels = np.nan
         if np.isnan(initial_change):
             for j in np.linspace(used_th+0.01, 1., 4):
-                # Thresholds get higher, area should tend downwards to 1 (i.e. only including the actual peak)
-                res = _area_change(fmap, occupancy_mask, peak_rc, j, j-0.01, other_fields_linear)
+                # Thresholds get higher, area should tend downwards to 1 
+                # (i.e. only including the actual peak)
+                res = _area_change(fmap, occupancy_mask, peak_rc, j, j-0.01, 
+                                   other_fields_linear)
                 initial_change = res['acceleration']
                 area1 = res['area1']
                 area2 = res['area2']
@@ -195,7 +200,9 @@ def place_field(firing_map, **kwargs):
                                    other_fields_linear, used_th)
         if np.any(np.isnan(pixel_list)):
             # nu - not used
-            nu, pixel_list, nu = _area_for_threshold(fmap, occupancy_mask, peak_rc, used_th+0.01, other_fields_linear)
+            _, pixel_list, _ = _area_for_threshold(fmap, occupancy_mask, 
+                                                     peak_rc, used_th+0.01, 
+                                                     other_fields_linear)
         if len(pixel_list)>0:
             pixels = np.unravel_index(pixel_list, fmap.shape, 'F')
         else:
@@ -257,14 +264,16 @@ def place_field(firing_map, **kwargs):
 #########################################################
 
 
-def _expand_field(I, occupancy_mask, peak_rc, initial_change, initial_area, other_fields_linear, initial_th):
+def _expand_field(I, occupancy_mask, peak_rc, initial_change, 
+                  initial_area, other_fields_linear, initial_th):
     '''
     Adaptive placefield detection:
         Start with a threshold around 80%, step down in ~0.02
         Measure field at threshold
         If the field is invalid, take the previous iteration
         If field size has decreased, keep count
-        If field size has increased by less than 300% of initial_change AND the field has decreased in size fewer than 3 times in a row
+        If field size has increased by less than 300% of initial_change AND the
+          field has decreased in size fewer than 3 times in a row
             If the field size hasn't changed in 10 steps, return the current field size
         Else
     '''
@@ -278,7 +287,8 @@ def _expand_field(I, occupancy_mask, peak_rc, initial_change, initial_area, othe
     for threshold in np.linspace(initial_th, 0.2, num_steps):
         threshold = np.round(threshold, 2)
 
-        area, pixels, is_bad = _area_for_threshold(I, occupancy_mask, peak_rc, threshold, other_fields_linear)
+        area, pixels, is_bad = _area_for_threshold(I, occupancy_mask, peak_rc,
+                                        threshold, other_fields_linear)
         if np.isnan(area) or is_bad:
             pixel_list = last_pixels
             break
@@ -324,11 +334,13 @@ def _area_change(I, occupancy_mask, peak_rc, first, second, other_fields_linear)
     Params
     ------
     I : np.ndarray                      : Image
-    occupancy_mask: np.ndarray          : binary map - True where the animal spent zero time
+    occupancy_mask: np.ndarray          : binary map - True where the animal 
+                                            spent zero time
     peak_rc : tuple                     : [row, col] of local maxima
     first : float                       : first threshold
     second : float                      : second threshold
-    other_fields_linear : np.ndarray    : All other local maxima *except* the one under consideration
+    other_fields_linear : np.ndarray    : All other local maxima *except* the 
+                                            one under consideration
     '''
     results = {'acceleration': np.nan, 'area1': np.nan, 'area2': np.nan,
                'first_pixels': np.nan,
@@ -431,45 +443,4 @@ def _area_for_threshold(I, occupancy_mask, peak_rc, th, other_fields_linear):
     return (ar, area_linear_indices, is_bad)
 
 
-
-
-
-if __name__ == '__main__':
-    print("Loading modules")
-    import os
-    import scipy.io as spio
-    import matplotlib.pyplot as plt
-    os.environ['HOMESHARE'] = r'C:\temp\astropy'
-    bnt_output = r'C:\Users\simoba\Documents\_work\Kavli\bntComp\Output_2\auto_input_file_vars.mat'
-    print("Loading data")
-    #bnt = spio.loadmat(bnt_output)
-    print("Data loaded")
-
-    i = 324
-    rmap = bnt['cellsData'][i,0]['epochs'][0,0][0,0]['map'][0,0]['z'][0,0]
-    fields, field_map = placefield(rmap, min_peak=0.4, search_method='default')
-    lm = opexebo.general.peak_search(rmap, search_method="default")
-    y, x = lm.T
-    lms = opexebo.general.peak_search(rmap, search_method="sep")
-    ys, xs = lms.T
-    
-    plt.rcParams['figure.figsize'] = [12,12]
-    plt.figure()
-    plt.subplot(2,2,1)
-    plt.title("Ratemap")
-    plt.imshow(rmap.data)
-    plt.colorbar()
-    plt.scatter(x, y, color="red")
-    plt.scatter(xs, ys, marker="x", color="orange")
-    plt.subplot(2,2,2)
-    plt.title("Default")
-    plt.imshow(field_map)
-    plt.scatter(x, y, color="red")
-    plt.scatter(xs, ys, marker="x", color="orange")
-    fields, field_map = placefield(rmap, min_peak=0.4, search_method='sep', threshold=0.2,null_background=True, debug=True)
-    plt.subplot(2,2,4)
-    plt.title("sep")
-    plt.imshow(field_map)
-    plt.scatter(x, y, color="red")
-    plt.scatter(xs, ys, marker="x", color="orange")
     

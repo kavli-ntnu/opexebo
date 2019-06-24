@@ -17,7 +17,8 @@ def rate_map_coherence(rate_map_raw):
     Parameters
     ---
     rate_map _raw       : np.ma.MaskedArray
-        Non-smoothed rate map: n x m array where cell value is the firing rate, masked at locations with low occupancy
+        Non-smoothed rate map: n x m array where cell value is the firing rate,
+        masked at locations with low occupancy
     
     Returns
     ---
