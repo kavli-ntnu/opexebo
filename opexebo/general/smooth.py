@@ -60,7 +60,7 @@ def smooth(data, sigma, **kwargs):
     smoothed_data : np.ndarray or np.ma.MaskedArray
         Smoothed data
 
-    See also:
+    See also
     --------
     BNT.+general.smooth
     http://docs.astropy.org/en/stable/convolution/index.html

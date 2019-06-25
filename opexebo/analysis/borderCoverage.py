@@ -14,7 +14,6 @@ def border_coverage(fields, **kwargs):
     This function calculates firing map border coverage that is further
     used in calculation of a border score.
 
-
     TODO
     I havefollowed the approach used in BNT, but I want to double check whether there 
     is a better way to do this - it only tells you that *a* field (it doesn't tell 
@@ -22,8 +21,8 @@ def border_coverage(fields, **kwargs):
 
 
     It seems like there should be a better way of doing this
-        (e.g. return a vector of coverage, i.e. a value for each border checked, and 
-        return an index of the best field for each border, or something similar)
+    (e.g. return a vector of coverage, i.e. a value for each border checked, and 
+    return an index of the best field for each border, or something similar)
 
     Parameters
     ----------
@@ -32,9 +31,9 @@ def border_coverage(fields, **kwargs):
         The key is the field_id corresponding to the labelled fields_map
         Each firing field is also given as a dictionary
         Example:
-            fields = {1:field_one, 2:field_two}
-            field_one = {'field_id':1, 'field_size':2.6, ...}
-    kwargs
+        fields = {1:field_one, 2:field_two}
+        field_one = {'field_id':1, 'field_size':2.6, ...}
+    **kwargs
         search_width    :   int
             rate_map and fields_map have masked values, which may occur within the region of border 
             pixels. To mitigate this, we check rows/columns within search_width pixels of the border

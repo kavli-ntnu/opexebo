@@ -29,42 +29,45 @@ def tuning_curve_stats(tuning_curve, **kwargs):
             Arc is between two points with values around
             globalPeak * percentile. Value should be in range [0, 1]
 
-
     Returns
     -------
     tcstat : dict
-        'hd_score'         : float
+        hd_score         : float
             Score for how strongly modulated by angle the cell is
-        'hd_mvl'           : float
+        hd_mvl           : float
             mean vector length
-        'hd_peak_rate'     : float
-            ' Peak firing rate  [Hz]
-        'hd_mean_rate'     : float
+        hd_peak_rate     : float
+            Peak firing rate  [Hz]
+        hd_mean_rate     : float
             Mean firing rate [Hz]
-        'hd_peak_direction' : float
-        'hd_peak_direction_rad' : float
-            Direction of peak firing rate [degrees, radians]
-        'hd_mean_direction': float
-        'hd_mean_direction_rad': float
-            Direction of mean firing rate [degrees, radians]
-        'hd_stdev'         : float
+        hd_peak_direction : float
+            Direction of peak firing rate [degrees]
+        hd_peak_direction_rad : float
+            Direction of peak firing rate
+        hd_mean_direction: float
+            Direction of mean firing rate [degrees]
+        hd_mean_direction_rad: float
+            Direction of mean firing rate
+        hd_stdev         : float
             Circular standard deviation [degrees]
-        'halfCwInd'  : int
-        'halfCcwInd' : int
+        halfCwInd  : int
             Indicies of at the start, end of the range defined by percentile
-            (Clockwise, counter-clockwise).
-        'halfCwRad' : float
-        'halfCcwRad'  : float
+            (clockwise).
+        halfCcwInd : int
+            Indicies of at the start, end of the range defined by percentile
+            (counter-clockwise).
+        halfCwRad : float
             Angle of the start, end of the range defined by percentile
-        'arc_angle_rad' : float
-        'arc_angle_rad' : float
+        halfCcwRad  : float
+            Angle of the start, end of the range defined by percentile
+        arc_angle_rad : float
             Angle of the arc defined by percentile
-
+        arc_angle_rad : float
+            Angle of the arc defined by percentile
 
     See also
     --------
     BNT.+analyses.tcStatistics
-    opexebo.analysis.tuningcurve
 
     Copyright (C) 2019 by Simon Ball
 

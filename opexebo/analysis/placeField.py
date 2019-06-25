@@ -50,22 +50,31 @@ def place_field(firing_map, **kwargs):
     Returns
     -------
     fields      : list (of dict)
-        'coords'         : np.ndarray    : Coordinates of all bins in the firing field
-        'peak_coords'    : np.ndarray    : Coordinates peak firing rate [y,x]
-        'centroid_coords': np.ndarray    : Coordinates of centroid (decimal) [y,x]
-        'area'           : int           : Number of bins in firing field. [bins]
-        'bbox'           : tuple         : Coordinates of bounding box including the 
-                                            firing field (y_min, x_min, y_max, y_max)
-        'mean_rate'      : float         : mean firing rate [Hz]
-        'peak_rate'      : float         : peak firing rate [Hz]
-        'map'            : np.ndarray    : Binary map of arena. Cells inside firing 
-                                            field have value 1, all other cells have value 0
+        coords         : np.ndarray    : 
+            Coordinates of all bins in the firing field
+        peak_coords    : np.ndarray    :
+            Coordinates peak firing rate [y,x]
+        centroid_coords: np.ndarray    : 
+            Coordinates of centroid (decimal) [y,x]
+        area           : int           : 
+            Number of bins in firing field. [bins]
+        bbox           : tuple         : 
+            Coordinates of bounding box including the firing field 
+            (y_min, x_min, y_max, y_max)
+        mean_rate      : float         : 
+            mean firing rate [Hz]
+        peak_rate      : float         : 
+            peak firing rate [Hz]
+        map            : np.ndarray    : 
+            Binary map of arena. Cells inside firing field have value 1, all 
+            other cells have value 0
     fields_map  : np.ndarray
         labelled integer image (i.e. background = 0, field1 = 1, field2 = 2, etc.)
 
     See also
     --------
     BNT.+analyses.placefieldAdaptive
+    
     https://se.mathworks.com/help/images/understanding-morphological-reconstruction.html
 
     Copyright (C) 2018 by Vadim Frolov, (C) 2019 by Simon Ball, Horst Obenhaus

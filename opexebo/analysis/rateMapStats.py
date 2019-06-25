@@ -21,7 +21,7 @@ def rate_map_stats(rate_map, time_map, debug=False):
     8 well-defined neighbours. This function uses zero-padding technique.
     
     Parameters
-    ---
+    ----------
     rate_map        : np.ma.MaskedArray
         Smoothed rate map: n x m array where cell value is the firing rate, 
         masked at locations with low occupancy
@@ -32,7 +32,7 @@ def rate_map_stats(rate_map, time_map, debug=False):
         Already smoothed
     
     Returns
-    ---
+    -------
     rms : dict
         spatial_information_rate    : float
             information rate [bits/sec]
@@ -47,8 +47,8 @@ def rate_map_stats(rate_map, time_map, debug=False):
         mean_rate : float
             mean firing rate of smoothed map [Hz]
 
-    See:
-    ---
+    See also
+    --------
     BNT.+analyses.mapStatsPDF(map)
     BNT.+analyses.coherence(map)
         

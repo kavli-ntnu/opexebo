@@ -22,14 +22,13 @@ def rate_map(occupancy_map, spikes, **kwargs):
     ----------
     occupancy_map : np.ndarray or np.ma.MaskedArray
         Nx1 or Nx2 array of time spent by animal in each bin
-        
     spikes : np.ndarray
         Nx2 or Nx3 array of spike positions: [t, x] or [t, x, y]. Must have the
         same dimensionality as positions (i.e. 1d, 2d)
-    kwargs
-        bin_width       : float. 
-            Bin size (in cm). Bins are always assumed square default 2.5 cm.
-        arena_size      : float or tuple of floats. 
+    **kwargs
+        bin_width : float. 
+            Bin size in cm. Bins are always assumed square default 2.5 cm.
+        arena_size : float or tuple of floats. 
             Dimensions of arena (in cm)
             For a linear track, length
             For a circular arena, diameter
@@ -50,17 +49,15 @@ def rate_map(occupancy_map, spikes, **kwargs):
     rmap : np.ma.MaskedArray
         2D array, masked at locations of very low occupancy (t<1ms).
         Each cell gives the rate of neuron firing at that location.
+    
+    Raises
+    ------
+    ValueError
+        If input values do not match expectations
 
     See also
     --------
     BNT.+analyses.map
-
-    Copyright (C) 2019 by Simon Ball
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or
-    (at your option) any later version.
     '''
 
     # Check correct inputs
