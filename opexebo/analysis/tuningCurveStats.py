@@ -106,7 +106,12 @@ def tuning_curve_stats(tuning_curve, **kwargs):
     tcstat['hd_peak_direction'] = np.degrees(_index_to_angle(peak_dir_index,
                                                               bin_width))
     tcstat['hd_peak_rate'] = np.nanmax(tuning_curve)
-    tcstat['hd_mean_rate'] = np.nanmean(tuning_curve)
+    
+    if tuning_curve.mask.all():
+        # Added to cope with numpy bug in nanmean with fully masked array
+        tcstat['hd_mean_rate'] = np.nan
+    else:
+        tcstat['hd_mean_rate'] = np.nanmean(tuning_curve)
 
     # Calculate the more complex ones:
     # mvl

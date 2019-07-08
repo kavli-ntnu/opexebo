@@ -103,6 +103,9 @@ def grid_score(aCorr, **kwargs):
     # outer bound is defined by the minimum of autocorrelogram's dimensions
     # this is need for rectangular autocorrelograms.
     outerBound = int(np.floor(np.min(np.array(aCorr.shape)/2)))
+    if outerBound < cFieldRadius:
+        return (np.nan, grid_score_stats(np.zeros_like(aCorr), 
+                                    np.zeros_like(aCorr), centre))
     radii = np.linspace(cFieldRadius+1, outerBound, outerBound-cFieldRadius)
     radii = radii.astype(int)
     numSteps = len(radii)

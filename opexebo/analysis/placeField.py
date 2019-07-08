@@ -71,6 +71,13 @@ def place_field(firing_map, **kwargs):
     fields_map  : np.ndarray
         labelled integer image (i.e. background = 0, field1 = 1, field2 = 2, etc.)
 
+    Raises
+    ------
+    ValueError
+        Invalid input arguments
+    NotImplementedError
+        non-defined peack searching methods
+
     See also
     --------
     BNT.+analyses.placefieldAdaptive
@@ -94,7 +101,7 @@ def place_field(firing_map, **kwargs):
     peak_coords = kwargs.get("peak_coords", None)
     debug = kwargs.get("debug", False)
 
-    if not 0 <= init_thresh <= 1:
+    if not 0 < init_thresh <= 1:
         raise ValueError("Keyword 'init_thresh' must be in the range [0, 1]."\
                          " You provided %.2f" % init_thresh)
     if search_method not in default.all_methods:
@@ -263,7 +270,7 @@ def place_field(firing_map, **kwargs):
             # Field too small and debugging information not needed
             # Do nothing
             pass
-    fields_map = np.ma.masked_where(occupancy_mask, fields_map)
+    #fields_map = np.ma.masked_where(occupancy_mask, fields_map)
     return (fields, fields_map)
 
 

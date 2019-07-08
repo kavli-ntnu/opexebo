@@ -51,7 +51,7 @@ firing_field_min_mean = 0
 search_method = 'default'
 
 #: All implemented means of finding local maxima. Use lower case. 
-all_methods = (search_method, "sep")    
+all_methods = (search_method, "sep", "not implemented")    
 
 
 
