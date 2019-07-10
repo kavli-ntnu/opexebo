@@ -11,6 +11,12 @@ Install by using pip::
 
     pip install git+https://github.com/kavli-ntnu/opexebo.git#egg=opexebo
 
+Installing in this way requires having `git`, this can be acquired from
+    https://git-scm.com/download/win
+
+Installing the required python package `sep` requires the Microsoft Visual C++ Build Tools, these can be downloaded from
+    https://www.microsoft.com/en-us/download/details.aspx?id=48159
+
 
 Usage example
 =============
