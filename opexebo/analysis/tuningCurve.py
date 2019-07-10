@@ -11,7 +11,7 @@ def tuning_curve(angular_occupancy, spike_angles, **kwargs):
     
     STATUS : EXPERIMENTAL
 
-    Parameters:
+    Parameters
     ----------
     angular_occupancy : np.ma.MaskedArray
         unsmoothed histogram of time spent at each angular range
@@ -35,7 +35,6 @@ def tuning_curve(angular_occupancy, spike_angles, **kwargs):
     See also
     --------
     BNT.+analyses.turningcurve
-    opexebo.analysis.angularoccupancy
 
     Copyright (C) 2019 by Simon Ball
 

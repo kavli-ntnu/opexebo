@@ -16,14 +16,18 @@ from scipy.signal import convolve2d
 def normxcorr2_general(map):
     """Calculate spatial autocorrelation.
 
-    Adaptation of a more general function to calculate autocorrelations.
+    Python adaption of more general matlab function for calculating cross 
+    correlation
 
-    Args:
-    map: NxM matrix, firing map. map is not necessary a numpy array. Must not
-        contain NaNs!
+    Parameters
+    ----------
+    map: NxM matrix
+        firing map. map is not necessary a numpy array. Must not contain NaNs!
 
-    Returns:
-    Resulting correlation matrix, which is a 2D numpy array.
+    Returns
+    -------
+    np.ndarray
+        Resulting correlation matrix
     """
 
     if not isinstance(map, np.ndarray):

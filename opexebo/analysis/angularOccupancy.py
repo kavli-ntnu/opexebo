@@ -30,7 +30,9 @@ def angular_occupancy(angle,**kwargs):
     bin_edges : list-like
         x, or (x, y), where x, y are 1d np.ndarrays
         Here x, y correspond to the output histogram
-        
+    
+    See also
+    --------
     Copyright (C) 2019 by Simon Ball, Horst Obenhaus
 
     This program is free software; you can redistribute it and/or modify

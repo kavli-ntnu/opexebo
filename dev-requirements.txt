@@ -1,9 +1,10 @@
 pip==19.1.1
 bumpversion==0.5.3
-wheel==0.31.x
+wheel>=0.31.0,<0.32
 flake8==3.5.0
-tox==3.2.x
-Sphinx==1.7.x
-coverage==4.5.x
-twine==1.11.x
+tox>=3.2.0,<3.3
+sphinx>=1.7.0,<1.8
+sphinx_rtd_theme=0.4.3
+coverage>=4.5.0,<4.6
+twine>=1.11.x,<1.12
 pytest==4.3.1

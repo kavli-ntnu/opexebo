@@ -61,7 +61,7 @@ def accumulate_spatial(pos, **kwargs):
     """
 
     # Check correct inputs:
-    dims, num_samples = pos.shape
+    dims = pos.ndim
     if dims not in (1, 2):
         raise ValueError("pos should have either 1 or 2 dimensions. You have"\
                          " provided %d dimensions." % dims)
@@ -78,10 +78,11 @@ def accumulate_spatial(pos, **kwargs):
     num_bins = np.ceil(arena_size / bin_width).astype(int)
 
     # Histogram of positions
-    x = pos[0, :]
+    
 
     if is_2d:
-        y = pos[1, :]
+        x = pos[0]
+        y = pos[1]
         if limits is None:
             limits = ( [np.nanmin(x), np.nanmax(x)],
                          [np.nanmin(y), np.nanmax(y)] )
@@ -93,9 +94,9 @@ def accumulate_spatial(pos, **kwargs):
                              [limits[2], limits[3]] )
         in_range = np.logical_and( 
                 np.logical_and(
-                        np.ma.masked_greater_equal(x, limits[0][0]), np.ma.masked_less(x, limits[0][1])),
+                        np.greater_equal(x, limits[0][0]), np.less(x, limits[0][1])),
                 np.logical_and(
-                        np.ma.masked_greater_equal(y, limits[1][0]), np.ma.masked_less(y, limits[1][1])) )
+                        np.greater_equal(y, limits[1][0]), np.less(y, limits[1][1])) )
         # the simple operator ">= doesn't respect Masked Arrays
         # As of 2019, it does actually behave correctly (NaN is invalid and so
         # is removed), but I would prefer to be seplicit
@@ -109,15 +110,16 @@ def accumulate_spatial(pos, **kwargs):
         edges = np.array([yedges, xedges]) # Note that due to the tranposition
                             # the label xedge, yedge is potentially misleading
     else:
+        x = pos
         if limits is None:
             limits = [np.nanmin(x), np.nanmax(x)]
         elif len(limits) != 2: 
             raise ValueError("You must provide a 2-element 'limits' value for a"\
                              " 1D map. You provided %d elements" % len(limits))
-        in_range = np.logical_and(np.ma.masked_greater_equal(x, limits[0]),
-                                  np.ma.masked_less(y, limits[1]))
+        in_range = np.logical_and(np.greater_equal(x, limits[0]),
+                                  np.less(x, limits[1]))
         in_range_x = x[in_range]
 
-        hist, edges = np.histogram(x, bins=num_bins, range=limits)
+        hist, edges = np.histogram(in_range_x, bins=num_bins, range=limits)
 
     return hist, edges

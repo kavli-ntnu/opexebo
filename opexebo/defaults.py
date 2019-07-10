@@ -1,44 +1,76 @@
-""" Provide common default values for analysis parameters """
+'''Opexebo default values
+
+This module provides default values for all keyword arguments in the Opexebo 
+package. 
+
+'''
 
 
-# spatial/angular occupancy
-bin_width = 2.5         # Standard spatial resolution, [cm]
-bin_angle = 15        # Standard angular bin width [degree]
-bin_speed = 5 			# Standard speed bin, [cm/s]
-speed_cutoff = 0   # Standard speed cutoff below which to ignore positions [cm/s]
+'''spatial/angular occupancy'''
+#: Standard spatial resolution, [cm]
+bin_width = 2.5
 
-# Smoothing
-sigma = 2               # Standard Gaussian Standard Deviation for smoothing, [bins]
-sigma_speed = 0.4       # Standard Gaussian stdev for smoothing firing rate. [s]
-						# Default at 0.4s from doi:10.1038/nature14622 . 
-mask_fill = 0         # Used to define the behaviour of smoothing around masked values
-                        # A masked location will have this value inserted
-                        # A value of NaN in the astropy.convolution.convolve function will
-                        # be replaced by an interpolated value based on nearby locations
+#: Standard angular bin width [degree]
+bin_angle = 15
+
+#: Standard speed bin, [cm/s]
+bin_speed = 5
+
+#: Standard speed cutoff below which to ignore positions [cm/s]
+speed_cutoff = 0
 
 
-# Firing field related
-initial_search_threshold = 0.96 
-firing_field_min_bins = 9   # Minimum number of bins for a firing field to be valid [bins]
-firing_field_min_peak = 1   # Minimum peak firing rate for a firing field to be valid [Hz]
-firing_field_min_mean = 0   # Minimum mean firing rate for a firing field to be valid [Hz]
-search_method = 'default'   # The method used to find local maxima
-all_methods = (search_method, "sep")    # All implemented means of finding local maxima. 
-                                        # These should all be lowercase
+
+'''Smoothing'''
+#: Standard Gaussian Standard Deviation for smoothing, [bins]
+sigma = 2.0
+
+#: Standard Gaussian stdev for smoothing firing rat, [s]. Default at 0.4s from doi 10.1038/nature14622 .     
+sigma_speed = 0.4
+
+#: Replacement value for masked values when smoothing. Use np.nan to interpolate through masked values instead of use fixed value
+mask_fill = 0
 
 
-# Head Direction score
-hd_percentile = 0.95    # Percentile for head drection arc
-
-# Grid Score
-min_orientation = 15    # minimum orientation before a field is considered for Gridness Score  [degrees]
 
 
-# Speed Score
-lower_bound_speed = 2	# The default lower edge of the bandpass filter used for speedscore [cm/s]
-upper_bound_time = 10 	# The default time used to calculate the upper edge of the bandpass filter [s]
+''' Firing field related'''
+#: Initial relative threshold to search for local maxima, in range [0,1]
+initial_search_threshold = 0.96
+
+#: Minimum number of bins for a firing field to be valid [bins]
+firing_field_min_bins = 9
+
+#: Minimum peak firing rate for a firing field to be valid [Hz]
+firing_field_min_peak = 1
+
+#: Minimum mean firing rate for a firing field to be valid [Hz]
+firing_field_min_mean = 0
+
+#: The method used to find local maxima
+search_method = 'default'
+
+#: All implemented means of finding local maxima. Use lower case. 
+all_methods = (search_method, "sep", "not implemented")    
 
 
-# Border score related
-search_width = 8        # Search width for border coverage, see analyses.bordercoverage, [bins]
-walls = 'trbl'          # standard walls for border search, see analyses.bordercoverage, string
+
+
+''' Score related'''
+#: Percentile for head drection arc, in range [0,1]
+hd_percentile = 0.95
+
+#: minimum angular separation between fields in acorr considered for grid ellipse [degrees]
+min_orientation = 15
+
+
+#: The default lower edge of the bandpass filter used for speedscore [cm/s]
+lower_bound_speed = 2
+#: The default time used to calculate the upper edge of the bandpass filter [s]
+upper_bound_time = 10
+
+
+#: Search width for border coverage, see analyses.bordercoverage, [bins]
+search_width = 8
+#: standard walls for border search, see analyses.bordercoverage, string    
+walls = 'trbl'

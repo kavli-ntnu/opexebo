@@ -38,8 +38,8 @@ def border_score(rate_map, fields_map, fields, **kwargs):
         The key is the field_id corresponding to the labelled fields_map
         Each firing field is also given as a dictionary
         Example:
-            fields = {1:field_one, 2:field_two}
-            field_one = {'field_id':1, 'field_size':2.6, ...}
+        fields = {1:field_one, 2:field_two}
+        field_one = {'field_id':1, 'field_size':2.6, ...}
     kwargs
         search_width    :   int
             rate_map and fields_map have masked values, which may occur within 

@@ -21,7 +21,7 @@ def rate_map_stats(rate_map, time_map, debug=False):
     8 well-defined neighbours. This function uses zero-padding technique.
     
     Parameters
-    ---
+    ----------
     rate_map        : np.ma.MaskedArray
         Smoothed rate map: n x m array where cell value is the firing rate, 
         masked at locations with low occupancy
@@ -32,7 +32,7 @@ def rate_map_stats(rate_map, time_map, debug=False):
         Already smoothed
     
     Returns
-    ---
+    -------
     rms : dict
         spatial_information_rate    : float
             information rate [bits/sec]
@@ -47,8 +47,8 @@ def rate_map_stats(rate_map, time_map, debug=False):
         mean_rate : float
             mean firing rate of smoothed map [Hz]
 
-    See:
-    ---
+    See also
+    --------
     BNT.+analyses.mapStatsPDF(map)
     BNT.+analyses.coherence(map)
         
@@ -74,7 +74,14 @@ def rate_map_stats(rate_map, time_map, debug=False):
     selectivity = np.nan
     inf_rate = np.nan
     inf_content = np.nan
-
+    if rate_map.mask.all():
+        # Currently, there is a bug in numpy that causes nanmean to fail
+        # on fully masked arrays. This should be a pretty rare occurrence, though!
+        rmap_mean = np.nan
+        rmap_peak = np.nan
+    else:
+        rmap_mean = np.nanmean(rate_map)
+        rmap_peak = np.nanmax(rate_map)
     
     mean_rate = np.ma.sum( rate_map * position_PDF )
     mean_rate_sq = np.ma.sum( np.ma.power(rate_map, 2) * position_PDF )
@@ -102,8 +109,7 @@ def rate_map_stats(rate_map, time_map, debug=False):
         inf_rate = np.ma.sum(position_PDF * rate_map * np.ma.log2(log_argument))
         inf_content = inf_rate / mean_rate
         
-    rmap_mean = np.mean(rate_map)
-    rmap_peak = np.max(rate_map)
+    
         
     return {"spatial_information_rate":inf_rate, "spatial_information_content":inf_content,
             "sparsity":sparsity, "selectivity":selectivity, "peak_rate":rmap_peak,

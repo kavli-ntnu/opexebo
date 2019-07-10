@@ -8,7 +8,7 @@ Created on Tue Jun  4 11:37:57 2019
 import numpy as np
 
 
-def fit_ellipse(X, Y, **kwargs):
+def fit_ellipse(X, Y):
     '''
     Fit an ellipse to the provided set of X, Y co-ordinates
 
@@ -16,16 +16,16 @@ def fit_ellipse(X, Y, **kwargs):
     Authors: Andrew Fitzgibbon, Maurizio Pilu, Bob Fisher
     Reference: "Direct Least Squares Fitting of Ellipses", IEEE T-PAMI, 1999
         
-         @Article{Fitzgibbon99,
-          author = "Fitzgibbon, A.~W.and Pilu, M. and Fisher, R.~B.",
-          title = "Direct least-squares fitting of ellipses",
-          journal = pami,
-          year = 1999,
-          volume = 21,
-          number = 5,
-          month = may,
-          pages = "476--480"
-         }
+    @Article{Fitzgibbon99,
+    author = "Fitzgibbon, A.~W.and Pilu, M. and Fisher, R.~B.",
+    title = "Direct least-squares fitting of ellipses",
+    journal = pami,
+    year = 1999,
+    volume = 21,
+    number = 5,
+    month = may,
+    pages = "476--480"
+    }
     and implemented in MatLab by Vadim Frolov
 
     Parameters

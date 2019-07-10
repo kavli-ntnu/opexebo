@@ -11,6 +11,18 @@ Install by using pip::
 
     pip install git+https://github.com/kavli-ntnu/opexebo.git#egg=opexebo
 
+A specific revision, branch, tag, or release an be installed by targetting the git command:
+
+    https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support
+
+Installing in this way requires having `git`, this can be acquired from
+
+    https://git-scm.com/download/win
+
+Installing the required python package `sep` requires the Microsoft Visual C++ Build Tools, these can be downloaded from
+
+    https://www.microsoft.com/en-us/download/details.aspx?id=48159
+
 
 Usage example
 =============

@@ -26,6 +26,7 @@ def autocorrelation(firing_map):
     See also
     --------
     BNT.+analyses.autocorrelation
+    
     opexebo.general.normxcorr2_general
         
     Copyright (C) 2018 by Vadim Frolov

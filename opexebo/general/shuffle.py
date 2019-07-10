@@ -6,27 +6,25 @@ import time
 def shuffle(times, offset_lim, iterations, **kwargs):
     '''
     Increment the provided time series by a random period of time in order to 
-    destroy the correlation between spike times and animal behaviour.
+    destroy the correlation between spike times and animal behaviour. 
     
     STATUS : EXPERIMENTAL
     
-    The increment behaves circularly: 
-        * initially, we have two time series, Tracking and SpikeTimes, both with 
-        values in the range [t0, t1]. 
-        * after incrementing by T, we have Tracking in [t0, t1] and SpikeTimes
-        in [t0+T, t1+T]
-        * Take all spike times in the range [t1, t1+T] and map back to [t0, t0+T]
-        by subtracting (t1-t0)
+    The increment behaves circularly
+    * initially, we have two time series, Tracking and SpikeTimes, both with 
+    values in the range [t0, t1]. 
+    * after incrementing by T, we have Tracking in [t0, t1] and SpikeTimes
+    in [t0+T, t1+T]
+    * Take all spike times in the range [t1, t1+T] and map back to [t0, t0+T]
+    by subtracting (t1-t0)
     
     The end result should be a series of times also in the range [t0, t1], 
-    with the same intervals between times**, but the exact value of those times
-    has changed. 
-    
-    ** with 1 exception, at the gap between where the oldest times end and
-    the first times begin, if tracking_range not provided.
+    with the same intervals between times, but the exact value of those times
+    has changed. if tracking_range not provided, then two spikes (previously 
+    first, last) will noe have zero spacing
     
     The random numbers are drawn from a pseudorandom, uniform, distribution in 
-    the range [t_min, t_max]
+    the range [offset_lim, t1-offset_lim]
         
     
     Parameters
@@ -61,7 +59,7 @@ def shuffle(times, offset_lim, iterations, **kwargs):
     
     See also
     --------
-    BNT.+scripts.shuffling (around line 350)
+    BNT.+scripts.shuffling around line 350
     '''
     
     # Check values
@@ -70,16 +68,22 @@ def shuffle(times, offset_lim, iterations, **kwargs):
     if times.ndim != 1:
         raise ValueError("You must provide a 1D array of times. You provided a"\
                          " %d-dimensional array" % times.ndim)
+    if times.size == 0:
+        raise ValueError("Your spike_times array is empty")
     if np.isnan(times).any():
         raise ValueError("You have NaN values in your times array")
     debug = kwargs.get('debug', False)
     tr = kwargs.get('tracking_range', None)
-    if tr is not None:
-        t0 = np.nanmin(tr)
-        t1 = np.nanmax(tr)
-        if t0 > np.nanmin(times) or t1 < np.nanmax(times):
-            raise ValueError("Your times cover a larger span of time than your"\
-                             " tracking information")
+    try:
+        if tr is not None:
+            t0 = np.nanmin(tr)
+            t1 = np.nanmax(tr)
+            if (t0 > np.nanmin(times)) or (t1 < np.nanmax(times)):
+                raise ValueError("Your times cover a larger span of time than your"\
+                                 " tracking information")
+    except ValueError as e:
+        print(e)
+        print(times)
     else:
         t0 = np.nanmin(times)
         t1 = np.nanmax(times)
@@ -98,7 +102,7 @@ def shuffle(times, offset_lim, iterations, **kwargs):
     
     
     increments = np.random.RandomState().rand(iterations) # Uniformmly distrbuted in [0, 1]
-    increments = t_min + (increments * (t_max-t_min))
+    increments = t_min + (increments * (t_max-t_min)) # uniformly distributed in [t_min, t_max]
     
     num_spikes = np.size(times)
     
@@ -155,6 +159,7 @@ def shuffle(times, offset_lim, iterations, **kwargs):
         print(np.diff(output[:,0]))
     
     # Want to return such that each row of the output is a single time-shifted iteration
+    # This will allow a single iteration of ShuffledUnitSikeTimes to be accessed as output[i]
     output = output.transpose()
     
     return output, increments
