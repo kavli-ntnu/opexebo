@@ -86,6 +86,8 @@ def tuning_curve_stats(tuning_curve, **kwargs):
     if not 0 <= percentile <= 1:
         raise ValueError("Keyword 'percentile' should be in the range [0, 1]."\
                          " You provided  %.2f. " % percentile)
+    if type(tuning_curve) != np.ma.MaskedArray:
+        tuning_curve = np.ma.masked_invalid(tuning_curve)
 
     num_bin = tuning_curve.size
     bin_width = 2 * np.pi / num_bin
@@ -136,11 +138,11 @@ def tuning_curve_stats(tuning_curve, **kwargs):
     tuning_curve_re = np.zeros_like(tuning_curve)
     centre_index = int(num_bin / 2)
     offset = centre_index - peak_index
-    tuning_curve_re[offset:] = tuning_curve[:-offset]
-    tuning_curve_re[:offset] = tuning_curve[-offset:]
+    tuning_curve_re = np.roll(tuning_curve, offset)
     # A positive offset means that the peak angle was in the range [0, pi], and
     # is now at the central index. Therefore, to get the "proper" index,
     # subtract offset from index in tuning_curve_re
+
 
     if debug:
         print("Centre index: %d, value" % centre_index)
@@ -183,11 +185,11 @@ def _index_to_angle(index, bin_width):
 if __name__=='__main__':
     plt.close('all')
     samples = 100
-    x0 = -0.5
+    x0 =-0.5
     w = 0.5
     x = np.linspace(0, 2*np.pi * (samples-1)/samples, samples)
     tc = np.exp(-1*np.square(x-x0)/w) + np.exp(-1*np.square(x-x0-(2*np.pi))/w)
 
     perc = 0.8
-    stats = tuningcurvestats(tc, percentile=perc, debug=True)
-    print(stats['score'])
+    stats = tuning_curve_stats(tc, percentile=perc, debug=True)
+    print(stats['hd_score'])
