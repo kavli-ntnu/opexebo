@@ -54,10 +54,12 @@ def rate_map(occupancy_map, spikes, **kwargs):
     ------
     ValueError
         If input values do not match expectations
+    KeyError
+        Absence of arena information
 
     See also
     --------
-    BNT.+analyses.map
+    BNT.+analyses.map()
     '''
 
     # Check correct inputs
