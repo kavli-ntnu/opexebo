@@ -26,13 +26,8 @@ def border_coverage(fields, **kwargs):
 
     Parameters
     ----------
-    fields      :   dict
-        Dictionary of all known firing fields
-        The key is the field_id corresponding to the labelled fields_map
-        Each firing field is also given as a dictionary
-        Example:
-        fields = {1:field_one, 2:field_two}
-        field_one = {'field_id':1, 'field_size':2.6, ...}
+    fields      :   dict or list of dicts
+        One dictionary per field. Each dictionary must contain the keyword "map"
     **kwargs
         search_width    :   int
             rate_map and fields_map have masked values, which may occur within the region of border 
@@ -77,6 +72,12 @@ def border_coverage(fields, **kwargs):
     # Check that the wall definition is valid
     _validate_wall_definition(walls)
     walls = walls.lower()
+    
+    if type(fields) == dict:
+        # Deal with the case of being passed a single field, instead of a list of fields
+        fields = [fields]
+    elif type(fields) != list:
+        raise ValueError(f"You must supply either a dictionary, or list of dictionaries, of fields. You provided type '{type(fields)}'")
 
     # Check coverage of each field in turn
     coverage = 0
@@ -144,7 +145,7 @@ def _wall_field(wfmap):
     N = wfmap.shape[0]
     wfmap[wfmap>1] = 1 # Just in case a still-labelled map has crept in
     inverted_wfmap = 1-wfmap 
-    distance = distance_transform_edt(inverted_wfmap)
+    distance = distance_transform_edt(np.nan_to_num(inverted_wfmap.data, copy=True)) # scipy doesn't recognise masks
     distance = np.ma.masked_where(wfmap.mask, distance) # Preserve masking
     # distance_transform_edt(1-map) is the Python equivalent to (Matlab bwdist(map))
     # Cells in map with value 1 go to value 0

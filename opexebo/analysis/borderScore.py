@@ -13,16 +13,24 @@ def border_score(rate_map, fields_map, fields, **kwargs):
     STATUS : EXPERIMENTAL
     
     TODO: Update to account for the use of Vadim's placefield code
+    
 
     Calculates a border score for a firing rate map according to the article 
     "Representation of Geometric Borders in the Entorhinal Cortex" by Solstad 
     et. al. (Science 2008).
-    Border score ranges from -1 to +1 with +1 being "a perfect border cell". If
-    the firing map contains no firing fields, then the returned score is -1.
-    The score reflects not only how close a field is to a border and how big 
-    the coverage of this field is, but also it reflects spreadness of a field. 
-    The best border score (+1) will be calculated for a thin line (1 px, bin) 
-    that lies along the wall and fully covers this wall.
+    
+    Border score is either -1 (no firing fields provided) or in the range [0-1].
+    The score reflects both the width of a field (what fraction of a single wall
+    it touches), and the depth of a field (how far away from the field it extends)
+    The highest score is returned for a field with maximum width and infinitesimal
+    depth.
+    
+    Consequently, a border score of 1 can only **ever** be returned given an 
+    infinite resolution. A perfect field in a typical 40x40 bin map has a maximum
+    value of around 0.91.
+    
+    The score is only evaluated for the firing field that has the greatest wall
+    coverage. All other fields are ignored. 
     
     Parameters
     ----------
@@ -33,13 +41,10 @@ def border_score(rate_map, fields_map, fields, **kwargs):
         Cells that are members of field have the value corresponding to field_id 
         (non-zero positive  unique integers. Not necessarily contiguous 
         (e.g. 1, 2, 3, 5)). Cells that are not members of fields have value zero
-    fields      :   dict
-        Dictionary of all known firing fields
-        The key is the field_id corresponding to the labelled fields_map
-        Each firing field is also given as a dictionary
-        Example:
-        fields = {1:field_one, 2:field_two}
-        field_one = {'field_id':1, 'field_size':2.6, ...}
+    fields      :  list of  dict
+        List of dictionaries of firing fields. 
+        Each dictionary must, at least, contain the keyword "map", yielding a 
+        binary map of that field within the overall arena
     kwargs
         search_width    :   int
             rate_map and fields_map have masked values, which may occur within 
@@ -92,7 +97,7 @@ def border_score(rate_map, fields_map, fields, **kwargs):
     else:
         # 1 or more fields exist
         fields_map_unlabelled = np.copy(fields_map)
-        fields_map_unlabelled[fields_map>0] = 1
+        fields_map_unlabelled[fields_map>1] = 1
         coverage = border_coverage(fields, search_width = sw, walls = walls)
         fields_rate_map = fields_map_unlabelled * rate_map
         fields_rate_map = np.ma.masked_invalid(fields_rate_map)
@@ -118,14 +123,14 @@ def _weighted_firing_distance(rmap):
         rmap = np.ma.masked_invalid(rmap)
 
     # Normalise firing map by the sum of the firing map, such that it resembles a PDF
-    rmap /= np.ma.sum(rmap)
+    pdf = rmap / np.ma.sum(rmap)
 
     # Create an array, same size as rmap, where the cell value is the distance (in bins) from the edge of the array:
     x = np.ones(rmap.shape) # define area same size as ratemap
     x = np.pad(x, 1, mode='constant') # Pad outside with zeros, we calculate distance from nearest zero
     dist = distance_transform_cdt(x, metric='taxicab') # taxicab metric: distance along axes, not diagonal distance. 
     #wfd = np.ma.sum( np.ma.dot(dist[1:-1, 1:-1], rmap) )
-    wfd = np.ma.sum( dist[1:-1, 1:-1] * rmap )
+    wfd = np.ma.sum( dist[1:-1, 1:-1] * pdf )
 
     # Normalise by half of the smallest arena dimensions
     wfd = 2 * wfd / np.min(rmap.shape)

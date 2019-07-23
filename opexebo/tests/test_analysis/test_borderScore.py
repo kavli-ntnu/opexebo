@@ -16,55 +16,82 @@ from opexebo.analysis import border_score as func
 print("=== tests_analysis_border_score ===")
 
 
-
 ###############################################################################
 ################                HELPER FUNCTIONS
 ###############################################################################
 
+def field(grid, centre, width, peak):
+    '''
+    grid: array
+        the binned arena, e.g. np.zeros((40,40))
+    centre: tuple
+        x, y co-ordinates for the field to be centred
+        (0,0) is assumed to be upper left
+    width : tuple or float
+        x, y sigma. If float, x=y
+    peak : float
+        peak rate
+    '''
+    if type(width) in (float, int):
+        width = (width, width)
+    x = np.arange(grid.shape[1])
+    y = np.arange(grid.shape[0])
+    X, Y = np.meshgrid(x, y)
+    xt = np.square(X - centre[0]) / (2*width[0]**2)
+    yt = np.square(Y - centre[1]) / (2*width[1]**2)
+    g = np.exp(-1 * (xt+yt))
+    g[g<0.025] = 0
+    g *= peak    
+    return g
 
-def get_fields_opexebo(data, key):
-    # Rely on cellsData and allStatistics being in the same order
-    # get the identifying information from allStats
-    path = data['allStatistics'][0,key]['Path'][0]
-    basename = data['allStatistics'][0,key]['Basename'][0]
-    tetrode = data['allStatistics'][0,key]['Tetrode'][0,0]
-    cell = data['allStatistics'][0,key]['Cell'][0,0]
-    
-    fi = []
-    for j in range(data['allFields'].size): # start no sooner than i - this assumes that a ratemap NEVER has zero fields
-        pathj = data['allFields'][0,j]['Path'][0]
-        basenamej = data['allFields'][0,j]['Basename'][0]
-        tetrodej = data['allFields'][0,j]['Tetrode'][0,0]
-        cellj = data['allFields'][0,j]['Cell'][0,0]
-        if path == pathj and basename == basenamej and tetrode == tetrodej and cell == cellj:
-            fi.append(j)
-    return fi
+def show(f):
+    plt.figure()
+    plt.imshow(f)
+    plt.show()
 
-def get_border_score_opexebo(data, key):
-    rmap = 0
-    fmap = 0
-    fields = 0
+def rmap0():
+    '''f2 should have a border score of about 0.25 on the Right wall'''
+    f = np.zeros((40,40))
+    f0 = field(f, (5,14), (2.5, 4), 15)
+    f1 = field(f, (23,17), (1,1.5), 10) 
+    f2 = field(f, (35, 3), (8, 8), 5)
+    f3 = field(f, (12, 28), (6,2), 6)
+    f4 = field(f, (36, 37), (5, 3.3), 7)
+    rmap0 = f0+f1+f2+f3+f4
+    fmap0 = rmap0>3
+    fields0 = [{'map':f0}, {'map':f1}, {'map':f2}, {'map':f3}, {'map':f4}]
+    return rmap0, fmap0, fields0
 
-
-def get_border_score_bnt(data, key):
-    return data['cellsData'][key,0]['epochs'][0,0][0,0]['borderScore'][0,0][0,0]
-    
-
-
+def rmap1():
+    '''f0 should have a border score of 1 on the bottom wall'''
+    f = np.zeros((40,40))
+    f0 = field(f, (20, 0), (40, 0.5), 15)
+    f1 = field(f, (6,32), (3, 3), 10)
+    rmap1 = f0 + f1
+    fmap1 = rmap1>3
+    fields = [{"map":f0}, {"map":f1}]
+    return rmap1, fmap1, fields
 
 ###############################################################################
 ################                MAIN TESTS
 ###############################################################################
     
+def test_zero_fields():
+    rmap = np.zeros((40, 40))
+    fmap = rmap.copy()
+    fields = []
+    assert(func(rmap, fmap, fields) == -1)
+    print("test_zero_fields() passed")
+
+def test_perfect_fields():
+    result = func(*rmap1(), walls="B")
+    print(result)
+    assert(result == 1)
+
+
 
 
 if __name__ == '__main__':
-    #data = spio.loadmat(th.test_data_square)
-    ds = np.arange(th.get_data_size(data))
-    key = 14
-    fields = get_fields_bnt(data, key)
-    print(key, len(fields))
-    plt.figure()
-    plt.imshow(th.get_ratemap_bnt(data, key)[0])
-    plt.colorbar()
-    plt.show()
+#    test_zero_fields()
+#    test_perfect_fields()
+    show(rmap1()[0])

@@ -40,6 +40,8 @@ def peak_search(image, **kwargs):
     
     
     See also
+    --------
+    Copyright (C) 2019 by Simon Ball
     """
     
     search_method = kwargs.get("search_method", default.search_method)

@@ -50,7 +50,7 @@ def accumulate_spatial(pos, **kwargs):
 
     See also
     --------
-    BNT.+analyses.map
+    BNT.+analyses.map()
 
     Copyright (C) 2019 by Simon Ball
 
