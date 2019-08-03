@@ -122,8 +122,9 @@ def place_field(firing_map, **kwargs):
     else:
         occupancy_mask = np.zeros_like(firing_map).astype('bool')
         occupancy_mask[np.isnan(firing_map)] = True
-        firing_map = np.nan_to_num(firing_map, copy=True)
 
+    firing_map[np.isnan(firing_map)] = np.min(firing_map[np.isfinite(firing_map)])
+    
     se = morphology.disk(1)
     Ie = morphology.erosion(firing_map, se)
     fmap = morphology.reconstruction(Ie, firing_map)
