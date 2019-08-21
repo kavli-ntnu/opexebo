@@ -22,6 +22,11 @@ def validatekeyword__arena_size(kwv, provided_dimensions):
     Returns
     -------
     arena_size : float or np.ndarray of floats
+    
+    Raises
+    ------
+    ValueError
+    IndexError
     '''
     if provided_dimensions == 1:
         is_2d = False
