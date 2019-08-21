@@ -112,10 +112,8 @@ def place_field(firing_map, **kwargs):
     global_peak = np.nanmax(firing_map)
     if np.isnan(global_peak) or global_peak == 0:
         return [], np.zeros_like(firing_map)
-
-    # Get details of where the animal spent zero time, then discard NaNs (if any)
-    # This is a binary image - False if the animal visited that bin,
-    # True if the animal did NOT visit that bin
+    
+    # Construct a mask of bins that the animal never visited (never visited -> true)  
     if type(firing_map) == np.ma.MaskedArray:
         occupancy_mask = firing_map.mask
         firing_map = firing_map.data
@@ -123,7 +121,9 @@ def place_field(firing_map, **kwargs):
         occupancy_mask = np.zeros_like(firing_map).astype('bool')
         occupancy_mask[np.isnan(firing_map)] = True
 
-    firing_map[np.isnan(firing_map)] = np.min(firing_map[np.isfinite(firing_map)])
+    # Reliably discard NaNs to avoid errors with morphology
+    finite_firing_map = np.zeros_like(firing_map)
+    finite_firing_map[np.isnan(firing_map)] = np.min(firing_map[np.isfinite(firing_map)])
     
     se = morphology.disk(1)
     Ie = morphology.erosion(firing_map, se)
@@ -134,14 +134,14 @@ def place_field(firing_map, **kwargs):
         if search_method == default.search_method:
             peak_coords = opexebo.general.peak_search(fmap, **kwargs)
         elif search_method == "sep":
-            #fmap = firing_map
+            #fmap = finite_firing_map
             peak_coords = opexebo.general.peak_search(fmap, **kwargs)
         else:
             raise NotImplementedError("The search method you have requested (%s) is"\
                                       " not yet implemented" % search_method)
 
     # obtain value of found peaks
-    found_peaks = firing_map[peak_coords[:, 0], peak_coords[:, 1]]
+    found_peaks = finite_firing_map[peak_coords[:, 0], peak_coords[:, 1]]
 
     # leave only peaks that satisfy the threshold
     good_peaks = (found_peaks >= min_peak)
@@ -234,10 +234,10 @@ def place_field(firing_map, **kwargs):
     regions = measure.regionprops(fields_map)
 
     fields = []
-    fields_map = np.zeros(firing_map.shape)  # void it as we can eliminate some fields
+    fields_map = np.zeros(finite_firing_map.shape)  # void it as we can eliminate some fields
 
     for region in regions:
-        field_map = firing_map[region.coords[:, 0], region.coords[:, 1]]
+        field_map = finite_firing_map[region.coords[:, 0], region.coords[:, 1]]
         mean_rate = np.nanmean(field_map)
         num_bins = len(region.coords)
 
@@ -254,7 +254,7 @@ def place_field(firing_map, **kwargs):
             field['centroid_coords'] = region.centroid
             field['mean_rate'] = mean_rate
             field['peak_rate'] = peak_rate
-            mask = np.zeros(firing_map.shape)
+            mask = np.zeros(finite_firing_map.shape)
             mask[region.coords[:, 0], region.coords[:, 1]] = 1
             field['map'] = mask
 
