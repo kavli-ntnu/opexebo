@@ -7,12 +7,14 @@ import opexebo
 import opexebo.defaults as default
 
 
-def angular_occupancy(angle,**kwargs):
+def angular_occupancy(time, angle,**kwargs):
     '''
     Calculate angular occupancy from tracking angle and kwargs over (0,2*pi)
 
     Parameters
     ----------
+    time : numpy.ndarray
+        time stamps of angles in seconds
     angle : numpy array
         Head angle in radians
         Nx1 array
@@ -40,10 +42,12 @@ def angular_occupancy(angle,**kwargs):
     the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
     '''
-    ndim = angle.ndim
-    if ndim != 1:
+    if time.ndim != 1:
+        raise ValueError("time must be provided as a 1D array. You provided %d"\
+                         " dimensions" % time.ndim)
+    if angle.ndim != 1:
         raise ValueError("angle must be provided as a 1D array. You provided %d"\
-                         " dimensions" % ndim)
+                         " dimensions" % angle.ndim)
     if np.nanmax(angle) > 2*np.pi:
         raise Warning("Angles greater than 2pi detected. Please check that your"\
                       " angle array is in radians. If it is in degrees, you can"\
@@ -58,8 +62,12 @@ def angular_occupancy(angle,**kwargs):
                                                 arena_size=arena_size, limits=limits)
     masked_angle_histogram = np.ma.masked_where(angle_histogram==0, angle_histogram)
     
+    # masked_angle_histogram is in units of frames. It needs to be converted to units of seconds
+    frame_duration = np.min(np.diff(time))
+    masked_angle_seconds = masked_angle_histogram * frame_duration
+    
     # Calculate the fractional coverage based on the mask. Since the mask is 
     # False where the animal HAS gone, invert it first (just for this calculation)
-    coverage = np.sum(np.logical_not(masked_angle_histogram.mask)) / masked_angle_histogram.size
+    coverage = np.sum(np.logical_not(masked_angle_seconds.mask)) / masked_angle_seconds.size
     
-    return masked_angle_histogram, coverage, bin_edges
+    return masked_angle_seconds, coverage, bin_edges
