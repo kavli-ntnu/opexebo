@@ -62,7 +62,7 @@ def test_invalid_input():
     with pytest.raises(ValueError): # invalid input threshold
         init_thresh = 0
         func(fmap, init_thresh = init_thresh)
-    with pytest.raises(SyntaxError): # invalid search method - wrong type
+    with pytest.raises(ValueError): # invalid search method - wrong type
         sm = 3
         func(fmap, search_method=sm)
     with pytest.raises(ValueError): # invalid search method - unknown
@@ -73,6 +73,30 @@ def test_invalid_input():
         func(fmap, search_method=sm)
     print("test_invalid_input() passed")
     return True
+
+def test_unchanging_ratemap():
+    '''Check that the input arguments are not modified in place by the placefield detection function'''
+    # All finite
+    fmap = np.ones((40,40))
+    fmap_original = fmap.copy()
+    func(fmap)
+    assert(np.array_equal(fmap, fmap_original))
+    # Some non-finite
+    fmap = np.ones((40,40))
+    fmap[21,3] = np.inf
+    fmap_original = fmap.copy()
+    func(fmap)
+    assert(np.array_equal(fmap, fmap_original))
+    #Masked array
+    fmap = np.ones((40,40))
+    fmap[21,3] = np.inf
+    fmap = np.ma.masked_invalid(fmap)
+    fmap_original = fmap.copy()
+    func(fmap)
+    assert(np.array_equal(fmap, fmap_original))
+    print("test_unchanging_ratemap() passed")
+    return True
+    
 '''
 Due to changes made in the field detection algorithm, it is highly likely that:
     * A different number of fields will be detected (e.g. due to merging/splitting in marginal areas)
@@ -88,27 +112,33 @@ def test_messy_data():
     # This uses a miscellanious bunch of cells from Dave's work in deep layers
     # That meanst that they're not very good examples, but there are a *lot* 
     # of them
+    # Unfortunately, I think the combination of messy and the changes made to
+    # the Python version mean that they're never going to agree very well. 
     data = spio.loadmat(th.test_data_big)
     ds = np.arange(th.get_data_size(data))
     sm = "sep"
-    values = np.zeros(ds.shape)
+    areas = np.zeros((ds.size, 3))
+    numbers = np.zeros((ds.size, 3))
+    np.seterr(all="ignore")
     for key in tqdm(ds):
         rmap = th. get_ratemap_bnt(data, key)[0]
         fmap_bnt, fields_bnt = get_fields_bnt(data, key)
     
         fields, fmap = func(rmap, search_method=sm)
         
-        fmap_bnt[fmap_bnt>1] = 1
-        fmap[fmap>1] = 1
-
-        bnt = np.sum(fmap_bnt) / fmap_bnt.size # these are [0,1]
-        ope = np.sum(fmap) / fmap.size
-        if ope != 0:
-            similarity = bnt/ope # this should ideally be 1
-            
-            values[key] = similarity
-    return values
+        # Compare total area of all fields
+        area_bnt = np.count_nonzero(fmap_bnt)
+        area_ope = np.count_nonzero(fmap)
+        areas[key] = (area_bnt, area_ope, np.divide(area_bnt, area_ope))
+        
+        
+        # Compare total number of fields
+        numbers[key] = (len(fields_bnt), len(fields), len(fields_bnt)-len(fields))
+    return areas, numbers
         
     
     
-
+#areas, numbers = test_messy_data()
+#plt.figure()
+#plt.plot(areas[:,2])
+#plt.show()

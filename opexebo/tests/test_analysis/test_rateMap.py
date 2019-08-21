@@ -90,6 +90,7 @@ def test_rmap_simple():
     ds = np.arange(th.get_data_size(data))
     arena_size = 80
     bin_width = 2.0
+    rtol = 1e-4
     
     for key in ds:
     
@@ -104,11 +105,11 @@ def test_rmap_simple():
         assert(np.isnan(bnt).all() == ope.mask.all())
         
         # Test that the map produces similar absolute rates
-        assert(np.isclose(np.nanmean(bnt), np.nanmean(ope), rtol = 1e-5))
+        assert(np.isclose(np.nanmean(bnt), np.nanmean(ope), rtol = rtol))
         
         # Test that the maximum and minimum values are similar
-        assert(np.isclose(np.nanmax(bnt), np.nanmax(ope), rtol = 1e-5))
-        assert(np.isclose(np.nanmin(bnt), np.nanmin(ope), rtol = 1e-5))
+        assert(np.isclose(np.nanmax(bnt), np.nanmax(ope), rtol = rtol))
+        assert(np.isclose(np.nanmin(bnt), np.nanmin(ope), rtol = rtol))
         
     print("test_ratemap_simple passed")
     return True
