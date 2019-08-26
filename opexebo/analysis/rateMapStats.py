@@ -60,6 +60,10 @@ def rate_map_stats(rate_map, time_map, debug=False):
     (at your option) any later version.
     '''
      
+    if type(rate_map) != np.ma.MaskedArray:
+        rate_map = np.ma.masked_invalid(rate_map, copy=True)
+    if type(time_map) != np.ma.MaskedArray:
+        time_map = np.ma.masked_invalid(time_map, copy=True)
 
     duration = np.ma.sum(time_map)
     position_PDF = time_map / (duration + np.spacing(1)) 

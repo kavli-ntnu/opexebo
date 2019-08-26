@@ -1,7 +1,7 @@
 """
 Provide function for gridness score calculation.
 """
-import matplotlib.pyplot as plt
+
 import numpy as np
 
 from scipy.spatial.distance import cdist
@@ -343,6 +343,7 @@ def _circular_mask(image, radius, polarity='outwards', center=None):
         return mask
 
 def _draw_ellipse(x, y, rl, rs, theta):
+    import matplotlib.pyplot as plt
     from matplotlib.patches import Ellipse
     from matplotlib import transforms
     theta = (theta%(2*np.pi))# + np.pi
@@ -355,6 +356,7 @@ def _draw_ellipse(x, y, rl, rs, theta):
 
 
 def _plotContours(img, contours):
+    import matplotlib.pyplot as plt
     fig, ax = plt.subplots()
     ax.imshow(img, cmap='jet', origin='lower')
 
