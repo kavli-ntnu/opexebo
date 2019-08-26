@@ -43,6 +43,7 @@ def place_field(firing_map, **kwargs):
         search_method : str
             Peak detection finding method. By default, use skimage.morphology.local_maxima
             Acceptable values are defined in opexebo.defaults.
+            Not required if peak_coords are provided
         peak_coords : array-like
             List of peak co-ordinates to consider instead of auto detection
             Default None
@@ -118,8 +119,7 @@ def place_field(firing_map, **kwargs):
     if np.isnan(global_peak) or global_peak == 0:
         return [], np.zeros_like(firing_map)
 
-    # Construct a mask of bins that the animal never visited (never visited -> true)
-  
+    # Construct a mask of bins that the animal never visited (never visited -> true)  
     if type(firing_map) == np.ma.MaskedArray:
         occupancy_mask = firing_map.mask
         firing_map = firing_map.data
