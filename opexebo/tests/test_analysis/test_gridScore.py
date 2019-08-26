@@ -3,11 +3,12 @@
 import os
 os.environ['HOMESHARE'] = r'C:\temp\astropy'
 import sys
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(os.getcwd(), '..'))
 
 import scipy.io as spio
 import numpy as np
 import pytest
+import inspect
 
 import test_helpers as th
 from opexebo.analysis import grid_score as func
@@ -45,7 +46,7 @@ def test_grid_score_similarity():
             vals[key] = ratio
     tol = 1e-5
     assert((vals<tol).all())
-    print("test_grid_score_similarity() passed")
+    print(f"{inspect.stack()[0][3]} passed")
     return True
 
 if __name__ == '__main__':

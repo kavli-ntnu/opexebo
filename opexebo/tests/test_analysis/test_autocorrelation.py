@@ -3,8 +3,9 @@
 import os
 os.environ['HOMESHARE'] = r'C:\temp\astropy'
 import sys
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(os.getcwd(), '..'))
 
+import inspect
 import scipy.io as spio
 import numpy as np
 import pytest
@@ -40,7 +41,7 @@ def test_acorr_similarity():
         acorr_bnt = get_acorr_bnt(data, key)
         acorr_ope = func(rmap)
         assert(np.isclose(acorr_ope, acorr_bnt, rtol=3e-3).all())
-    print("test_acorr_similarity() passed")
+    print(f"{inspect.stack()[0][3]} passed")
     return True
 
 

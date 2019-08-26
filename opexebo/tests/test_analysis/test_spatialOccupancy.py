@@ -1,9 +1,10 @@
 """ Tests for spatial occupancy"""
 
 import os
-os.environ['HOMESHARE'] = r'C:\temp\astropy'
 import sys
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(os.getcwd(), '..'))
+os.environ['HOMESHARE'] = r'C:\temp\astropy'
+print(sys.path)
 
 import scipy.io as spio
 import numpy as np
@@ -27,11 +28,13 @@ def get_time_map_opexebo(data, key, arena_size = 80, bin_width=2.0):
     elif type(arena_size) in (tuple, list, np.ndarray):
         lim = (-arena_size[0]/2, arena_size[0]/2, -arena_size[1]/2, arena_size[1]/2)
 
-    positions=data['cellsData'][key,0]['epochs'][0,0][0,0][0,0]['pos'].transpose()
-    positions = np.ma.masked_where(np.isnan(positions), positions)
-    speeds = np.ones((2, positions.shape[1]))
+    t, x, y=data['cellsData'][key,0]['epochs'][0,0][0,0][0,0]['pos'].transpose()
+    
+    position = np.array([x, y])
+    position = np.ma.masked_invalid(position)
+    speed = np.ones(t.shape)
     spc = 0
-    ma = func(positions, speeds, arena_size=arena_size, 
+    ma = func(t, position, speed, arena_size=arena_size, 
                                            bin_width=bin_width, speed_cutoff=spc, limits=lim)
     return ma
 
@@ -53,6 +56,7 @@ def test_square_arena():
     ds = np.arange(th.get_data_size(data))
     arena_size = 80
     bin_width = 2.0
+    rtol = 1e-3
     
     for key in ds:
     
@@ -67,11 +71,11 @@ def test_square_arena():
         assert(np.isnan(bnt).all() == ope.mask.all())
         
         # Test that the map produces similar absolute times
-        assert(np.isclose(np.nanmean(ope), np.nanmean(bnt), rtol = 1e-5))
+        assert(np.isclose(np.nanmean(ope), np.nanmean(bnt), rtol = rtol))
         
         # Test that the maximum and minimum values are similar
-        assert(np.isclose(np.nanmax(ope), np.nanmax(bnt), rtol = 1e-5))
-        assert(np.isclose(np.nanmin(ope), np.nanmin(bnt), rtol = 1e-5))
+        assert(np.isclose(np.nanmax(ope), np.nanmax(bnt), rtol = rtol))
+        assert(np.isclose(np.nanmin(ope), np.nanmin(bnt), rtol = rtol))
         
     print("test_square_arena() passed")
     return True
@@ -81,6 +85,7 @@ def test_rectangular_arena():
     ds = np.arange(th.get_data_size(data))
     arena_size = (200,100)
     bin_width = 2.0
+    rtol = 1e-3
     
     for key in ds:
     
@@ -95,11 +100,11 @@ def test_rectangular_arena():
         assert(np.isnan(bnt).all() == ope.mask.all())
         
         # Test that the map produces similar absolute times
-        assert(np.isclose(np.nanmean(ope), np.nanmean(bnt), rtol = 1e-5))
+        assert(np.isclose(np.nanmean(ope), np.nanmean(bnt), rtol = rtol))
         
         # Test that the maximum and minimum values are similar
-        assert(np.isclose(np.nanmax(ope), np.nanmax(bnt), rtol = 1e-5))
-        assert(np.isclose(np.nanmin(ope), np.nanmin(bnt), rtol = 1e-5))
+        assert(np.isclose(np.nanmax(ope), np.nanmax(bnt), rtol = rtol))
+        assert(np.isclose(np.nanmin(ope), np.nanmin(bnt), rtol = rtol))
         
     print("test_rectangular_arena() passed")
     return True
@@ -114,47 +119,52 @@ def test_linear_arena():
 
 def test_invalid_inputs():
     # wrong dimensions to positions
+    n = 10
+
     with pytest.raises(ValueError):
-        positions = np.ones(10) #!
-        speeds = np.ones((2,10))
-        func(positions, speeds, arena_size = 1)
+        times = np.arange(n)
+        positions = np.ones((3, n)) #!
+        speeds = np.ones(n)
+        func(times, positions, speeds, arena_size = 1)
     with pytest.raises(ValueError):
-        positions = np.ones((4, 10)) #!
-        speeds = np.ones((2, 10))
-        func(positions, speeds, arena_size = 1)
-    with pytest.raises(ValueError):
-        positions = np.ones((3, 10))
-        speeds = np.ones((1, 10)) #!
-        func(positions, speeds, arena_size = 1)
+        times = np.arange(n)
+        positions = np.ones((2, n))
+        speeds = np.ones((2, n)) #!
+        func(times, positions, speeds, arena_size = 1)
     
     # Mismatched pos/speed
-    with pytest.raises(ValueError):
-        positions = np.ones((3,10))
-        speeds - np.ones((2,11)) #!
-        func(positions, speeds, arena_size = 1)
+    with pytest.raises(ValueError):        
+        times = np.arange(n)
+        positions = np.ones((2, n))
+        speeds - np.ones(n+1) #!
+        func(times, positions, speeds, arena_size = 1)
     
     # No arena size
-    with pytest.raises(KeyError):
-        positions = np.ones((3, 10))
-        speeds = np.ones((2, 10))
-        func(positions, speeds) #!
+    with pytest.raises(KeyError):       
+        times = np.arange(n)
+        positions = np.ones((2, n))
+        speeds = np.ones(n)
+        func(times, positions, speeds) #!
         
     # All nan
     # This isn't explicit in the function, but comes as a result of excluding
     # all non-finite values, and then being left with an empty array
-    with pytest.raises(ValueError):
-        positions = np.full((3,10), np.nan)
-        speeds = np.full((2,10), np.nan)
-        func(positions, speeds, arena_size = 1)
+    with pytest.raises(ValueError):       
+        times = np.arange(n)
+        positions = np.full((2,n), np.nan)
+        speeds = np.full(n, np.nan)
+        func(times, positions, speeds, arena_size = 1)
     
     print("test_invalid_inputs passed")
         
         
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
+#    data = spio.loadmat(th.test_data_square)
+#    get_time_map_opexebo(data, 0, arena_size = 80, bin_width=2.0)
+#    test_square_arena()
+#    test_rectangular_arena()
+#    test_circular_arena()
+#    test_linear_arena()
+#    test_invalid_inputs()
     
-    test_square_arena()
-    test_rectangular_arena()
-    test_circular_arena()
-    test_linear_arena()
-    test_invalid_inputs()

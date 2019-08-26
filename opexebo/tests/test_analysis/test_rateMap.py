@@ -3,7 +3,7 @@
 import os
 os.environ['HOMESHARE'] = r'C:\temp\astropy'
 import sys
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(os.getcwd(), '..'))
 
 
 import scipy.io as spio
@@ -90,7 +90,7 @@ def test_rmap_simple():
     ds = np.arange(th.get_data_size(data))
     arena_size = 80
     bin_width = 2.0
-    rtol = 1e-4
+    rtol = 1e-3
     
     for key in ds:
     
