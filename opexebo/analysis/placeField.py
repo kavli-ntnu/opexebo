@@ -130,7 +130,7 @@ def place_field(firing_map, **kwargs):
     # Reliably discard NaNs to avoid errors with morphology
     finite_firing_map = np.zeros_like(firing_map)
     finite_firing_map[np.isnan(firing_map)] = np.min(firing_map[np.isfinite(firing_map)])
-
+    
     se = morphology.disk(1)
     Ie = morphology.erosion(finite_firing_map, se)
     fmap = morphology.reconstruction(Ie, finite_firing_map)
