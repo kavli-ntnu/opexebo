@@ -1,7 +1,7 @@
 """
 Provide function for gridness score calculation.
 """
-import matplotlib.pyplot as plt
+
 import numpy as np
 
 from scipy.spatial.distance import cdist
@@ -29,10 +29,6 @@ def grid_score(aCorr, **kwargs):
     acorr: np.ndarray
         A 2D autocorrelogram.
     **kwargs
-        search_method : str
-            Method passed to opexebo.analysis.placefield for detecting the central
-            peak of aCorr.
-            Default and all possible values are stored in opexebo.defaults
         min_orientation : int
             See function "grid_score_stats"
 
@@ -87,10 +83,10 @@ def grid_score(aCorr, **kwargs):
     aCorr = aCorr / aCorr.max()
     centre = -0.5 + np.array(aCorr.shape)/2 # centre : also [y, x]
     cFieldRadius = int(np.floor(_findCentreRadius(aCorr, **kwargs)))
-    if debug:
-        print("Center radius is {}".format(cFieldRadius))
 
     if cFieldRadius in [-1, 0, 1]:
+        if debug:
+            print("Terminating due to invalid cFieldRadius")
         return (np.nan, grid_score_stats(np.zeros_like(aCorr), 
                                     np.zeros_like(aCorr), centre))
 
@@ -104,12 +100,18 @@ def grid_score(aCorr, **kwargs):
     # this is need for rectangular autocorrelograms.
     outerBound = int(np.floor(np.min(np.array(aCorr.shape)/2)))
     if outerBound < cFieldRadius:
+        if debug:
+            print("Terminating due to invalid outerBound"\
+                  f" ({outerBound} < {cFieldRadius})")
         return (np.nan, grid_score_stats(np.zeros_like(aCorr), 
                                     np.zeros_like(aCorr), centre))
+        
     radii = np.linspace(cFieldRadius+1, outerBound, outerBound-cFieldRadius)
     radii = radii.astype(int)
     numSteps = len(radii)
     if numSteps < 1:
+        if debug:
+            print("Terminating due to invalud numSteps")
         return (np.nan, grid_score_stats(np.zeros_like(aCorr), 
                                     np.zeros_like(aCorr), centre))
 
@@ -305,15 +307,15 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
             print('Not enough fields detected ({})'.format(len(all_coords)))
             
 
-    grid_stats = {'grid_spacings':             gs_spacings,
-                  'grid_spacing':              np.nanmean(gs_spacings),
-                  'grid_orientations':         gs_orientations,
-                  'grid_orientations_std':     gs_orientations_std,
-                  'grid_orientation':          gs_orientation,
-                  'grid_positions':            gs_positions,
-                  'grid_ellipse':              gs_ellipse,
+    grid_stats = {'grid_spacings': gs_spacings,
+                  'grid_spacing': np.nanmean(gs_spacings),
+                  'grid_orientations': gs_orientations,
+                  'grid_orientations_std': gs_orientations_std,
+                  'grid_orientation': gs_orientation,
+                  'grid_positions': gs_positions,
+                  'grid_ellipse': gs_ellipse,
                   'grid_ellipse_aspect_ratio': gs_aspect_ratio,
-                  'grid_ellipse_theta':        gs_ellipse_theta}
+                  'grid_ellipse_theta': gs_ellipse_theta}
     return grid_stats
 
 
@@ -341,6 +343,7 @@ def _circular_mask(image, radius, polarity='outwards', center=None):
         return mask
 
 def _draw_ellipse(x, y, rl, rs, theta):
+    import matplotlib.pyplot as plt
     from matplotlib.patches import Ellipse
     from matplotlib import transforms
     theta = (theta%(2*np.pi))# + np.pi
@@ -353,6 +356,7 @@ def _draw_ellipse(x, y, rl, rs, theta):
 
 
 def _plotContours(img, contours):
+    import matplotlib.pyplot as plt
     fig, ax = plt.subplots()
     ax.imshow(img, cmap='jet', origin='lower')
 
@@ -404,16 +408,22 @@ def _contourArea(contours, i):
 
 
 def _findCentreRadius(aCorr, **kwargs):
-    sm = kwargs.get("search_method", default.search_method)
+    debug = kwargs.get("debug", False)
     halfHeight = np.ceil(aCorr.shape[0]/2)
     halfWidth = np.ceil(aCorr.shape[1]/2)
     peak_coords = np.ones(shape=(1, 2), dtype=np.int)
     peak_coords[0, 0] = halfHeight-1
     peak_coords[0, 1] = halfWidth-1
-    fields = opexebo.analysis.place_field(aCorr, min_bins=2, min_peak=0, min_mean=0, init_thresh=.8, \
-                                         search_method=sm, peak_coords=peak_coords)[0] # Fix all input args for now
+    fields = opexebo.analysis.place_field(aCorr, min_bins=5, min_peak=0, min_mean=0, init_thresh=.95, \
+                                         peak_coords=peak_coords)[0] # Fix all input args for now
     if fields is None or len(fields) == 0:
+        if debug:
+            print("Terminating _findCentreRadius due to no fields")
         return 0
+    elif debug:
+        print(f"Fields found: {len(fields)}")
+    else:
+        pass
 
     peak_coords = np.ndarray(shape=(len(fields), 2), dtype=np.integer)
     areas = np.ndarray(shape=(len(fields), 1), dtype=np.integer)
@@ -446,7 +456,10 @@ def _findCentreRadius(aCorr, **kwargs):
             closestFieldInd = indices_to_test[min_ind]
 
     radius = np.floor(np.sqrt(areas[closestFieldInd] / np.pi))
-    # print("radius is {}".format(radius))
+    
+    if debug:
+        print("radius is {}".format(radius))
+        
     return radius
 
 

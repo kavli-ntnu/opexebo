@@ -43,6 +43,7 @@ def place_field(firing_map, **kwargs):
         search_method : str
             Peak detection finding method. By default, use skimage.morphology.local_maxima
             Acceptable values are defined in opexebo.defaults.
+            Not required if peak_coords are provided
         peak_coords : array-like
             List of peak co-ordinates to consider instead of auto detection
             Default None
@@ -97,13 +98,18 @@ def place_field(firing_map, **kwargs):
     min_peak = kwargs.get("min_peak", default.firing_field_min_peak)
     min_mean = kwargs.get("min_mean", default.firing_field_min_mean)
     init_thresh = kwargs.get("init_thresh", default.initial_search_threshold)
-    search_method = kwargs.get("search_method", default.search_method).lower()
+    search_method = kwargs.get("search_method", default.search_method)
     peak_coords = kwargs.get("peak_coords", None)
     debug = kwargs.get("debug", False)
 
     if not 0 < init_thresh <= 1:
         raise ValueError("Keyword 'init_thresh' must be in the range [0, 1]."\
                          " You provided %.2f" % init_thresh)
+    try:
+        search_method = search_method.lower()
+    except AttributeError:
+        raise ValueError("Keyword 'search_method' is expected to be a string"\
+                         f" You provided a {type(search_method)} ({search_method})")
     if search_method not in default.all_methods:
         raise ValueError("Keyword 'search_method' must be left blank or given a"\
                          " value from the following list: %s. You provided '%s'." \
@@ -112,7 +118,7 @@ def place_field(firing_map, **kwargs):
     global_peak = np.nanmax(firing_map)
     if np.isnan(global_peak) or global_peak == 0:
         return [], np.zeros_like(firing_map)
-    
+
     # Construct a mask of bins that the animal never visited (never visited -> true)  
     if type(firing_map) == np.ma.MaskedArray:
         occupancy_mask = firing_map.mask
@@ -126,8 +132,8 @@ def place_field(firing_map, **kwargs):
     finite_firing_map[np.isnan(firing_map)] = np.min(firing_map[np.isfinite(firing_map)])
     
     se = morphology.disk(1)
-    Ie = morphology.erosion(firing_map, se)
-    fmap = morphology.reconstruction(Ie, firing_map)
+    Ie = morphology.erosion(finite_firing_map, se)
+    fmap = morphology.reconstruction(Ie, finite_firing_map)
     '''Part 2: find local maxima'''
     # Based on the user-requested search method, find the co-ordinates of local maxima
     if peak_coords is None:

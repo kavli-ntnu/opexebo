@@ -188,36 +188,3 @@ def _validate_wall_definition(walls):
             if char.lower() not in ["t","r","b","l"]:
                 raise ValueError("Character %s is not a valid entry in wall"\
                                  "definition. Valid characters are [t, r, b, l]" % char)
-
-
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    test_data = [[0,0,0,0,0,5,0,4],
-                 [0,0,0,0,1,1,2,4],
-                 [0,0,3,6,6,4,4,1],
-                 [0,5,2,5,2,4,2,1],
-                 [0,0,1,5,3,2,1,1],
-                 [0,0,2,5,2,2,6,1],
-                 [0,0,0,5,6,6,6,6]]
-    test_data = np.ma.MaskedArray(test_data)
-    test_data.mask = np.zeros(test_data.shape, dtype=bool)
-    test_data[test_data.data>0]=1
-    test_data.mask[3,5] = True
-    test_data.mask[3,6] = True
-    test_data.mask[0,0] = True
-    
-    inv_wf = 1-test_data
-    distance = distance_transform_edt(inv_wf)
-    distance = np.ma.masked_where(test_data.mask, distance)
-    sw = 2
-    fig, ((ax1, ax2), (ax3, ax4), (ax5, ax6)) = plt.subplots(3,2)
-    ax1.imshow(distance)
-    ax3.imshow((distance[:, :sw]))
-    ax3.set_ylabel("L")
-    ax4.imshow(np.fliplr(distance[:, -sw:]))
-    ax4.set_ylabel("R")
-    ax5.imshow(np.rot90(distance[:sw, :]))
-    ax5.set_ylabel("B")
-    ax6.imshow(np.fliplr(np.rot90(distance[-sw:, :])))
-    ax6.set_ylabel("T")
-    plt.show()

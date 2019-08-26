@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import astropy.stats.circstats as cs
 import opexebo.defaults as default
 
@@ -180,16 +179,3 @@ def _index_to_angle(index, bin_width):
     the bin that it indexes. The angle is deliberately not wrapped into [0,2pi]
     '''
     return (0.5 + index) * bin_width
-
-
-if __name__=='__main__':
-    plt.close('all')
-    samples = 100
-    x0 =-0.5
-    w = 0.5
-    x = np.linspace(0, 2*np.pi * (samples-1)/samples, samples)
-    tc = np.exp(-1*np.square(x-x0)/w) + np.exp(-1*np.square(x-x0-(2*np.pi))/w)
-
-    perc = 0.8
-    stats = tuning_curve_stats(tc, percentile=perc, debug=True)
-    print(stats['hd_score'])
