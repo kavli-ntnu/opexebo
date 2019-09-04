@@ -45,7 +45,7 @@ firing_field_min_bins = 9
 firing_field_min_peak = 1
 
 #: Minimum mean firing rate for a firing field to be valid [Hz]
-firing_field_min_mean = 0
+firing_field_min_mean = 0.1
 
 #: The method used to find local maxima
 search_method = 'default'
