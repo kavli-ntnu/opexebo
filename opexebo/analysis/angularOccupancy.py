@@ -7,7 +7,7 @@ import opexebo
 import opexebo.defaults as default
 
 
-def angular_occupancy(time, angle,**kwargs):
+def angular_occupancy(time, angle, **kwargs):
     '''
     Calculate angular occupancy from tracking angle and kwargs over (0,2*pi)
 
@@ -26,7 +26,8 @@ def angular_occupancy(time, angle,**kwargs):
     -------
     masked_histogram : numpy masked array
         Angular histogram, masked at angles at which the animal was never 
-        observed. Masked means that the mask value is True
+        observed. A mask value of True means that the animal never occupied
+        that angle. 
     coverage : float
         Fraction of the bins that the animal visited. In range [0, 1]
     bin_edges : list-like
@@ -48,6 +49,9 @@ def angular_occupancy(time, angle,**kwargs):
     if angle.ndim != 1:
         raise ValueError("angle must be provided as a 1D array. You provided %d"\
                          " dimensions" % angle.ndim)
+    if time.size != angle.size:
+        raise ValueError("Arrays 'time' and 'angle' must have the same number"\
+                         f" of elements. You provided {time.size} and {angle.size}")
     if np.nanmax(angle) > 2*np.pi:
         raise Warning("Angles greater than 2pi detected. Please check that your"\
                       " angle array is in radians. If it is in degrees, you can"\
@@ -63,7 +67,7 @@ def angular_occupancy(time, angle,**kwargs):
     masked_angle_histogram = np.ma.masked_where(angle_histogram==0, angle_histogram)
     
     # masked_angle_histogram is in units of frames. It needs to be converted to units of seconds
-    frame_duration = np.min(np.diff(time))
+    frame_duration = np.mean(np.diff(time))
     masked_angle_seconds = masked_angle_histogram * frame_duration
     
     # Calculate the fractional coverage based on the mask. Since the mask is 
