@@ -117,20 +117,34 @@ def place_field(firing_map, **kwargs):
 
     global_peak = np.nanmax(firing_map)
     if np.isnan(global_peak) or global_peak == 0:
+        if debug:
+            print(f"Terminating due to invalid global peak: {global_peak}")
         return [], np.zeros_like(firing_map)
 
     # Construct a mask of bins that the animal never visited (never visited -> true)  
+    # This needs to account for multiple input formats.
+    # The standard that I want to push is that firing_map is type MaskedArray
+        # In this case, the cells that an animal never visited have firing_map.mask[cell]=True
+        # while firing_map.data[cell] PROBABLY = 0
+    # An alternative is the BNT standard, where firing_map is an ndarray
+        # In this case, the cells never visited are firing_map[cell] = np.nan
+    # In either case, we need to get out the following:
+        # finite_firing_map is an ndarray (float) where unvisted cells have a meaningfully finite value (e.g. zero, or min())
+        # mask is an ndarray (bool) where unvisited cells are True, all other cells are False
+
     if type(firing_map) == np.ma.MaskedArray:
+        
         occupancy_mask = firing_map.mask
-        firing_map = firing_map.data
+        finite_firing_map = firing_map.data.copy()
+        finite_firing_map[np.isnan(firing_map.data)] = 0
+        
     else:
         occupancy_mask = np.zeros_like(firing_map).astype('bool')
         occupancy_mask[np.isnan(firing_map)] = True
+        finite_firing_map = firing_map.copy()
+        finite_firing_map[np.isnan(firing_map)] = 0
 
-    # Reliably discard NaNs to avoid errors with morphology
-    finite_firing_map = np.zeros_like(firing_map)
-    finite_firing_map[np.isnan(firing_map)] = np.min(firing_map[np.isfinite(firing_map)])
-    
+   
     se = morphology.disk(1)
     Ie = morphology.erosion(finite_firing_map, se)
     fmap = morphology.reconstruction(Ie, finite_firing_map)
