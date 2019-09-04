@@ -41,6 +41,6 @@ setup(
     name='opexebo',
     packages=find_packages(include=['opexebo*']),
     url='https://github.com/kavli-ntnu/opexebo',
-    version='0.3.0',
+    version='0.3.1',
     zip_safe=False,
 )
