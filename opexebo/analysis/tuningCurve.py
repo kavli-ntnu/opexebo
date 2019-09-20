@@ -24,6 +24,8 @@ def tuning_curve(angular_occupancy, spike_angles, **kwargs):
         bin_width : float
             width of histogram bin in degrees
             Must match that used in calculating angular_occupancy
+            In the case of a non-exact divisor of 360 deg, the bin size will be 
+            shrunk to yield an integer bin number. 
 
 
     Returns
