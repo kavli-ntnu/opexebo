@@ -47,21 +47,21 @@ def tuning_curve(angular_occupancy, spike_angles, **kwargs):
     occ_ndim = angular_occupancy.ndim
     spk_ndim = spike_angles.ndim
     if occ_ndim != 1:
-        raise ValueError("angular_occupancy must be a 1D array. You provided a\
-                         %d dimensional array" % occ_ndim)
+        raise ValueError("angular_occupancy must be a 1D array. You provided a"\
+                         " %d dimensional array" % occ_ndim)
     if spk_ndim != 1:
-        raise ValueError("spike_angles must be a 1D array. You provided a %d\
-                         dimensional array" % spk_ndim)
+        raise ValueError("spike_angles must be a 1D array. You provided a %d"\
+                         " dimensional array" % spk_ndim)
     if np.nanmax(spike_angles) > 2*np.pi:
-        raise Warning("Angles higher than 2pi detected. Please check that your\
-                      spike_angle array is in radians. If it is in degrees,\
-                      you can convert with 'np.radians(array)'")
+        raise Warning("Angles higher than 2pi detected. Please check that your"\
+                      " spike_angle array is in radians. If it is in degrees,"\
+                      " you can convert with 'np.radians(array)'")
 
     bin_width = kwargs.get("bin_width", default.bin_angle)
     num_bins = num_bins = int(360. / bin_width)
     if num_bins != angular_occupancy.size:
-        raise ValueError("Keyword 'bin_width' must match the value used to \
-                         generate angular_occupancy")
+        raise ValueError("Keyword 'bin_width' must match the value used to"\
+                         " generate angular_occupancy")
 
     spike_histogram, bin_edges = opexebo.general.accumulate_spatial(spike_angles,
                 arena_size=2*np.pi, limits=(0, 2*np.pi), bin_width=bin_width)
