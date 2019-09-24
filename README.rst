@@ -68,3 +68,9 @@ The file contains cell arrays ``aCorrs``, ``rateMaps`` and vectors ``gridScores`
     plt.imshow(map, cmap='jet', origin='lower')
     acorr = opexebo.analysis.autocorrelation(map)
     plt.imshow(acorr, cmap='jet', origin='lower')
+    
+opexebo meaning
+============
+From Vadim Frolov, the developer:
+
+*opexebo is in fact a misspelled name of a Russian village (Орехово) meaning adjective nut, like if you have bread with nuts inside you may say ореховый хлеб. I do not remember if I misspelled it on purpose or by accident, but in the end it surved me the purpose of being a unique name. And it's kind of mirrored, which is nice.*
