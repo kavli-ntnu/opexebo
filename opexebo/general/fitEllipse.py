@@ -65,6 +65,12 @@ def fit_ellipse(X, Y):
     if X.size != Y.size:
         raise ValueError("X and Y must be the same length. You provided"\
                          " (%d, %d) values respectively" % (X.size, Y.size))
+    if not np.isfinite(X).all():
+        raise ValueError("X cannot contain values that are nan or inf."\
+                         f" You provided {X}")
+    if not np.isfinite(Y).all():
+        raise ValueError("X cannot contain values that are nan or inf."\
+                         f" You provided {Y}")
     # Normalise the data and move it to the origin
     mx = np.mean(X)
     my = np.mean(Y)
