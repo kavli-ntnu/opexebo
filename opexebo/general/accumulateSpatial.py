@@ -67,6 +67,7 @@ def accumulate_spatial(pos, **kwargs):
                          " provided %d dimensions." % dims)
 
     # Get kwargs values
+    debug = kwargs.get("debug", False)
     bin_width = kwargs.get("bin_width", default.bin_width)
     arena_size = kwargs.get("arena_size")
     limits = kwargs.get("limits", None)
@@ -86,6 +87,8 @@ def accumulate_spatial(pos, **kwargs):
         if limits is None:
             limits = ( [np.nanmin(x), np.nanmax(x)],
                          [np.nanmin(y), np.nanmax(y)] )
+            if debug:
+                print("No limits found. Calculating based on min/max")
         elif len(limits) != 4:
             raise ValueError("You must provide a 4-element 'limits' value for a"\
                              " 2D map. You provided %d elements" % len(limits))
@@ -99,10 +102,29 @@ def accumulate_spatial(pos, **kwargs):
                         np.greater_equal(y, limits[1][0]), np.less(y, limits[1][1])) )
         # the simple operator ">= doesn't respect Masked Arrays
         # As of 2019, it does actually behave correctly (NaN is invalid and so
-        # is removed), but I would prefer to be seplicit
+        # is removed), but I would prefer to be explicit
 
         in_range_x = x[in_range]
         in_range_y = y[in_range]
+        if debug:
+            print(f"Limits: {limits}")
+            print(f"numbins : {num_bins}")
+            print(f"data points : {len(in_range_x)}")
+            # Testing for invalid inputs that have made it past validation
+            # in_range_* should be of non-zero, equal length
+            assert len(in_range_x) == len(in_range_y)
+            assert len(in_range_x) > 0
+            # in_range_* should be all real
+            assert np.isfinite(in_range_x).all()
+            assert np.isfinite(in_range_y).all()
+            # Non zero number of bins
+            assert num_bins[0] > 1
+            assert num_bins[1] > 1
+            # Finite limits
+            assert np.isfinite(np.array(limits)).all()
+
+            
+            
 
         hist, xedges, yedges = np.histogram2d(in_range_x, in_range_y,
                                        bins=num_bins, range=limits)

@@ -22,7 +22,7 @@ def tuning_curve(angular_occupancy, spike_angles, **kwargs):
         associated with the m'th spike
     kwargs
         bin_width : float
-            width of histogram bin in degrees
+            width of histogram bin in DEGREES
             Must match that used in calculating angular_occupancy
             In the case of a non-exact divisor of 360 deg, the bin size will be 
             shrunk to yield an integer bin number. 
@@ -60,10 +60,16 @@ def tuning_curve(angular_occupancy, spike_angles, **kwargs):
                       " you can convert with 'np.radians(array)'")
 
     bin_width = kwargs.get("bin_width", default.bin_angle)
-    num_bins = np.ceil(360. / bin_width).astype(int)
+    num_bins = np.ceil(360. / bin_width).astype(int) # This is for validation ONLY, the value num_bins here is not passed onwards
     if num_bins != angular_occupancy.size:
         raise ValueError("Keyword 'bin_width' must match the value used to"\
                          " generate angular_occupancy")
+    #UNITS!!!
+    # bin_width and arena_size need to be in the same units. 
+    # As it happens, I hardcoded arena_size as 2pi -> convert bin_width to radians
+    # limits and spike_angles need to be in the same units
+    
+    bin_width = np.radians(bin_width)
 
     spike_histogram, bin_edges = opexebo.general.accumulate_spatial(spike_angles,
                 arena_size=2*np.pi, limits=(0, 2*np.pi), bin_width=bin_width)
