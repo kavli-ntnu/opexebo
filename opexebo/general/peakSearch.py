@@ -1,8 +1,13 @@
 import numpy as np
+import warnings
 import opexebo.defaults as default
 from skimage import measure, morphology
-import sep
 
+
+#import sep
+# NOTE!! Due to how annoying it is to install sep, I have moved this dependency 
+# into the method that uses it. This will allow users that struggle to install it
+# to proceed with other methods that do not rely on it
 
 # TODO! Decide what, if any, parameters need to move over to Defaults
 
@@ -58,7 +63,7 @@ def peak_search(image, **kwargs):
     if search_method == default.search_method:
         peak_coords = _peak_search_skimage(image, **kwargs)
     elif search_method == "sep":
-        peak_coords = _peak_search_sep(image, **kwargs)
+        peak_coords = _peak_search_sep_wrapper(image, **kwargs)
     else:
         raise NotImplementedError("The search method you have requested (%s) is"\
                                   " not yet implemented" % search_method)
@@ -104,8 +109,26 @@ def _peak_search_skimage(image, **kwargs):
     return peak_coords
 
 
-
-
+def _peak_search_sep_wrapper(firing_map, **kwargs):
+    ''' Wrapper around the 'sep' Peak Search method
+    Because the 'sep' package is a nightmare to install, and not used for most
+    analysis routines, this wrapper allows most users to ignore it
+    
+    If the user tries to invoke the 'sep' routines, this will try to do so
+    If it fails due to ModuleNotFound, it will use the default algorithm instead
+    with a warning to the user
+    
+    '''
+    algorithm = _peak_search_sep
+    try:
+        import sep
+    except ModuleNotFoundError:
+        warnings.warn("Package 'sep' not installed in this environment."\
+                      " Using the default peak search algorithm instead")
+        algorithm = _peak_search_skimage
+    return algorithm(firing_map, **kwargs)
+        
+        
 
 def _peak_search_sep(firing_map, **kwargs):
     '''Peak search using sep, a Python wrapper for a standard astronomy library.
@@ -120,6 +143,8 @@ def _peak_search_sep(firing_map, **kwargs):
          'tetrode': 6,
          'cell': 23}
     '''
+    import sep
+    
     mask = kwargs.get("mask", np.zeros(firing_map.shape, dtype=bool))
     null_background = kwargs.get("null_background", False)
     threshold = kwargs.get("threshold", 0.2)

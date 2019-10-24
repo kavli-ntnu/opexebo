@@ -16,6 +16,9 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'requirements.txt')) as f:
     requirements = f.read().split()
 
+with open(path.join(here, 'optional-requirements.txt')) as f:
+    optional_requirements = f.read().split()
+
 setup_requirements = [ ]
 
 test_requirements = [ ]
@@ -35,6 +38,7 @@ setup(
     ],
     description="Collection of python code in Kavli lab.",
     install_requires=requirements,
+    extras_require={"full": optional_requirements},
     long_description=readme + '\n\n' + history,
     include_package_data=True,
     keywords='neuroscience kavli gridscore',
