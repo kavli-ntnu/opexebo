@@ -100,7 +100,7 @@ def grid_score(aCorr, **kwargs):
     centre = -0.5 + np.array(aCorr.shape)/2 # centre : also [y, x]
     cFieldRadius = int(np.floor(_findCentreRadius(aCorr, **kwargs)))
 
-    if cFieldRadius in [-1, 0, 1]:
+    if cFieldRadius == 0:
         if debug:
             print("Terminating due to invalid cFieldRadius")
         return INVALID_OUTPUT
@@ -120,7 +120,7 @@ def grid_score(aCorr, **kwargs):
                   f" ({outerBound} < {cFieldRadius})")
         return INVALID_OUTPUT
         
-    radii = np.linspace(cFieldRadius+1, outerBound, outerBound-cFieldRadius)
+    radii = np.linspace(max(3, cFieldRadius+1), outerBound, outerBound-cFieldRadius)
     radii = radii.astype(int)
     numSteps = len(radii)
     if numSteps < 1:
@@ -427,13 +427,14 @@ def _contourArea(contours, i):
 
 def _findCentreRadius(aCorr, **kwargs):
     debug = kwargs.get("debug", False)
+    search_method = kwargs.get("search_method", default.search_method)
     halfHeight = np.ceil(aCorr.shape[0]/2)
     halfWidth = np.ceil(aCorr.shape[1]/2)
     peak_coords = np.ones(shape=(1, 2), dtype=np.int)
     peak_coords[0, 0] = halfHeight-1
     peak_coords[0, 1] = halfWidth-1
     fields = opexebo.analysis.place_field(aCorr, min_bins=5, min_peak=0, min_mean=0, init_thresh=.95, \
-                                         peak_coords=peak_coords)[0] # Fix all input args for now
+                                         peak_coords=peak_coords, search_method=search_method)[0] # Fix all input args for now
     if fields is None or len(fields) == 0:
         if debug:
             print("Terminating _findCentreRadius due to no fields")
