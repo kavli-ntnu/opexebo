@@ -11,6 +11,20 @@ import opexebo
 import opexebo.defaults as default
 
 
+# This is included as the return result of an invalid autocorrelogram
+# It replaces an earlier mixture of output types that performed calcaultions 
+# on a null-acorr instead
+INVALID_OUTPUT = (np.nan, {'grid_spacings': np.array([np.nan, np.nan, np.nan]),
+  'grid_spacing': np.nan,
+  'grid_orientations': np.array([np.nan, np.nan, np.nan]),
+  'grid_orientations_std': np.nan,
+  'grid_orientation': np.nan,
+  'grid_positions': np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]),
+  'grid_ellipse': np.nan,
+  'grid_ellipse_aspect_ratio': np.nan,
+  'grid_ellipse_theta': np.nan})
+
+
 def grid_score(aCorr, **kwargs):
     """Calculate gridness score for an autocorrelogram.
 
@@ -86,11 +100,10 @@ def grid_score(aCorr, **kwargs):
     centre = -0.5 + np.array(aCorr.shape)/2 # centre : also [y, x]
     cFieldRadius = int(np.floor(_findCentreRadius(aCorr, **kwargs)))
 
-    if cFieldRadius in [-1, 0, 1]:
+    if cFieldRadius == 0:
         if debug:
             print("Terminating due to invalid cFieldRadius")
-        return (np.nan, grid_score_stats(np.zeros_like(aCorr), 
-                                    np.zeros_like(aCorr), centre))
+        return INVALID_OUTPUT
 
     halfHeight = np.ceil(aCorr.shape[0]/2)
     halfWidth  = np.ceil(aCorr.shape[1]/2)
@@ -105,17 +118,15 @@ def grid_score(aCorr, **kwargs):
         if debug:
             print("Terminating due to invalid outerBound"\
                   f" ({outerBound} < {cFieldRadius})")
-        return (np.nan, grid_score_stats(np.zeros_like(aCorr), 
-                                    np.zeros_like(aCorr), centre))
+        return INVALID_OUTPUT
         
-    radii = np.linspace(cFieldRadius+1, outerBound, outerBound-cFieldRadius)
+    radii = np.linspace(max(3, cFieldRadius+1), outerBound, outerBound-cFieldRadius)
     radii = radii.astype(int)
     numSteps = len(radii)
     if numSteps < 1:
         if debug:
             print("Terminating due to invalud numSteps")
-        return (np.nan, grid_score_stats(np.zeros_like(aCorr), 
-                                    np.zeros_like(aCorr), centre))
+        return INVALID_OUTPUT
 
     rotAngles_deg = np.arange(30, 151, 30)  # 30, 60, 90, 120, 150
     rotatedACorr = np.zeros(
@@ -226,9 +237,10 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
     # Get kwargs
     debug = kwargs.get('debug', False)
     min_orientation = kwargs.get('min_orientation', default.min_orientation)
+    search_method = kwargs.get("search_method", default.search_method)
     min_orientation = np.radians(min_orientation)
-    search_method = kwargs.get("search_method", default.search_method) 
     if debug:
+        print(f"Search method: {search_method}")
         print('Min orientation: {} degrees'.format(np.degrees(min_orientation)))
     
 
@@ -415,13 +427,14 @@ def _contourArea(contours, i):
 
 def _findCentreRadius(aCorr, **kwargs):
     debug = kwargs.get("debug", False)
+    search_method = kwargs.get("search_method", default.search_method)
     halfHeight = np.ceil(aCorr.shape[0]/2)
     halfWidth = np.ceil(aCorr.shape[1]/2)
     peak_coords = np.ones(shape=(1, 2), dtype=np.int)
     peak_coords[0, 0] = halfHeight-1
     peak_coords[0, 1] = halfWidth-1
     fields = opexebo.analysis.place_field(aCorr, min_bins=5, min_peak=0, min_mean=0, init_thresh=.95, \
-                                         peak_coords=peak_coords)[0] # Fix all input args for now
+                                         peak_coords=peak_coords, search_method=search_method)[0] # Fix all input args for now
     if fields is None or len(fields) == 0:
         if debug:
             print("Terminating _findCentreRadius due to no fields")
