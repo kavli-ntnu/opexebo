@@ -11,6 +11,20 @@ import opexebo
 import opexebo.defaults as default
 
 
+# This is included as the return result of an invalid autocorrelogram
+# It replaces an earlier mixture of output types that performed calcaultions 
+# on a null-acorr instead
+INVALID_OUTPUT = (np.nan, {'grid_spacings': np.array([np.nan, np.nan, np.nan]),
+  'grid_spacing': np.nan,
+  'grid_orientations': np.array([np.nan, np.nan, np.nan]),
+  'grid_orientations_std': np.nan,
+  'grid_orientation': np.nan,
+  'grid_positions': np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]),
+  'grid_ellipse': np.nan,
+  'grid_ellipse_aspect_ratio': np.nan,
+  'grid_ellipse_theta': np.nan})
+
+
 def grid_score(aCorr, **kwargs):
     """Calculate gridness score for an autocorrelogram.
 
@@ -89,8 +103,7 @@ def grid_score(aCorr, **kwargs):
     if cFieldRadius in [-1, 0, 1]:
         if debug:
             print("Terminating due to invalid cFieldRadius")
-        return (np.nan, grid_score_stats(np.zeros_like(aCorr), 
-                                    np.zeros_like(aCorr), centre, **kwargs))
+        return INVALID_OUTPUT
 
     halfHeight = np.ceil(aCorr.shape[0]/2)
     halfWidth  = np.ceil(aCorr.shape[1]/2)
@@ -105,8 +118,7 @@ def grid_score(aCorr, **kwargs):
         if debug:
             print("Terminating due to invalid outerBound"\
                   f" ({outerBound} < {cFieldRadius})")
-        return (np.nan, grid_score_stats(np.zeros_like(aCorr), 
-                                    np.zeros_like(aCorr), centre, **kwargs))
+        return INVALID_OUTPUT
         
     radii = np.linspace(cFieldRadius+1, outerBound, outerBound-cFieldRadius)
     radii = radii.astype(int)
@@ -114,8 +126,7 @@ def grid_score(aCorr, **kwargs):
     if numSteps < 1:
         if debug:
             print("Terminating due to invalud numSteps")
-        return (np.nan, grid_score_stats(np.zeros_like(aCorr), 
-                                    np.zeros_like(aCorr), centre, **kwargs))
+        return INVALID_OUTPUT
 
     rotAngles_deg = np.arange(30, 151, 30)  # 30, 60, 90, 120, 150
     rotatedACorr = np.zeros(
