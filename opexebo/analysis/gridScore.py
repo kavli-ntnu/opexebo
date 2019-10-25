@@ -90,7 +90,7 @@ def grid_score(aCorr, **kwargs):
         if debug:
             print("Terminating due to invalid cFieldRadius")
         return (np.nan, grid_score_stats(np.zeros_like(aCorr), 
-                                    np.zeros_like(aCorr), centre))
+                                    np.zeros_like(aCorr), centre, **kwargs))
 
     halfHeight = np.ceil(aCorr.shape[0]/2)
     halfWidth  = np.ceil(aCorr.shape[1]/2)
@@ -106,7 +106,7 @@ def grid_score(aCorr, **kwargs):
             print("Terminating due to invalid outerBound"\
                   f" ({outerBound} < {cFieldRadius})")
         return (np.nan, grid_score_stats(np.zeros_like(aCorr), 
-                                    np.zeros_like(aCorr), centre))
+                                    np.zeros_like(aCorr), centre, **kwargs))
         
     radii = np.linspace(cFieldRadius+1, outerBound, outerBound-cFieldRadius)
     radii = radii.astype(int)
@@ -115,7 +115,7 @@ def grid_score(aCorr, **kwargs):
         if debug:
             print("Terminating due to invalud numSteps")
         return (np.nan, grid_score_stats(np.zeros_like(aCorr), 
-                                    np.zeros_like(aCorr), centre))
+                                    np.zeros_like(aCorr), centre, **kwargs))
 
     rotAngles_deg = np.arange(30, 151, 30)  # 30, 60, 90, 120, 150
     rotatedACorr = np.zeros(
@@ -226,9 +226,10 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
     # Get kwargs
     debug = kwargs.get('debug', False)
     min_orientation = kwargs.get('min_orientation', default.min_orientation)
+    search_method = kwargs.get("search_method", default.search_method)
     min_orientation = np.radians(min_orientation)
-    search_method = kwargs.get("search_method", default.search_method) 
     if debug:
+        print(f"Search method: {search_method}")
         print('Min orientation: {} degrees'.format(np.degrees(min_orientation)))
     
 
