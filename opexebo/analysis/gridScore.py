@@ -31,6 +31,8 @@ def grid_score(aCorr, **kwargs):
     **kwargs
         min_orientation : int
             See function "grid_score_stats"
+        search_method : str
+            Peak searching method, currently limited to either `default` or `sep`
 
     Returns
     -------
@@ -192,6 +194,8 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
             detected in 2D autocorrelation must have. If difference is
             below this threshold, discard the field that has larger
             distance from center
+        search_method : str
+            Peak searching method, currently limited to either `default` or `sep`
 
     Returns
     -------
@@ -223,6 +227,7 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
     debug = kwargs.get('debug', False)
     min_orientation = kwargs.get('min_orientation', default.min_orientation)
     min_orientation = np.radians(min_orientation)
+    search_method = kwargs.get("search_method", default.search_method) 
     if debug:
         print('Min orientation: {} degrees'.format(np.degrees(min_orientation)))
     
@@ -238,7 +243,7 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
     gs_spacings         = np.full(3, fill_value = np.nan, dtype=float)
 
     # Find fields in autocorrelogram
-    all_coords = opexebo.general.peak_search(aCorr, mask=mask, search_method="sep",
+    all_coords = opexebo.general.peak_search(aCorr, mask=mask, search_method=search_method,
                                              null_background=True, threshold=0.1)
 
     if all_coords.shape[0] >= 6:
@@ -279,6 +284,7 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
 
         
         if debug:
+            import matplotlib.pyplot as plt
             aCorr_masked = np.ma.masked_where(mask, aCorr.copy())
             plt.imshow(aCorr_masked)
             plt.scatter(centre[1],centre[0], s=600, marker='x', color='black')

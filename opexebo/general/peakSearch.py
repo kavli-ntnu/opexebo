@@ -119,14 +119,16 @@ def _peak_search_sep_wrapper(firing_map, **kwargs):
     with a warning to the user
     
     '''
-    algorithm = _peak_search_sep
     try:
         import sep
+        return _peak_search_sep(firing_map, **kwargs)
     except ModuleNotFoundError:
-        warnings.warn("Package 'sep' not installed in this environment."\
-                      " Using the default peak search algorithm instead")
-        algorithm = _peak_search_skimage
-    return algorithm(firing_map, **kwargs)
+        raise ModuleNotFoundError("The package 'sep' is missing from your system."\
+                " You can invoke an alternative algorithm that does not depend on"\
+                " 'sep' by assigning a different value to 'search_method'."\
+                " Alternatively, install 'sep' on your system:"\
+                " 'pip install sep'")
+    
         
         
 
