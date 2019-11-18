@@ -91,32 +91,41 @@ def tuning_curve_stats(tuning_curve, **kwargs):
     num_bin = tuning_curve.size
     bin_width = 2 * np.pi / num_bin
     hb = bin_width / 2
+    bin_centres = np.linspace(hb, (2*np.pi)-hb, num_bin)
 
     if debug:
         print("Num_bin: %d" % num_bin)
         print("Therefore, bin_width = %.3g deg = %.3g rad"
               % (np.degrees(bin_width), bin_width))
 
-    # Calculate the simple values
+    #### Calculate the simple values
     tcstat = {}
-    mean_dir = cs.circmean(tuning_curve)
-    peak_dir_index = np.argmax(tuning_curve)
-    tcstat['hd_mean_direction_rad'] = mean_dir
-    tcstat['hd_peak_direction_rad'] = _index_to_angle(peak_dir_index, bin_width)
-    tcstat['hd_mean_direction'] = np.degrees(mean_dir)
-    tcstat['hd_peak_direction'] = np.degrees(_index_to_angle(peak_dir_index,
-                                                              bin_width))
-    tcstat['hd_peak_rate'] = np.nanmax(tuning_curve)
+    # The average of the values of angles, weighted by the firing rate at those angles
+    mean_dir_radians = cs.circmean(data = bin_centres, weights=tuning_curve)
+    tcstat['hd_mean_direction_rad'] = mean_dir_radians
+    tcstat['hd_mean_direction'] = np.degrees(mean_dir_radians)
     
+    # The direction in which the highest firing rate occurs
+    peak_dir_index = np.nanargmax(tuning_curve)
+    peak_dir_angle_radians = _index_to_angle(peak_dir_index, bin_width)    
+    tcstat['hd_peak_direction_rad'] = peak_dir_angle_radians
+    tcstat['hd_peak_direction'] = np.degrees(peak_dir_angle_radians)
+    
+    # The peak firing rate IN Hz
+    peak_rate_hz = np.nanmax(tuning_curve)
+    tcstat['hd_peak_rate'] = peak_rate_hz
+    
+    # The mean firing rate across all angles IN Hz
     if tuning_curve.mask.all():
-        # Added to cope with numpy bug in nanmean with fully masked array
-        tcstat['hd_mean_rate'] = np.nan
+        #### Added to cope with numpy bug in nanmean with fully masked array
+        mean_rate_hz = np.nan
     else:
-        tcstat['hd_mean_rate'] = np.nanmean(tuning_curve)
+        mean_rate_hz = np.nanmean(tuning_curve)
+    tcstat['hd_mean_rate'] = mean_rate_hz
 
-    # Calculate the more complex ones:
-    # mvl
-    bin_centres = np.linspace(hb, (2*np.pi)-hb, num_bin)
+
+    #### Calculate the more complex ones:
+    # mvl    
     mvl = np.sum(tuning_curve * np.exp(1j*bin_centres))
     mvl = np.abs(mvl)/np.sum(tuning_curve)
     tcstat['hd_mvl'] = mvl
@@ -126,17 +135,15 @@ def tuning_curve_stats(tuning_curve, **kwargs):
     tcstat['hd_stdev'] = np.sqrt(2*(1-mvl))
 
     # Percentile arc
-    peak_index = np.nanargmax(tuning_curve)
-    peak = tcstat['hd_peak_rate']
-    half_peak = peak * percentile
+    half_peak = peak_rate_hz * percentile
 
     # Because Python doesn't natively handle circular arrays, reshape such that
-    # the peak rate occurs at the centre of the array - thendon't have to worry
+    # the peak rate occurs at the centre of the array - then don't have to worry
     # about whether the arc goes off one edge of the array or not
     # Must be careful to keep track of the array to which the indicies point
     tuning_curve_re = np.zeros_like(tuning_curve)
     centre_index = int(num_bin / 2)
-    offset = centre_index - peak_index
+    offset = centre_index - peak_dir_index
     tuning_curve_re = np.roll(tuning_curve, offset)
     # A positive offset means that the peak angle was in the range [0, pi], and
     # is now at the central index. Therefore, to get the "proper" index,
@@ -145,7 +152,7 @@ def tuning_curve_stats(tuning_curve, **kwargs):
 
     if debug:
         print("Centre index: %d, value" % centre_index)
-        print("Peak index: %d" % peak_index)
+        print("Peak index: %d" % peak_dir_index)
         print("Offset: %d" % offset)
 
     # Clockwise and counter-clockwise edges of arc around peak defined by

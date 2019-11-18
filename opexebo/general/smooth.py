@@ -54,6 +54,13 @@ def smooth(data, sigma, **kwargs):
             from nearby cells. This will only apply if the input is a
             MaskedArray to start with. If the input is a standard np.ndarray,
             then no values will be substituted, even if there are nans present.
+        circle : bool
+            If True, then smoothing at the edge of the array will be handled in
+            a circular manner, i.e. the value to the left of data[0] will be
+            data[-1]
+            If False, the edge will be handled by padding with values equal to
+            the boundary value. 
+            Default False
 
     Returns
     -------
@@ -80,9 +87,14 @@ def smooth(data, sigma, **kwargs):
         kernel = Gaussian1DKernel(stddev=sigma)
     else:
         raise NotImplementedError("This function currently supports smoothing"\
-                " 1D, 2D data. You have provided %d dimensional data" % d)
+                f" 1D, 2D data. You have provided {d} dimensional data")
 
     mask_fill = kwargs.get('mask_fill', default.mask_fill)
+    circular = kwargs.get("circular", False)
+    if not isinstance(circular, bool):
+        raise ValueError("You must provide a boolean (True/False) value for"\
+                         f" keyword 'circular'. You provided {circular}, which"\
+                         f" is type {type(circular)}")
 
     working_data = data.copy()
     if type(data) == np.ma.MaskedArray:
@@ -90,31 +102,36 @@ def smooth(data, sigma, **kwargs):
 
     width = int(4*sigma)
 
-    working_data = np.pad(working_data, pad_width=width, mode='symmetric')
-    # pad the outer boundary to depth "width
-    # The padding values are based on reflecting at the border
-    # mode='symmetrical' results in
-    # [0, 1, 2, 3, 4] -> [1,0  ,0,1,2,3,4,  4,3]
-    # mode='reflect' results in
-    # [0, 1, 2, 3, 4] -> [2,1  ,0,1,2,3,4,  3,2]
-    # i.e. changing whether the reflection axis is outside the original data
-    # or overlaid on the outermost row
-
-    smoothed_data = convolve(working_data, kernel, boundary='extend')
-    # Because of the padding, the boundary mode isn't really relevant
-    # By choosing a large width, the edge effects arising from this additional
-    # padding (boundary='extend') is minimised
-
-    if d == 2:
-        smoothed_data = smoothed_data[width:-width, width:-width]
-    elif d == 1:
-        smoothed_data = smoothed_data[width:-width]
-    else: # This condition should never happen, due to checking above
-        raise NotImplementedError("This function currently supports smoothing"\
-                " 1D, 2D data. You have provided %d dimensional data" % d)
-    # We have to get rid of the padding that we previously added, and the only
-    # way to do that is slicing, which is NOT dimensional-agnostic
-    # There may be a more elegant solution than if/else, but this will do now
+    if circular:
+        smoothed_data = convolve(working_data, kernel, boundary="wrap")
+        # Don't bother with padding. Use the values from the other end of the 
+        # array, i.e. imagine the array wrapped around a cylinder
+    elif not circular:
+        working_data = np.pad(working_data, pad_width=width, mode='symmetric')
+        # pad the outer boundary to depth "width
+        # The padding values are based on reflecting at the border
+        # mode='symmetrical' results in
+        # [0, 1, 2, 3, 4] -> [1,0  ,0,1,2,3,4,  4,3]
+        # mode='reflect' results in
+        # [0, 1, 2, 3, 4] -> [2,1  ,0,1,2,3,4,  3,2]
+        # i.e. changing whether the reflection axis is outside the original data
+        # or overlaid on the outermost row
+    
+        smoothed_data = convolve(working_data, kernel, boundary='extend')
+        # Because of the padding, the boundary mode isn't really relevant
+        # By choosing a large width, the edge effects arising from this additional
+        # padding (boundary='extend') is minimised
+    
+        if d == 2:
+            smoothed_data = smoothed_data[width:-width, width:-width]
+        elif d == 1:
+            smoothed_data = smoothed_data[width:-width]
+        else: # This condition should never happen, due to checking above
+            raise NotImplementedError("This function currently supports smoothing"\
+                    f" 1D, 2D data. You have provided {d} dimensional data")
+        # We have to get rid of the padding that we previously added, and the only
+        # way to do that is slicing, which is NOT dimensional-agnostic
+        # There may be a more elegant solution than if/else, but this will do now
 
     if type(data) == np.ma.MaskedArray:
         smoothed_data = np.ma.masked_where(data.mask, smoothed_data)
