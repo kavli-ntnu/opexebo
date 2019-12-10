@@ -27,7 +27,7 @@ setup(
     author="Simon Ball",
     author_email='simon.ball@ntnu.no',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
@@ -45,6 +45,6 @@ setup(
     name='opexebo',
     packages=find_packages(include=['opexebo*']),
     url='https://github.com/kavli-ntnu/opexebo',
-    version='0.3.5',
+    version='0.3.6',
     zip_safe=False,
 )
