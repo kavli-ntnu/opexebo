@@ -18,4 +18,4 @@ from opexebo import general
 
 __author__ = """Simon Ball"""
 __email__ = 'simon.ball@ntnu.no'
-__version__ = '0.3.5'
+__version__ = '0.4.0'

@@ -28,6 +28,12 @@ def spatial_occupancy(time, position, speed, **kwargs):
         [s]
     
     kwargs
+        arena_shape : str
+            accepts: ("square", "rectangle", "rectangular", "rect", "s", "r")
+                    ("circ", "circular", "circle", "c")
+                    ("linear", "line", "l")
+            Rectangular and square are equivalent. Elliptical or n!=4 polygons
+            not currently supported. Defaults to Rectangular
         arena_size      : float or tuple of floats. 
             Dimensions of arena (in cm)
             For a linear track, length
@@ -91,7 +97,7 @@ def spatial_occupancy(time, position, speed, **kwargs):
     # Handle NaN positions by converting to a Masked Array
     position = np.ma.masked_invalid(position)
     
-
+    
     speed_cutoff = kwargs.get("speed_cutoff", default.speed_cutoff)
     debug = kwargs.get("debug", False)
     
@@ -124,9 +130,37 @@ def spatial_occupancy(time, position, speed, **kwargs):
 
     masked_map = np.ma.masked_where(occupancy_map < 0.001, occupancy_map_time)
     
-    # Calculate the fractional coverage based on the mask. Since the mask is 
-    # False where the animal HAS gone, invert it first (just for this calculation)
-    coverage = np.sum(np.logical_not(masked_map.mask)) / masked_map.size
+    # Calculate the fractional coverage based on the mask. The occupancy_map is
+    # zero where the animal has not gone, and therefore non-zero where the animal
+    # HAS gone. . Coverage is 1.0 when the animal has visited every location
+    # Does not take account of a circular arena, where not all locations are
+    # accessible
+    
+    arena_size = kwargs.get("arena_size")
+    bin_width = kwargs.get("bin_width", default.bin_width)
+    shape = kwargs.get("arena_shape", default.shape)
+    
+    if shape.lower() in default.shapes_square:
+        coverage = np.count_nonzero(occupancy_map) / occupancy_map.size
+    elif shape.lower() in default.shapes_circle:
+        if type(arena_size) in (float, int):
+            radius = arena_size / 2
+        elif type(arena_size) in (tuple, list, np.ndarray):
+            radius = arena_size[0]/2
+        x_centres = bin_edges[0][:-1] + (bin_width / 2)
+        y_centres = bin_edges[1][:-1] + (bin_width / 2)
+        X, Y = np.meshgrid(x_centres, y_centres)
+        distance_map = np.sqrt(np.power(X,2) + np.power(Y,2))
+        in_field = distance_map<=radius
+        
+        coverage = min(1.0, np.count_nonzero(occupancy_map) / (np.sum(in_field)))
+            # Due to the thresholding, coverage might be calculated to be  > 1
+            # In this case, cut off to a maximum value of 1.
+    elif shape.lower() in default.shapes_linear:
+        raise NotImplementedError("Spatial Occupancy does not currently"
+                                  " support linear arenas")
+    else:
+        raise NotImplementedError(f"Arena shape '{shape}' not understood")
     
     return masked_map, coverage, bin_edges
     

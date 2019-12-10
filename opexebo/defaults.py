@@ -19,6 +19,12 @@ bin_speed = 5
 #: Standard speed cutoff below which to ignore positions [cm/s]
 speed_cutoff = 0
 
+#: Shape of area: assume a rectangular arena
+shape = "rectangular"
+shapes_square = ("square", "rectangle", "rectangular", "rect", "s", "r")
+shapes_circle = ("circ", "circular", "circle", "c")
+shapes_linear = ("linear", "line", "l")
+
 
 
 '''Smoothing'''

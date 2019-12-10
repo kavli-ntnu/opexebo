@@ -70,8 +70,8 @@ def angular_occupancy(time, angle, **kwargs):
     frame_duration = np.mean(np.diff(time))
     masked_angle_seconds = masked_angle_histogram * frame_duration
     
-    # Calculate the fractional coverage based on the mask. Since the mask is 
-    # False where the animal HAS gone, invert it first (just for this calculation)
-    coverage = np.sum(np.logical_not(masked_angle_seconds.mask)) / masked_angle_seconds.size
+    # Calculate the fractional coverage based on locations where the histogram
+    # is zero. If all locations are  non-zero, then coverage is 1.0
+    coverage = np.count_nonzero(angle_histogram) / masked_angle_seconds.size
     
     return masked_angle_seconds, coverage, bin_edges
