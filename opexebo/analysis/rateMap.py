@@ -28,7 +28,15 @@ def rate_map(occupancy_map, spikes_tracking, **kwargs):
         occurring with an instaneous speed below the threshold are discarded
     **kwargs
         bin_width : float. 
-            Bin size in cm. Bins are always assumed square default 2.5 cm.
+            Bin size in cm. Bins are always assumed square default 2.5 cm. One
+            of `bin_width`, `bin_number`, `bin_edges` must be provided
+        bin_number: int
+            Number of bins. The same number will be used along both axes,
+            permitting rectangular bins. One of `bin_width`, `bin_number`,
+            `bin_edges` must be provided
+        bin_edges: array-like
+            Edges of the bins. Provided either as `edges` or `(x_edges, y_edges)`. One
+            of `bin_width`, `bin_number`, `bin_edges` must be provided
         speed_cutoff    : float. 
             Timestamps with instantaneous speed beneath this value are ignored. 
             Default 0
@@ -103,7 +111,7 @@ def rate_map(occupancy_map, spikes_tracking, **kwargs):
         spikes = np.array((spikes_x, spikes_y))
 
     # Histogram of spike positions
-    spike_map = opexebo.general.accumulate_spatial(spikes, **kwargs)[0]
+    spike_map, edges = opexebo.general.accumulate_spatial(spikes, **kwargs)
 
     if spike_map.shape != occupancy_map.shape:
         raise ValueError("Rate Map and Occupancy Map must have the same"\
