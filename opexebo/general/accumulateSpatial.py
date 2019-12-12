@@ -106,9 +106,9 @@ def accumulate_spatial(pos, **kwargs):
                        " can be accepted.")
     elif bool(bin_edges):
         # First priority: use predefined bin_edges
-        # TODO! TODO!
         # Bear in mind that the histogram will be transposed as part of this function
-        # So for the Ratemap
+        # So we have to "pre"-transpose the provided (x_edges, y_edges) to 
+        # (y_edges, x_edges), such that the resulting figure still makes sense
         if is_2d:
             if type(bin_edges) not in (tuple, list, np.ndarray):
                 raise ValueError("keyword 'bin_edges' must be either a tuple or list (of np.ndarrays), or a")
