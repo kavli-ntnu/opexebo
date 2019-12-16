@@ -47,6 +47,9 @@ def grid_score(aCorr, **kwargs):
             See function "grid_score_stats"
         search_method : str
             Peak searching method, currently limited to either `default` or `sep`
+        bin_width : float
+            Size of the bins. Distance units will be returned in the same units
+            If not provided, distance units will be retuned in units [bins]
 
     Returns
     -------
@@ -58,9 +61,10 @@ def grid_score(aCorr, **kwargs):
     grid_stats : dictionary
         grid_spacings              : np.array
             Spacing of three adjacent fields closest to center in autocorr
-            (in [bins])
+            (in [bins] if keyword `bin_width` is not given)
         grid_spacing                : float
-            Nanmean of 'spacings' in [bins]
+            Nanmean of 'spacings' (in [bins] if keyword `bin_width` is not
+            given)
         grid_orientations           : np.array
             Orientation of three adjacent fields closest to center in autocorr
             (in [degrees])
@@ -207,6 +211,9 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
             distance from center
         search_method : str
             Peak searching method, currently limited to either `default` or `sep`
+        bin_width : float
+            Size of the bins. Distance units will be returned in the same units
+            If not provided, distance units will be retuned in units [bins]
 
     Returns
     -------
@@ -236,6 +243,7 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
 
     # Get kwargs
     debug = kwargs.get('debug', False)
+    bin_width = kwargs.get("bin_width", 1) # if not provided, use a 1:1 match from bins to return units
     min_orientation = kwargs.get('min_orientation', default.min_orientation)
     search_method = kwargs.get("search_method", default.search_method)
     min_orientation = np.radians(min_orientation)
@@ -260,6 +268,9 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
 
     if all_coords.shape[0] >= 6:
         # Calculate orientation and distance of all local maxima to center
+        # np.arctan2 gives angles in radians relative to the horizontal axis in the range [-pi, pi]
+        # A vector along the horizontal axis from (0,0) to (0,-1) has angle pi.
+        # np.arctan2 - accepts arguments (y, x), and gives the angles in each case from (0,0) to (xi, yi)
         orientation = np.arctan2(all_coords[:,0] - centre[0], all_coords[:,1] - centre[1]) # in radians
         distance = np.sqrt(np.square(all_coords[:,0]-centre[0]) + np.square(all_coords[:,1]-centre[1]))
 
@@ -291,7 +302,8 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
         ################# GATHER OUTPUT #################
         gs_positions = positions[sorted_ids_ang]
         # For grid orientation and spacing take only 3 out of 6 neighbouring fields
-        gs_spacings = distance[sorted_ids_ang][:3]
+        # Convert from distance in bins to distance in units
+        gs_spacings = distance[sorted_ids_ang][:3] * bin_width
         gs_orientations = np.degrees(orientation[sorted_ids_ang][:3]) % 180
 
         
