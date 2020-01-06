@@ -14,6 +14,7 @@ from opexebo.analysis.tuningCurveStats import tuning_curve_stats
 
 # Miscellanious
 from opexebo.analysis.populationVectorCorrelation import population_vector_correlation
+from opexebo.analysis.thetaModulationIndex import theta_modulation_index
 
 # Experimental
 from opexebo.analysis.speedScore import speed_score
@@ -23,5 +24,5 @@ from opexebo.analysis.borderScore import border_score
 __all__ = ["spatial_occupancy", "rate_map", "rate_map_stats", "rate_map_coherence",
         "grid_score", "grid_score_stats", "autocorrelation", "place_field", 
            "angular_occupancy", "tuning_curve", "tuning_curve_stats", 
-           "population_vector_correlation", 
+           "population_vector_correlation", "theta_modulation_index",
            "border_coverage", "border_score", "speed_score"]

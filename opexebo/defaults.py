@@ -39,6 +39,17 @@ mask_fill = 0
 
 
 
+'''LFP related'''
+#: Default method for calculating a power spectrum
+power_spectrum_method = "welch"
+
+#: Default effective resolution for Welch's method (Hz)
+psd_resolution_welch = 1
+
+#: Default return scale, i.e. linear or decibel scale
+psd_return_scale = "linear"
+
+
 
 ''' Firing field related'''
 #: Initial relative threshold to search for local maxima, in range [0,1]
