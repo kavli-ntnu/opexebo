@@ -86,6 +86,13 @@ def theta_modulation_index(spike_times, **kwargs):
     arbitrary_trough = np.where((50e-3 <= bins) & (bins < 70e-3))
     arbitrary_peak = np.where((100e-3 <= bins) & (bins < 140e-3))
     
-    contrast = ( np.sum(hist[arbitrary_peak]) - np.sum(hist[arbitrary_trough]) ) / ( np.sum(hist[arbitrary_peak]) + np.sum(hist[arbitrary_trough]) )
+    # Only provide a value if there are at least _some_ spikes within each window
+    min_spikes_for_contrast = 5
+    peak = np.sum(hist[arbitrary_peak])
+    trough = np.sum(hist[arbitrary_trough])
+    if peak >= min_spikes_for_contrast and trough >= min_spikes_for_contrast:
+        contrast = (peak-trough) / (peak+trough)
+    else:
+        contrast = np.nan
     
     return contrast, hist, bins
