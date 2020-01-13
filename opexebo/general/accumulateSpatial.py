@@ -20,8 +20,9 @@ def accumulate_spatial(pos, **kwargs):
             pos = np.array( [x, y] )
    kwargs
         bin_width : float. 
-            Bin size in cm. Bins are always assumed square default 2.5 cm. One
-            of `bin_width`, `bin_number`, `bin_edges` must be provided
+            Bin size in cm. Bins are always assumed square default 2.5 cm. If 
+            bin_width is supplied, `limit` must also be supplied. One of 
+            `bin_width`, `bin_number`, `bin_edges` must be provided
         bin_number: int
             Number of bins. The same number will be used along both axes,
             permitting rectangular bins. One of `bin_width`, `bin_number`,
@@ -98,6 +99,7 @@ def accumulate_spatial(pos, **kwargs):
     if not bin_edges and not bin_width and not bin_number:
         # No bin decision was provided, so go with default
         bin_width = default.bin_width
+        debug_bin_type = "default - bin_width"
     elif sum([bool(bin_number), bool(bin_width), bool(bin_edges)]) != 1:
         # Count the number of values where a value other than False is present
         # If there are more than 1 "True" value, then the user has provided too many keywords
@@ -111,15 +113,20 @@ def accumulate_spatial(pos, **kwargs):
         # (y_edges, x_edges), such that the resulting figure still makes sense
         if is_2d:
             if type(bin_edges) not in (tuple, list, np.ndarray):
-                raise ValueError("keyword 'bin_edges' must be either a tuple or list (of np.ndarrays), or a")
+                raise ValueError("keyword 'bin_edges' must be either a tuple or list (of np.ndarrays), or a 2D array")
         else:
             if not isinstance(bin_edges, np.ndarray):
                 raise ValueError("Keyword 'bin_edges' must be a numpy array for a 1D histogram")
-        bins = (bin_edges[1], bin_edges[0])
+        bins = (bin_edges[0], bin_edges[1])
         debug_bin_type = "bin_edges"
     elif bool(bin_width):
         # Calculate the number of bins based on the requested width and arena_size
-        bins = np.ceil(arena_size / bin_width).astype(int)
+        # Then calculate the actual bin edges that this would give, based on expanding from top left. 
+        num_bins = np.ceil(arena_size / bin_width).astype(int)
+        if is_2d:
+            bins = [np.linspace(0, arena_size[i], num_bins[i]+1) + limits[2*i] for i in range(2)]
+        else:
+            bins = np.linspace(0, arena_size, num_bins+1) + limits[0]
         debug_bin_type = "bin_width"
     elif bool(bin_number):
         if not isinstance(bin_number, int):
@@ -167,7 +174,7 @@ def accumulate_spatial(pos, **kwargs):
         hist, xedges, yedges = np.histogram2d(in_range_x, in_range_y,
                                        bins=bins, range=limits)
         hist = hist.transpose() # Match the format that BNT traditionally used.
-        edges = [yedges, xedges] # Note that due to the tranposition
+        edges = [xedges, yedges] # Note that due to the tranposition
                             # the label xedge, yedge is potentially misleading
     else:
         x = pos
