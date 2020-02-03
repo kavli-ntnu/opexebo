@@ -32,7 +32,7 @@ shapes_linear = ("linear", "line", "l")
 sigma = 2.0
 
 #: Standard Gaussian stdev for smoothing firing rat, [s]. Default at 0.4s from doi 10.1038/nature14622 .     
-sigma_speed = 0.4
+sigma_time = 0.4
 
 #: Replacement value for masked values when smoothing. Use np.nan to interpolate through masked values instead of use fixed value
 mask_fill = 0
@@ -80,11 +80,14 @@ hd_percentile = 0.95
 #: minimum angular separation between fields in acorr considered for grid ellipse [degrees]
 min_orientation = 15
 
-
+#: The default speed bandwidth for adaptive bandpassing [cm/s]
+speed_bandwidth = 2
 #: The default lower edge of the bandpass filter used for speedscore [cm/s]
 lower_bound_speed = 2
 #: The default time used to calculate the upper edge of the bandpass filter [s]
 upper_bound_time = 10
+#: The default upper edge of the bandpass filter if a fixed (rather than adaptive) filter is chosen [cm/s]
+upper_bound_speed = 15
 
 
 #: Search width for border coverage, see analyses.bordercoverage, [bins]
