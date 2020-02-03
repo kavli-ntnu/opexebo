@@ -45,7 +45,7 @@ def smooth(data, sigma, **kwargs):
     data : np.ndarray or np.ma.MaskedArray
         Data that will be smoothed
     sigma : float
-        Standard deviations for Gaussian kernel in units of pixels
+        Standard deviations for Gaussian kernel in units of pixels/bins
     kwargs
         mask_fill : float
             The value that masked locations should be treated as
