@@ -219,7 +219,7 @@ def _bandpass_adaptive(speed, sampling_rate, lower_speed, upper_time, speed_band
     else:
         raise ValueError(f"The animal did not speed {upper_time}s within a speed"\
                          f" bandwidth of {speed_bandwidth} cm/s. Try using a"\
-                         " larger speed-bandwidth)
+                         " larger speed-bandwidth")
     return _filter
 
 def _bandpass_fixed(speed, lower_speed, upper_speed, **kwargs):
