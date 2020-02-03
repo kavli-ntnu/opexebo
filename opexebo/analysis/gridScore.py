@@ -319,11 +319,15 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
 
         # Fit an ellipse to those remaining fields:
         if len(gs_positions) > 2:
-            gs_ellipse =  opexebo.general.fit_ellipse(gs_positions[:,1], gs_positions[:,0])
-            gs_ellipse_theta = np.degrees(gs_ellipse[4]+np.pi)%360
-            # The +pi term was included in the original BNT, I have kept it to
-            # maintain consistency with past results.
-            gs_aspect_ratio = gs_ellipse[2]/gs_ellipse[3] # Major radius / Minor radius
+            try:
+                gs_ellipse =  opexebo.general.fit_ellipse(gs_positions[:,1], gs_positions[:,0])
+                gs_ellipse_theta = np.degrees(gs_ellipse[4]+np.pi)%360
+                # The +pi term was included in the original BNT, I have kept it to
+                # maintain consistency with past results.
+                gs_aspect_ratio = gs_ellipse[2]/gs_ellipse[3] # Major radius / Minor radius
+            except np.linalg.LinAlgError as e:
+                print(f"LinAlgError: {e}")
+                print(f"Retuning NaN ellipse stats")
 
         # Work out mean orientation of grid. Take standard deviation as quality marker
         gs_orientation       = np.nanmean(gs_orientations % 60)
