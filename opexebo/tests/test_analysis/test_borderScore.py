@@ -95,7 +95,7 @@ def test_perfect_fields():
 
 
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
 #    test_zero_fields()
 #    test_perfect_fields()
-    show(rmap1()[0])
+#    show(rmap1()[0])

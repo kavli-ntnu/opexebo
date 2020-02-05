@@ -67,9 +67,8 @@ def test_invalid_inputs():
         
         
 
-if __name__ == '__main__':
-
-    test_circular_arena()
-    test_linear_arena()
-    test_invalid_inputs()
-    
+#if __name__ == '__main__':
+#    test_circular_arena()
+#    test_linear_arena()
+#    test_invalid_inputs()
+#    

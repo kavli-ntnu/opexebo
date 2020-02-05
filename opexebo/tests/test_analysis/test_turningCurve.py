@@ -31,5 +31,5 @@ def test_random_data():
     print(f"{inspect.stack()[0][3]} passed")
     return True
 
-if __name__ == '__main__':
-    test_random_data()
+#if __name__ == '__main__':
+#    test_random_data()

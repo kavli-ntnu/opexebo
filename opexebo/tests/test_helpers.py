@@ -175,14 +175,14 @@ def generate_field(bin_centres, x, y, s_major, s_minor, theta, amplitude, noise)
     field = field * noise * amplitude
     return field
     
-def generate_hexagonal_grid_fields():
+def generate_hexagonal_grid_fields_dict():
     '''Example code to generate a field definition list for a hexagonal grid of
     cells. Mimic a perfect grid cell.'''
     sma = 5
     smi = 5
     amp = 1
     fields = []
-    offset = 20  
+    offset = 40
     for y_step in np.arange(-3, 4, 1):
         y = (y_step * offset * 0.866)
         for x_step in np.arange(-3, 4, 1):
@@ -190,3 +190,5 @@ def generate_hexagonal_grid_fields():
             field = {"x":x, "y":y, "s_major":sma, "s_minor":smi, "theta": 0, "amplitude":amp, "noise":0}
             fields.append(field)
     return fields
+
+

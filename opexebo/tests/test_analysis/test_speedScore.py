@@ -73,6 +73,6 @@ def test_random_inputs():
             assert np.isfinite(val)
             assert -1 <= val <= 1
     
-if __name__ == '__main__':
-    test_invalid_inputs()
-    test_random_inputs()
+#if __name__ == '__main__':
+#    test_invalid_inputs()
+#    test_random_inputs()

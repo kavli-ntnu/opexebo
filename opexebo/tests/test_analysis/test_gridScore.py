@@ -5,13 +5,14 @@ os.environ['HOMESHARE'] = r'C:\temp\astropy'
 import sys
 sys.path.insert(1, os.path.join(os.getcwd(), '..'))
 
+import matplotlib.pyplot as plt
 import scipy.io as spio
 import numpy as np
 import pytest
 import inspect
-import matplotlib.pyplot
 
 import test_helpers as th
+import opexebo
 from opexebo.analysis import grid_score as func
 
 print("=== tests_analysis_grid_score ===")
@@ -51,5 +52,17 @@ def test_grid_score_similarity():
     print(f"{inspect.stack()[0][3]} passed")
     return True
 
-if __name__ == '__main__':
-    pass
+def test_perfect_grid_cell():
+    firing_map = th.generate_2d_map("rect", 1, x=80, y=80, coverage=0.95, fields=th.generate_hexagonal_grid_fields_dict())
+#    plt.figure()
+#    plt.imshow(firing_map)
+    acorr = opexebo.analysis.autocorrelation(firing_map)
+#    plt.figure()
+#    plt.imshow(acorr)
+#    plt.show()
+    gs, stats = func(acorr, debug=True, search_method="default")#"sep")
+    print(gs)
+    print(stats)
+
+#if __name__ == '__main__':
+#    test_perfect_grid_cell()

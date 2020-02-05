@@ -79,10 +79,10 @@ def test_stupid_values():
     print("test_stupid_values() passed")
 
     
-if __name__ =='__main__':
-    #test_output_structure()
-    test_consistent_offset()
-    #test_stupid_values()
+#if __name__ =='__main__':
+#    test_output_structure()
+#    test_consistent_offset()
+#    test_stupid_values()
 
 
     
