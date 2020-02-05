@@ -73,8 +73,9 @@ def test_2d_square_valid():
     kwv = 80
     dim = 2
     ars, is_2d = func(kwv, dim)
-    assert(ars == 80.0)
-    assert(is_2d)
+    assert isinstance(ars, np.ndarray)
+    assert ars[0] == ars[1] == kwv
+    assert is_2d
     print("test_2d_square_valid passed")
     return True
 
