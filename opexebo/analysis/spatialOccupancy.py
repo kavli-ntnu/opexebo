@@ -110,7 +110,7 @@ def spatial_occupancy(time, position, speed, **kwargs):
         print("Time stamp delta: %f" % np.min(np.diff(time)))
    
 
-    good = speed>speed_cutoff
+    good = np.ma.greater_equal(speed, speed_cutoff)
     x = position[0,:][good]
     y = position[1,:][good]
     pos = np.array([x,y])
