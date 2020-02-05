@@ -59,8 +59,8 @@ def tuning_curve(angular_occupancy, spike_angles, **kwargs):
                       " spike_angle array is in radians. If it is in degrees,"\
                       " you can convert with 'np.radians(array)'")
 
-    bin_width = kwargs.get("bin_width", default.bin_angle)
-    num_bins = np.ceil(360. / bin_width).astype(int) # This is for validation ONLY, the value num_bins here is not passed onwards
+    bin_width = kwargs.get("bin_width", default.bin_angle) # in degrees
+    num_bins = opexebo.general.bin_width_to_bin_number(360., bin_width) # This is for validation ONLY, the value num_bins here is not passed onwards
     if num_bins != angular_occupancy.size:
         raise ValueError("Keyword 'bin_width' must match the value used to"\
                          " generate angular_occupancy")
