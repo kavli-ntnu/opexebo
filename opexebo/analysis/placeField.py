@@ -11,7 +11,8 @@ import opexebo.defaults as default
 
 
 def place_field(firing_map, **kwargs):
-    """Locate place fields on a firing map.
+    '''
+    Locate place fields on a firing map.
 
     Identifies place fields in 2D firing map. Placefields are identified by
     using an adaptive threshold. The idea is that we start with a peak value as
@@ -19,13 +20,12 @@ def place_field(firing_map, **kwargs):
     area doesn't change any more or the area explodes (this means the threshold
     is too low).
 
-
     Parameters
     ----------
     firing_map : np.ndarray or np.ma.MaskedArray
         smoothed rate map.
-        If supplied as an np.ndarray, it is assumed that the map takes values 
-        of np.nan at locations of zero occupancy. If supplied as an np.ma.MaskedArray, 
+        If supplied as an np.ndarray, it is assumed that the map takes values
+        of np.nan at locations of zero occupancy. If supplied as an np.ma.MaskedArray,
         it is assumed that the map is masked at locations of zero occupancy
     **kwargs
         min_bins : int
@@ -50,26 +50,26 @@ def place_field(firing_map, **kwargs):
 
     Returns
     -------
-    fields      : list (of dict)
-        coords         : np.ndarray    : 
+    fields : list (of dict)
+        coords : np.ndarray
             Coordinates of all bins in the firing field
-        peak_coords    : np.ndarray    :
+        peak_coords : np.ndarray
             Coordinates peak firing rate [y,x]
-        centroid_coords: np.ndarray    : 
+        centroid_coords: np.ndarray
             Coordinates of centroid (decimal) [y,x]
-        area           : int           : 
+        area : int
             Number of bins in firing field. [bins]
-        bbox           : tuple         : 
-            Coordinates of bounding box including the firing field 
+        bbox : tuple
+            Coordinates of bounding box including the firing field
             (y_min, x_min, y_max, y_max)
-        mean_rate      : float         : 
+        mean_rate : float
             mean firing rate [Hz]
-        peak_rate      : float         : 
+        peak_rate : float
             peak firing rate [Hz]
-        map            : np.ndarray    : 
-            Binary map of arena. Cells inside firing field have value 1, all 
+        map : np.ndarray
+            Binary map of arena. Cells inside firing field have value 1, all
             other cells have value 0
-    fields_map  : np.ndarray
+    fields_map : np.ndarray
         labelled integer image (i.e. background = 0, field1 = 1, field2 = 2, etc.)
 
     Raises
@@ -82,7 +82,7 @@ def place_field(firing_map, **kwargs):
     See also
     --------
     BNT.+analyses.placefieldAdaptive
-    
+
     https://se.mathworks.com/help/images/understanding-morphological-reconstruction.html
 
     Copyright (C) 2018 by Vadim Frolov, (C) 2019 by Simon Ball, Horst Obenhaus
@@ -91,8 +91,9 @@ def place_field(firing_map, **kwargs):
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 3 of the License, or
     (at your option) any later version.
-    """
-    ''' Part 1: handle inputs'''
+    '''
+    ##########################################################################
+    #####                   Part 1: Handle inputs
     # Get keyword arguments
     min_bins = kwargs.get("min_bins", default.firing_field_min_bins)
     min_peak = kwargs.get("min_peak", default.firing_field_min_peak)
@@ -104,7 +105,7 @@ def place_field(firing_map, **kwargs):
 
     if not 0 < init_thresh <= 1:
         raise ValueError("Keyword 'init_thresh' must be in the range [0, 1]."\
-                         " You provided %.2f" % init_thresh)
+                         f" You provided {init_thresh}")
     try:
         search_method = search_method.lower()
     except AttributeError:
@@ -112,8 +113,8 @@ def place_field(firing_map, **kwargs):
                          f" You provided a {type(search_method)} ({search_method})")
     if search_method not in default.all_methods:
         raise ValueError("Keyword 'search_method' must be left blank or given a"\
-                         " value from the following list: %s. You provided '%s'." \
-                         % (default.all_methods, search_method) )
+                         f" value from the following list: {default.all_methods}."\
+                         f" You provided '{search_method}'.")
 
     global_peak = np.nanmax(firing_map)
     if np.isnan(global_peak) or global_peak == 0:
@@ -121,7 +122,7 @@ def place_field(firing_map, **kwargs):
             print(f"Terminating due to invalid global peak: {global_peak}")
         return [], np.zeros_like(firing_map)
 
-    # Construct a mask of bins that the animal never visited (never visited -> true)  
+    # Construct a mask of bins that the animal never visited (never visited -> true)
     # This needs to account for multiple input formats.
     # The standard that I want to push is that firing_map is type MaskedArray
         # In this case, the cells that an animal never visited have firing_map.mask[cell]=True
@@ -129,26 +130,27 @@ def place_field(firing_map, **kwargs):
     # An alternative is the BNT standard, where firing_map is an ndarray
         # In this case, the cells never visited are firing_map[cell] = np.nan
     # In either case, we need to get out the following:
-        # finite_firing_map is an ndarray (float) where unvisted cells have a meaningfully finite value (e.g. zero, or min())
+        # finite_firing_map is an ndarray (float) where unvisted cells have a
+        # meaningfully finite value (e.g. zero, or min())
         # mask is an ndarray (bool) where unvisited cells are True, all other cells are False
 
-    if type(firing_map) == np.ma.MaskedArray:
-        
+    if isinstance(firing_map, np.ma.MaskedArray):
         occupancy_mask = firing_map.mask
         finite_firing_map = firing_map.data.copy()
         finite_firing_map[np.isnan(firing_map.data)] = 0
-        
+
     else:
         occupancy_mask = np.zeros_like(firing_map).astype('bool')
         occupancy_mask[np.isnan(firing_map)] = True
         finite_firing_map = firing_map.copy()
         finite_firing_map[np.isnan(firing_map)] = 0
 
-   
-    se = morphology.disk(1)
-    Ie = morphology.erosion(finite_firing_map, se)
-    fmap = morphology.reconstruction(Ie, finite_firing_map)
-    '''Part 2: find local maxima'''
+    structured_element = morphology.disk(1)
+    image_eroded = morphology.erosion(finite_firing_map, structured_element)
+    fmap = morphology.reconstruction(image_eroded, finite_firing_map)
+    
+    ##########################################################################
+    #####                   Part 2: find local maxima
     # Based on the user-requested search method, find the co-ordinates of local maxima
     if peak_coords is None:
         if search_method == default.search_method:
@@ -168,7 +170,8 @@ def place_field(firing_map, **kwargs):
     peak_coords = peak_coords[good_peaks, :]
 
 
-    '''Part 3: From local maxima, get fields by expanding around maxima'''
+    ##########################################################################
+    #####    Part 3: from local maxima get fields by expanding around maxima
     max_value = np.max(fmap)
     # prevent peaks with small values from being detected
     # SWB - This causes problems where a local peak is next to a cell that the animal never went
@@ -188,23 +191,22 @@ def place_field(firing_map, **kwargs):
         other_fields = peak_coords[peaks_index != i]
         if other_fields.size > 0:
             other_fields_linear = np.ravel_multi_index(
-                    multi_index=(other_fields[:, 0], other_fields[:, 1]),
-                    dims=fmap.shape, order='F')
+                        multi_index=(other_fields[:, 0], other_fields[:, 1]),
+                        dims=fmap.shape, order='F')
         else:
             other_fields_linear = []
 
         used_th = init_thresh
-        res = _area_change(fmap, occupancy_mask, peak_rc, used_th, 
+        res = _area_change(fmap, occupancy_mask, peak_rc, used_th,
                            used_th-0.02, other_fields_linear)
         initial_change = res['acceleration']
         area2 = res['area2']
         first_pixels = np.nan
         if np.isnan(initial_change):
             for j in np.linspace(used_th+0.01, 1., 4):
-                # Thresholds get higher, area should tend downwards to 1 
+                # Thresholds get higher, area should tend downwards to 1
                 # (i.e. only including the actual peak)
-                res = _area_change(fmap, occupancy_mask, peak_rc, j, j-0.01, 
-                                   other_fields_linear)
+                res = _area_change(fmap, occupancy_mask, peak_rc, j, j-0.01, other_fields_linear)
                 initial_change = res['acceleration']
                 area1 = res['area1']
                 area2 = res['area2']
@@ -236,11 +238,10 @@ def place_field(firing_map, **kwargs):
         pixel_list = _expand_field(fmap, occupancy_mask, peak_rc, initial_change, area2,
                                    other_fields_linear, used_th)
         if np.any(np.isnan(pixel_list)):
-            # nu - not used
-            _, pixel_list, _ = _area_for_threshold(fmap, occupancy_mask, 
-                                                     peak_rc, used_th+0.01, 
-                                                     other_fields_linear)
-        if len(pixel_list)>0:
+            _, pixel_list, _ = _area_for_threshold(fmap, occupancy_mask,
+                                                   peak_rc, used_th+0.01,
+                                                   other_fields_linear)
+        if len(pixel_list) > 0:
             pixels = np.unravel_index(pixel_list, fmap.shape, 'F')
         else:
             pixels = []
@@ -250,7 +251,8 @@ def place_field(firing_map, **kwargs):
         field_id = field_id + 1
 
 
-    '''Part 4: Determine which, if any, fields meet filtering criteria'''
+    ##########################################################################
+    #####     Part 4: Determine which, if any, fields meet filtering criteria
     regions = measure.regionprops(fields_map)
 
     fields = []
@@ -301,7 +303,7 @@ def place_field(firing_map, **kwargs):
 #########################################################
 
 
-def _expand_field(I, occupancy_mask, peak_rc, initial_change, 
+def _expand_field(image, occupancy_mask, peak_rc, initial_change,
                   initial_area, other_fields_linear, initial_th):
     '''
     Adaptive placefield detection:
@@ -324,8 +326,8 @@ def _expand_field(I, occupancy_mask, peak_rc, initial_change,
     for threshold in np.linspace(initial_th, 0.2, num_steps):
         threshold = np.round(threshold, 2)
 
-        area, pixels, is_bad = _area_for_threshold(I, occupancy_mask, peak_rc,
-                                        threshold, other_fields_linear)
+        area, pixels, is_bad = _area_for_threshold(image, occupancy_mask, peak_rc,
+                                                   threshold, other_fields_linear)
         if np.isnan(area) or is_bad:
             pixel_list = last_pixels
             break
@@ -335,7 +337,7 @@ def _expand_field(I, occupancy_mask, peak_rc, initial_change,
         else:
             num_decrease = 0
 
-        if np.floor(current_change / initial_change) <= 2 and num_decrease  < 3:
+        if np.floor(current_change / initial_change) <= 2 and num_decrease < 3:
             if current_change == 1:
                 num_not_changing = num_not_changing + 1
             else:
@@ -350,7 +352,7 @@ def _expand_field(I, occupancy_mask, peak_rc, initial_change,
         break
 
     peak_linear = np.ravel_multi_index(multi_index=(peak_rc[0], peak_rc[1]),
-                                       dims=I.shape, order='F')
+                                       dims=image.shape, order='F')
     # last_pixels is a vector, peak_linear is a single value
     if np.any(last_pixels == peak_linear):
         # good field
@@ -359,7 +361,7 @@ def _expand_field(I, occupancy_mask, peak_rc, initial_change,
     return pixel_list
 
 
-def _area_change(I, occupancy_mask, peak_rc, first, second, other_fields_linear):
+def _area_change(image, occupancy_mask, peak_rc, first, second, other_fields_linear):
     ''' Compare the change in field area based on two threshold values
 
     If either threshold results in an invalid field (based on criteria in
@@ -370,25 +372,29 @@ def _area_change(I, occupancy_mask, peak_rc, first, second, other_fields_linear)
 
     Params
     ------
-    I : np.ndarray                      : Image
-    occupancy_mask: np.ndarray          : binary map - True where the animal 
-                                            spent zero time
-    peak_rc : tuple                     : [row, col] of local maxima
-    first : float                       : first threshold
-    second : float                      : second threshold
-    other_fields_linear : np.ndarray    : All other local maxima *except* the 
-                                            one under consideration
+    image : np.ndarray
+        Image, i.e. rate map being considered
+    occupancy_mask: np.ndarray
+        binary mask. True where the animal spent zero time
+    peak_rc : tuple
+        [row, col] of local maxima
+    first : float
+        first threshold
+    second : float
+        second threshold
+    other_fields_linear : np.ndarray
+        All other local maxima except the ony under consideration
     '''
     results = {'acceleration': np.nan, 'area1': np.nan, 'area2': np.nan,
                'first_pixels': np.nan,
                'second_pixels': np.nan}
 
-    area1, first_pixels, is_bad1 = _area_for_threshold(I, occupancy_mask, peak_rc, first,
+    area1, first_pixels, is_bad1 = _area_for_threshold(image, occupancy_mask, peak_rc, first,
                                                        other_fields_linear)
     if np.isnan(area1) or is_bad1:
         return results
 
-    area2, second_pixels, is_bad2 = _area_for_threshold(I, occupancy_mask, peak_rc, second,
+    area2, second_pixels, is_bad2 = _area_for_threshold(image, occupancy_mask, peak_rc, second,
                                                         other_fields_linear)
     if np.isnan(area2) or is_bad2:
         return results
@@ -403,9 +409,9 @@ def _area_change(I, occupancy_mask, peak_rc, first, second, other_fields_linear)
     return results
 
 
-def _area_for_threshold(I, occupancy_mask, peak_rc, th, other_fields_linear):
+def _area_for_threshold(image, occupancy_mask, peak_rc, threshold, other_fields_linear):
     '''Calculate the area of the field defined by the local maxima 'peak_rc' and
-    the relative thresholding value 'th'
+    the relative thresholding value 'threshold'
 
     In addition, determine:
         * is the field contiguous (good), or does it contain voids? (bad)
@@ -421,20 +427,20 @@ def _area_for_threshold(I, occupancy_mask, peak_rc, th, other_fields_linear):
 
     returns
     -------
-    ar : int
+    area : int
         Number of cells in field OR np.nan if field contains holes
     area_linear_indicies : np.ndarray
         indicies of all cells within field if field is valid
     is_bad : bool
         True IF field includes a second local maxima or IF field contains holes
     '''
-    ar = np.nan
+    area = np.nan
     # Field is bad if it contains any other peak
     is_bad = False
 
-    peak_value = I[peak_rc[0], peak_rc[1]]
-    th_value = peak_value * th
-    mask = (I >= th_value)
+    peak_value = image[peak_rc[0], peak_rc[1]]
+    threshold_value = peak_value * threshold
+    mask = (image >= threshold_value)
 
     # Mask includes all pixels above the desired threshold, including other disconnected fields
     # use morphology.label to exclude disconnected fields
@@ -468,16 +474,13 @@ def _area_for_threshold(I, occupancy_mask, peak_rc, th, other_fields_linear):
     if euler_number <= 0:
         # If any holes existed, then return this
         is_bad = True
-        return (ar, [], is_bad)
+        return (area, [], is_bad)
 
     regions = measure.regionprops(labeled_img)
-    ar = np.sum(labeled_img == 1)
+    area = np.sum(labeled_img == 1)
     area_linear_indices = np.ravel_multi_index(multi_index=(regions[0].coords[:, 0],
-            regions[0].coords[:, 1]), dims=I.shape, order='F') # co-ordinates of members of field
+            regions[0].coords[:, 1]), dims=image.shape, order='F') # co-ordinates of members of field
     if len(other_fields_linear) > 0:
         is_bad = len(np.intersect1d(area_linear_indices, other_fields_linear)) > 0 # True if any other local maxima occur within this field
 
-    return (ar, area_linear_indices, is_bad)
-
-
-    
+    return (area, area_linear_indices, is_bad)
