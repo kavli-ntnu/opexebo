@@ -40,10 +40,17 @@ def validatekeyword__arena_size(kwv, provided_dimensions):
         if kwv <= 0: 
             raise ValueError("Keyword 'arena_size' value must be greater than"\
                              " zero (value given %f)" % kwv)
-        arena_size = kwv
+        if is_2d:
+            arena_size = np.array((kwv, kwv))
+        else:
+            arena_size = kwv
     elif type(kwv) in (list, tuple, np.ndarray):
         if len(kwv) == 1:
-            arena_size = float(kwv[0])
+            if is_2d:
+                
+                arena_size = np.array(kwv[0], kwv[0])
+            else:
+                arena_size = kwv[0]
         elif len(kwv) == 2 and not is_2d:
             raise IndexError("Mismatch in dimensions: 1d position data but 2d"\
                              " arena specified")
