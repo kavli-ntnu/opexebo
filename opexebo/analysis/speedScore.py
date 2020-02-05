@@ -79,6 +79,11 @@ def speed_score(spike_times, tracking_times, tracking_speeds, **kwargs):
             above, but additionally including an upper speed filter
             '2016' is a modification involving a slightly different approach to 
             smoothing the firing rate data
+    (lower_speed, upper_speed): list of floats
+        Speed thresholds using in the bandpass filter
+        Most useful in the case of the adaptive filter, because there is no
+        other way to find out what was actually used. 
+        
 
     See also
     --------
@@ -136,11 +141,13 @@ def speed_score(spike_times, tracking_times, tracking_speeds, **kwargs):
         print(bandpass_type)
     if bandpass_type == "none":
         _filter = _bandpass_none(tracking_speeds_smoothed, **kwargs)
+        lower_bound_speed = 0
+        upper_bound_speed = np.inf
     elif bandpass_type == "fixed":
         _filter = _bandpass_fixed(tracking_speeds_smoothed, lower_bound_speed, 
                                   upper_bound_speed, **kwargs)
     elif bandpass_type == "adaptive":
-        _filter = _bandpass_adaptive(tracking_speeds_smoothed, sampling_rate, 
+        _filter, upper_bound_speed = _bandpass_adaptive(tracking_speeds_smoothed, sampling_rate, 
                                      lower_bound_speed, upper_bound_time, speed_bandwidth, **kwargs)
     
     # Apply the filter to speeds
@@ -159,14 +166,14 @@ def speed_score(spike_times, tracking_times, tracking_speeds, **kwargs):
     speed_score_2015 = np.corrcoef(speeds, rate)[0,1]
 
     scores = {'2015': speed_score_2015, '2016': speed_score_2016}
-    return scores
+    return scores, (lower_bound_speed, upper_bound_speed)
 
 
 
 
 
 
-def _bandpass_adaptive(speed, sampling_rate, lower_speed, upper_time, speed_bandwidth, **kwargs):
+def _bandpass_adaptive(speed, sampling_rate, lower_speed, upper_time, speed_bw, **kwargs):
     '''Create a filter list that allows through values based on a defined lower
     value, and an upper value determined by the highest 2cm/s bandwidth at which
     the animal spent at least X time
@@ -190,6 +197,8 @@ def _bandpass_adaptive(speed, sampling_rate, lower_speed, upper_time, speed_band
         Time for calculating upper_speed in [s]. The upper_speed is calculated
         as the highest [2cm/s] speed bandwidth that the animal spends at least
         this long.
+    speed_bw : float
+        Range of speeds for calculating the upper_speed, in [cm/s]
         
     returns
     -------
@@ -197,8 +206,8 @@ def _bandpass_adaptive(speed, sampling_rate, lower_speed, upper_time, speed_band
         1d M-length array of booleans for indexing the speed array. True where
         the speed PASSES the filter
     '''
-    m = 10
-    hist_resolution = speed_bandwidth / m          # this is bin_width
+    m = 10 # multiplier on resolution - the histogram will be done with bin_widths this factor narrower than the speed_bw
+    hist_resolution = speed_bw / m          # this is bin_width
     bins = np.arange(np.min(speed), np.max(speed), hist_resolution)
     hist, bin_edges = np.histogram(speed, bins=bins)
     
@@ -218,9 +227,9 @@ def _bandpass_adaptive(speed, sampling_rate, lower_speed, upper_time, speed_band
         _filter = _bandpass_fixed(speed, lower_speed, upper_speed, **kwargs)
     else:
         raise ValueError(f"The animal did not speed {upper_time}s within a speed"\
-                         f" bandwidth of {speed_bandwidth} cm/s. Try using a"\
+                         f" bandwidth of {speed_bw} cm/s. Try using a"\
                          " larger speed-bandwidth")
-    return _filter
+    return _filter, upper_speed
 
 def _bandpass_fixed(speed, lower_speed, upper_speed, **kwargs):
     '''Create a filter list that allows through values between the defined upper
