@@ -264,7 +264,18 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
 
     # Find fields in autocorrelogram
     all_coords = opexebo.general.peak_search(aCorr, mask=mask, search_method=search_method,
-                                             null_background=True, threshold=0.1)
+                                             null_background=True, threshold=0.1, get_maxima=True)
+    if debug:
+        import matplotlib.pyplot as plt
+        plt.figure()
+        plt.imshow(aCorr)
+        plt.scatter(centre[1], centre[0], s=600, marker="x", color="black")
+        for field_no, coord in enumerate(all_coords):
+            plt.scatter(coord[1], coord[0], s=300, marker='x', color='red')
+            plt.text(coord[1]+3, coord[0], field_no, label='Center')
+        plt.title("All local maxima in acorr")
+        
+        
 
     if all_coords.shape[0] >= 6:
         # Calculate orientation and distance of all local maxima to center
@@ -310,6 +321,7 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
         if debug:
             import matplotlib.pyplot as plt
             aCorr_masked = np.ma.masked_where(mask, aCorr.copy())
+            plt.figure()
             plt.imshow(aCorr_masked)
             plt.scatter(centre[1],centre[0], s=600, marker='x', color='black')
             for field_no, coord in enumerate(gs_positions):
@@ -319,11 +331,15 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
 
         # Fit an ellipse to those remaining fields:
         if len(gs_positions) > 2:
-            gs_ellipse =  opexebo.general.fit_ellipse(gs_positions[:,1], gs_positions[:,0])
-            gs_ellipse_theta = np.degrees(gs_ellipse[4]+np.pi)%360
-            # The +pi term was included in the original BNT, I have kept it to
-            # maintain consistency with past results.
-            gs_aspect_ratio = gs_ellipse[2]/gs_ellipse[3] # Major radius / Minor radius
+            try:
+                gs_ellipse =  opexebo.general.fit_ellipse(gs_positions[:,1], gs_positions[:,0])
+                gs_ellipse_theta = np.degrees(gs_ellipse[4]+np.pi)%360
+                # The +pi term was included in the original BNT, I have kept it to
+                # maintain consistency with past results.
+                gs_aspect_ratio = gs_ellipse[2]/gs_ellipse[3] # Major radius / Minor radius
+            except np.linalg.LinAlgError as e:
+                print(f"LinAlgError: {e}")
+                print(f"Retuning NaN ellipse stats")
 
         # Work out mean orientation of grid. Take standard deviation as quality marker
         gs_orientation       = np.nanmean(gs_orientations % 60)

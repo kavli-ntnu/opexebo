@@ -1,7 +1,7 @@
 """Provide a function for mapping a list of positional data into a 1D or 2D space"""
 
 import numpy as np
-from opexebo.general import validatekeyword__arena_size
+from opexebo.general import validatekeyword__arena_size, bin_width_to_bin_number
 import opexebo.defaults as default
 
 
@@ -9,6 +9,22 @@ def accumulate_spatial(pos, **kwargs):
     """
     Accumulate repeated observations of a variable into a binned representation
     by means of a histogram.
+    
+    The histogram bin edges must be defined in one of 3 different ways:
+        * bin_width : based on the keyword `arena_size`, the number of bins will
+        be calculated as 
+            opexebo.general.bin_width_to_bin_number
+        The histogram will use num_bins between the minimum and maximum of the
+        positions (or `limit` if provided)
+        
+        * bin_number : the histogram will use bin_number of bins between the
+        minimum and maximum of the positions (or `limit` if provided)
+        
+        * bin_edges : the histogram will use the provided bin_edge arrays
+    
+    Either zero or one of the three bin_* keyword arguments must be defined. 
+    If none are defined, then a default bin_width is used. If more than 1 is
+    defined, an error is raised
 
     Parameters
     ----------
@@ -23,7 +39,7 @@ def accumulate_spatial(pos, **kwargs):
             Bin size in cm. Bins are always assumed square default 2.5 cm. If 
             bin_width is supplied, `limit` must also be supplied. One of 
             `bin_width`, `bin_number`, `bin_edges` must be provided
-        bin_number: int
+        bin_number: int or tuple of int
             Number of bins. The same number will be used along both axes,
             permitting rectangular bins. One of `bin_width`, `bin_number`,
             `bin_edges` must be provided
@@ -44,6 +60,13 @@ def accumulate_spatial(pos, **kwargs):
             to generate default limits.
             As is standard in python, acceptable values include the lower bound
             and exclude the upper bound
+        arena_size : float or tuple of floats. 
+            Dimensions of arena (in cm)
+            For a linear track, length
+            For a circular arena, diameter
+            For a square arena, length or (length, length)
+            For a non-square rectangle, (length1, length2)
+            In this function, a circle and a square are treated identically.
 
     Returns
     -------
@@ -106,11 +129,8 @@ def accumulate_spatial(pos, **kwargs):
         raise KeyError("You have provided more than one method for determining"\
                        " the edges of the histogram. Only zero or one methods"\
                        " can be accepted.")
-    elif bool(bin_edges):
+    if bool(bin_edges):
         # First priority: use predefined bin_edges
-        # Bear in mind that the histogram will be transposed as part of this function
-        # So we have to "pre"-transpose the provided (x_edges, y_edges) to 
-        # (y_edges, x_edges), such that the resulting figure still makes sense
         if is_2d:
             if type(bin_edges) not in (tuple, list, np.ndarray):
                 raise ValueError("keyword 'bin_edges' must be either a tuple or list (of np.ndarrays), or a 2D array")
@@ -122,19 +142,28 @@ def accumulate_spatial(pos, **kwargs):
     elif bool(bin_width):
         # Calculate the number of bins based on the requested width and arena_size
         # Then calculate the actual bin edges that this would give, based on expanding from top left. 
-        num_bins = np.ceil(arena_size / bin_width).astype(int)
-        if is_2d:
-            bins = [np.linspace(0, arena_size[i], num_bins[i]+1) + limits[2*i] for i in range(2)]
+        num_bins = bin_width_to_bin_number(arena_size, bin_width)
+        if limits is None:
+            # Handle the case that limits is not provided, i.e. is None
+            lim = (0,0,0,0)
         else:
-            bins = np.linspace(0, arena_size, num_bins+1) + limits[0]
+            lim = limits
+        if is_2d:
+            bins = [np.linspace(0, arena_size[i], num_bins[i]+1) + lim[2*i] for i in range(2)]
+        else:
+            bins = np.linspace(0, arena_size, num_bins+1) + (lim[0])
         debug_bin_type = "bin_width"
     elif bool(bin_number):
-        if not isinstance(bin_number, int):
-            raise ValueError("Keyword 'bin_number' must be an integer")
+        if type(bin_number) not in (int, tuple, list, np.ndarray):
+            raise ValueError("Keyword 'bin_number' must be an integer, or an array-like of integers.")
         bins = bin_number
         debug_bin_type = "bin_number"
     
-
+    if debug:
+        print(f"Limits: {limits}")
+        print(f"Binning type: {debug_bin_type}")
+        print(f"bins : {bins}")
+        
 
 
     # Histogram of positions
@@ -144,8 +173,8 @@ def accumulate_spatial(pos, **kwargs):
         x = pos[0]
         y = pos[1]
         if limits is None:
-            limits = ( [np.nanmin(x), np.nanmax(x)],
-                         [np.nanmin(y), np.nanmax(y)] )
+            limits = ( [np.nanmin(x), np.nanmax(x)*1.0001],          # Hist bins are (lower bound included, upper bound excluded))
+                         [np.nanmin(y), np.nanmax(y)*1.0001] )       # so generating the upper bound from nanmax guarantees that the largest value will never be included
             if debug:
                 print("No limits found. Calculating based on min/max")
         elif len(limits) != 4:
@@ -166,9 +195,6 @@ def accumulate_spatial(pos, **kwargs):
         in_range_x = x[in_range]
         in_range_y = y[in_range]
         if debug:
-            print(f"Limits: {limits}")
-            print(f"Binning type: {debug_bin_type}")
-            print(f"bins : {bins}")
             print(f"data points : {len(in_range_x)}")
 
         hist, xedges, yedges = np.histogram2d(in_range_x, in_range_y,
@@ -179,13 +205,15 @@ def accumulate_spatial(pos, **kwargs):
     else:
         x = pos
         if limits is None:
-            limits = [np.nanmin(x), np.nanmax(x)]
+            limits = [np.nanmin(x), np.nanmax(x)*1.0001]
         elif len(limits) != 2: 
             raise ValueError("You must provide a 2-element 'limits' value for a"\
                              " 1D map. You provided %d elements" % len(limits))
         in_range = np.logical_and(np.greater_equal(x, limits[0]),
                                   np.less(x, limits[1]))
         in_range_x = x[in_range]
+        if debug:
+            print(f"data points : {len(in_range_x)}")
 
         hist, edges = np.histogram(in_range_x, bins=bins, range=limits)
 

@@ -30,9 +30,9 @@ def rate_map(occupancy_map, spikes_tracking, **kwargs):
         bin_width : float. 
             Bin size in cm. Bins are always assumed square default 2.5 cm. One
             of `bin_width`, `bin_number`, `bin_edges` must be provided
-        bin_number: int
-            Number of bins. The same number will be used along both axes,
-            permitting rectangular bins. One of `bin_width`, `bin_number`,
+        bin_number: int or tuple of int
+            Number of bins. If a tuple is provided, then (x, y). Either square
+            or rectangular bins are supported. One of `bin_width`, `bin_number`,
             `bin_edges` must be provided
         bin_edges: array-like
             Edges of the bins. Provided either as `edges` or `(x_edges, y_edges)`. One
@@ -78,18 +78,18 @@ def rate_map(occupancy_map, spikes_tracking, **kwargs):
     if type(occupancy_map) not in (np.ndarray, np.ma.MaskedArray) :
         raise ValueError("Occupancy Map not provided in usable format. Please"\
             " provide either a Numpy ndarray or Numpy MaskedArray. You"\
-            " provided %s." % type(occupancy_map))
+            f" provided {type(occupancy_map)}.")
     if type(spikes_tracking) not in (np.ndarray, np.ma.MaskedArray) :
         raise ValueError("spikes not provided in usable format. Please"\
             " provide either a Numpy ndarray or Numpy MaskedArray. You"\
-            " provided %s." % type(spikes_tracking))
+            f" provided {type(spikes_tracking)}.")
     
     dims_p = occupancy_map.ndim
     dims_s, num_samples_s = spikes_tracking.shape
     if dims_s-2 != dims_p:
         raise ValueError("Spikes must have the same number of spatial"\
             " dimensions as positions ([t, s, x] or [t, s, x, y]). You have provided"\
-            " %d columns of spikes, and %d columns of positions" % (dims_s, dims_p))
+            f" {dims_s} columns of spikes, and {dims_p} columns of positions")
     
     if "arena_size" not in kwargs:
         raise KeyError("No arena dimensions provided. Please provide the\

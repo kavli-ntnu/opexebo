@@ -102,10 +102,10 @@ def test_zero_fields():
     return True
 
 
-if __name__ == '__main__':
-    test_perfect_fields()
-    test_offset_perfect_field()
-    test_partial_field()
-    test_extended_field()
-    test_central_field()
-    test_zero_fields()
+#if __name__ == '__main__':
+#    test_perfect_fields()
+#    test_offset_perfect_field()
+#    test_partial_field()
+#    test_extended_field()
+#    test_central_field()
+#    test_zero_fields()
