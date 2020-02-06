@@ -13,6 +13,7 @@ def border_score(rate_map, fields_map, fields, **kwargs):
     STATUS : EXPERIMENTAL
     
     TODO: Update to account for the use of Vadim's placefield code
+    TODO: Handle circular arenas (How?)
     
 
     Calculates a border score for a firing rate map according to the article 
@@ -43,15 +44,21 @@ def border_score(rate_map, fields_map, fields, **kwargs):
         (e.g. 1, 2, 3, 5)). Cells that are not members of fields have value zero
     fields      :  list of  dict
         List of dictionaries of firing fields. 
-        Each dictionary must, at least, contain the keyword "map", yielding a 
+        Each dictionary must, at least, contain the keyword "field_map", yielding a 
         binary map of that field within the overall arena
     kwargs
-        search_width    :   int
+        arena_shape : str
+            accepts: ("square", "rectangle", "rectangular", "rect", "s", "r")
+                    ("circ", "circular", "circle", "c")
+                    ("linear", "line", "l")
+            Rectangular and square are equivalent. Elliptical or n!=4 polygons
+            not currently supported. Defaults to Rectangular
+        search_width : int
             rate_map and fields_map have masked values, which may occur within 
             the region of border  pixels. To mitigate this, we check rows/columns
             within search_width pixels of the border.
             If no value is supplied, default 8
-        walls           :   str
+        walls : str
             Definition of walls along which the border score is calculated. Provided by
             a string which contains characters that stand for walls:
                       T - top wall (we assume the bird-eye view on the arena)
@@ -86,10 +93,6 @@ def border_score(rate_map, fields_map, fields, **kwargs):
     (at your option) any later version.
     '''
 
-    # Extract keyword arguments or set defaults
-    sw = kwargs.get('search_width', default.search_width)
-    walls = kwargs.get('walls', default.walls)
-
     # Check that fields exist
     if np.ma.max(fields_map) == 0:
         # No fields exist
@@ -98,7 +101,7 @@ def border_score(rate_map, fields_map, fields, **kwargs):
         # 1 or more fields exist
         fields_map_unlabelled = np.copy(fields_map)
         fields_map_unlabelled[fields_map>1] = 1
-        coverage = border_coverage(fields, search_width = sw, walls = walls)
+        coverage = border_coverage(fields, **kwargs)
         fields_rate_map = fields_map_unlabelled * rate_map
         fields_rate_map = np.ma.masked_invalid(fields_rate_map)
         wfd = _weighted_firing_distance(fields_rate_map)

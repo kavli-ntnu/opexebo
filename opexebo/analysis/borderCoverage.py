@@ -26,23 +26,29 @@ def border_coverage(fields, **kwargs):
 
     Parameters
     ----------
-    fields      :   dict or list of dicts
-        One dictionary per field. Each dictionary must contain the keyword "map"
+    fields : dict or list of dicts
+        One dictionary per field. Each dictionary must contain the keyword "field_map"
     **kwargs
-        search_width    :   int
+        arena_shape : str
+            accepts: ("square", "rectangle", "rectangular", "rect", "s", "r")
+                    ("circ", "circular", "circle", "c")
+                    ("linear", "line", "l")
+            Rectangular and square are equivalent. Elliptical or n!=4 polygons
+            not currently supported. Defaults to Rectangular
+        search_width : int
             rate_map and fields_map have masked values, which may occur within the region of border 
             pixels. To mitigate this, we check rows/columns within search_width pixels of the border
             If no value is supplied, default 8
-        walls           :   str
+        walls : str
             Definition of walls along which the border score is calculated. Provided by
             a string which contains characters that stand for walls:
                       T - top wall (we assume the bird-eye view on the arena)
                       R - right wall
                       B - bottom wall
                       L - left wall
-                      Characters are case insensitive. Default value is 'TRBL' meaning that border
-                      score is calculated along all walls. Any combination is possible, e.g.
-                      'R' to calculate along right wall, 'BL' to calculate along two walls, e.t.c.
+            Characters are case insensitive. Default value is 'TRBL' meaning that border
+            score is calculated along all walls. Any combination is possible, e.g.
+            'R' to calculate along right wall, 'BL' to calculate along two walls, e.t.c.
 
     Returns
     -------
@@ -68,31 +74,40 @@ def border_coverage(fields, **kwargs):
     # Extract keyword arguments or set defaults
     sw = kwargs.get('search_width', default.search_width)
     walls = kwargs.get('walls', default.walls)
+    shape = kwargs.get("arena_shape", default.shape)
+    if shape.lower() in default.shapes_square:
+        DO_A_THING()
+    elif shape.lower() in default.shapes_circle:
+        DO_A_THING()
+    elif shape.lower() in default.shapes_linear:
+        DO_A_THING()
+    else:
+        raise NotImplementedError(f"Arena shape '{shape}' not implemented")
 
     # Check that the wall definition is valid
     _validate_wall_definition(walls)
     walls = walls.lower()
     
-    if type(fields) == dict:
+    if isinstance(fields, dict):
         # Deal with the case of being passed a single field, instead of a list of fields
         fields = [fields]
-    elif type(fields) != list:
+    elif type(fields) not in (list, tuple, np.ndarray):
         raise ValueError(f"You must supply either a dictionary, or list of dictionaries, of fields. You provided type '{type(fields)}'")
 
     # Check coverage of each field in turn
     coverage = 0
     for field in fields:
-        fmap = field['map'] # binary image of field: values are 1 inside field, 0 outside
+        fmap = field['field_map'] # binary image of field: values are 1 inside field, 0 outside
         if "l" in walls:
             aux_map = fmap[:,:sw].copy()
-            c = _wall_field(aux_map)
+            c = _wall_field_rect(aux_map)
             if c > coverage:
                 coverage = c
 
         if "r" in walls:
             aux_map = fmap[:, -sw:].copy()
             aux_map = np.fliplr(aux_map) # Mirror image to match the expectations in _wall_field, i.e. border adjacent to left-most column
-            c = _wall_field(aux_map)
+            c = _wall_field_rect(aux_map)
             if c > coverage:
                 coverage = c
 
@@ -107,21 +122,22 @@ def border_coverage(fields, **kwargs):
         if "b" in walls:
             aux_map = fmap[:sw, :].copy()
             aux_map = np.rot90(aux_map) # Rotate counterclockwise - top of image moves to left of image
-            c = _wall_field(aux_map)
+            c = _wall_field_rect(aux_map)
             if c > coverage:
                 coverage = c
 
         if "t" in walls:
             aux_map = fmap[-sw:, :].copy()
             aux_map = np.fliplr(np.rot90(aux_map)) # rotate 90 deg counter clockwise (bottom to right), then mirror image
-            c = _wall_field(aux_map)
+            c = _wall_field_rect(aux_map)
             if c > coverage:
                 coverage = c
     return coverage
 
 
-def _wall_field(wfmap):
-    '''Evaluate what fraction of the border area is covered by a single field
+def _wall_field_rect(wfmap):
+    '''Evaluate what fraction of the border area is covered by a single field in
+    a rectangular or square arena
 
     Border coverage is provided as two values: 
         covered : the sum of the values across all sites immediately adjacent 
@@ -170,10 +186,17 @@ def _wall_field(wfmap):
 
     return coverage
 
+def _wall_field_circ(wfmap):
+    '''
+    Evaluate what fraction of the border area is covered by a single field in a
+    circular arena
+    '''
+    raise NotImplementedError
+
 
 def _validate_wall_definition(walls):
     '''Parse the walls argument for invalid entry'''
-    if type(walls) != str:
+    if not isinstance(walls, str):
         raise ValueError("Wall definition must be given as a string, e.g." \
                          "'trbl'. %s is not a valid input." % str(walls))
     elif len(walls) > 4:
