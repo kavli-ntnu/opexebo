@@ -41,8 +41,22 @@ def spatial_occupancy(time, position, speed, **kwargs):
             For a square arena, length or (x_length, y_length)
             For a non-square rectangle, (x_length, y_length)
             In this function, a circle and a square are treated identically.
-        bin_width       : float. 
-            Bin size (in cm). Bins are always assumed square default 2.5 cm.
+       bin_width : float. 
+            Bin size in cm. Bins are always assumed square default 2.5 cm. If 
+            bin_width is supplied, `limit` must also be supplied. One of 
+            `bin_width`, `bin_number`, `bin_edges` must be provided
+        bin_number: int or tuple of int
+            Number of bins. If provided as a tuple, then (x_bins, y_bins). One
+            of `bin_width`, `bin_number`, `bin_edges` must be provided
+        bin_edges: array-like
+            Edges of the bins. Provided either as `edges` or `(x_edges, y_edges)`.
+            One of `bin_width`, `bin_number`, `bin_edges` must be provided
+            Dimensions of arena (in cm)
+            For a linear track, length
+            For a circular arena, diameter
+            For a square arena, length or (length, length)
+            For a non-square rectangle, (length1, length2)
+            In this function, a circle and a square are treated identically.
         speed_cutoff    : float. 
             Timestamps with instantaneous speed beneath this value are ignored. 
             Default 0
@@ -144,14 +158,10 @@ def spatial_occupancy(time, position, speed, **kwargs):
         coverage = np.count_nonzero(occupancy_map) / occupancy_map.size
     elif shape.lower() in default.shapes_circle:
         if type(arena_size) in (float, int):
-            radius = arena_size / 2
+            diameter = arena_size
         elif type(arena_size) in (tuple, list, np.ndarray):
-            radius = arena_size[0]/2
-        x_centres = bin_edges[0][:-1] + (bin_width / 2)
-        y_centres = bin_edges[1][:-1] + (bin_width / 2)
-        X, Y = np.meshgrid(x_centres, y_centres)
-        distance_map = np.sqrt(np.power(X,2) + np.power(Y,2))
-        in_field = distance_map<=radius
+            diameter = arena_size[0]
+        in_field, _ = opexebo.general.circular_mask(bin_edges, diameter)
         
         coverage = min(1.0, np.count_nonzero(occupancy_map) / (np.sum(in_field)))
             # Due to the thresholding, coverage might be calculated to be  > 1
