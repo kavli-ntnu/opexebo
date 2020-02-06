@@ -7,8 +7,11 @@ import opexebo.defaults as default
 
 def accumulate_spatial(pos, **kwargs):
     """
-    Accumulate repeated observations of a variable into a binned representation
-    by means of a histogram.
+    Given a list of positions, create a histogram of those positions. The
+    resulting histogram is typically referred to as a map.
+    
+    The complexity in this function comes down to selecting where the edges of
+    the arena are, and generating the bins within those limits. 
     
     The histogram bin edges must be defined in one of 3 different ways:
         * bin_width : based on the keyword `arena_size`, the number of bins will
@@ -40,12 +43,11 @@ def accumulate_spatial(pos, **kwargs):
             bin_width is supplied, `limit` must also be supplied. One of 
             `bin_width`, `bin_number`, `bin_edges` must be provided
         bin_number: int or tuple of int
-            Number of bins. The same number will be used along both axes,
-            permitting rectangular bins. One of `bin_width`, `bin_number`,
-            `bin_edges` must be provided
-        bin_edges: array-like
-            Edges of the bins. Provided either as `edges` or `(x_edges, y_edges)`. One
+            Number of bins. If provided as a tuple, then (x_bins, y_bins). One
             of `bin_width`, `bin_number`, `bin_edges` must be provided
+        bin_edges: array-like
+            Edges of the bins. Provided either as `edges` or `(x_edges, y_edges)`.
+            One of `bin_width`, `bin_number`, `bin_edges` must be provided
             Dimensions of arena (in cm)
             For a linear track, length
             For a circular arena, diameter
@@ -129,19 +131,23 @@ def accumulate_spatial(pos, **kwargs):
         raise KeyError("You have provided more than one method for determining"\
                        " the edges of the histogram. Only zero or one methods"\
                        " can be accepted.")
+
     if bool(bin_edges):
         # First priority: use predefined bin_edges
+        # Remember - user provides (x, y), but histogram needs (y, x)
         if is_2d:
             if type(bin_edges) not in (tuple, list, np.ndarray):
                 raise ValueError("keyword 'bin_edges' must be either a tuple or list (of np.ndarrays), or a 2D array")
         else:
             if not isinstance(bin_edges, np.ndarray):
                 raise ValueError("Keyword 'bin_edges' must be a numpy array for a 1D histogram")
-        bins = (bin_edges[0], bin_edges[1])
+        bins = (bin_edges[1], bin_edges[0])
         debug_bin_type = "bin_edges"
+
     elif bool(bin_width):
         # Calculate the number of bins based on the requested width and arena_size
-        # Then calculate the actual bin edges that this would give, based on expanding from top left. 
+        # Then calculate the actual bin edges that this would give, based on expanding from top left.
+        # This returns in format (x, y) -> need to covnert for numpy
         num_bins = bin_width_to_bin_number(arena_size, bin_width)
         if limits is None:
             # Handle the case that limits is not provided, i.e. is None
@@ -149,45 +155,47 @@ def accumulate_spatial(pos, **kwargs):
         else:
             lim = limits
         if is_2d:
-            bins = [np.linspace(0, arena_size[i], num_bins[i]+1) + lim[2*i] for i in range(2)]
+            # Have to swap to (y, x)
+            bins = (np.linspace(0, arena_size[1], num_bins[1]+1) + lim[2],
+                    np.linspace(0, arena_size[0], num_bins[0]+1) + lim[0])
+            
+            #[np.linspace(0, arena_size[i], num_bins[i]+1) + lim[2*i] for i in [-1, 0]] # this handles the (x, y) -> (y, x) swap
         else:
             bins = np.linspace(0, arena_size, num_bins+1) + (lim[0])
         debug_bin_type = "bin_width"
+
     elif bool(bin_number):
         if type(bin_number) not in (int, tuple, list, np.ndarray):
             raise ValueError("Keyword 'bin_number' must be an integer, or an array-like of integers.")
         bins = bin_number
         debug_bin_type = "bin_number"
-    
+
     if debug:
         print(f"Limits: {limits}")
         print(f"Binning type: {debug_bin_type}")
         print(f"bins : {bins}")
-        
 
 
-    # Histogram of positions
-    
-
+    # Make the histogram
     if is_2d:
         x = pos[0]
         y = pos[1]
         if limits is None:
-            limits = ( [np.nanmin(x), np.nanmax(x)*1.0001],          # Hist bins are (lower bound included, upper bound excluded))
-                         [np.nanmin(y), np.nanmax(y)*1.0001] )       # so generating the upper bound from nanmax guarantees that the largest value will never be included
+            limits = np.array([np.nanmin(y), np.nanmax(y)*1.001, np.nanmin(x), np.nanmax(x)*1.001]).reshape(2,2)
+            # numpy convention: (y, x)
             if debug:
                 print("No limits found. Calculating based on min/max")
         elif len(limits) != 4:
             raise ValueError("You must provide a 4-element 'limits' value for a"\
                              " 2D map. You provided %d elements" % len(limits))
         else:
-            limits = ( [limits[0], limits[1]], # change from a 4 element list to a list of lists
-                             [limits[2], limits[3]] )
+            limits = np.flipud(np.array(limits).reshape(2,2))
+            # the flipud swaps x and y - rememebr, numpy convention that (y, x)
         in_range = np.logical_and( 
                 np.logical_and(
-                        np.greater_equal(x, limits[0][0]), np.less(x, limits[0][1])),
+                        np.greater_equal(y, limits[0, 0]), np.less(y, limits[0, 1])),
                 np.logical_and(
-                        np.greater_equal(y, limits[1][0]), np.less(y, limits[1][1])) )
+                        np.greater_equal(x, limits[1, 0]), np.less(x, limits[1, 1])) )
         # the simple operator ">= doesn't respect Masked Arrays
         # As of 2019, it does actually behave correctly (NaN is invalid and so
         # is removed), but I would prefer to be explicit
@@ -197,12 +205,45 @@ def accumulate_spatial(pos, **kwargs):
         if debug:
             print(f"data points : {len(in_range_x)}")
 
-        hist, xedges, yedges = np.histogram2d(in_range_x, in_range_y,
-                                       bins=bins, range=limits)
-        hist = hist.transpose() # Match the format that BNT traditionally used.
-        edges = [xedges, yedges] # Note that due to the tranposition
-                            # the label xedge, yedge is potentially misleading
-    else:
+        '''
+        A brief word on the documentation for np.histogram2d()
+        https://docs.scipy.org/doc/numpy/reference/generated/numpy.histogram2d.html
+        
+        The documentation is subtlely misleading in the use of `x` and `y`. 
+        
+        The NumPy standard notation is (almost) invariably to call (y, x), and, e.g.,
+        in a 2D array, you would create an array with 5 rows and 2 columns like follows:
+            np.zeros((5, 2))
+        
+        We would normally describe this as an array with a height (corresponding to y)
+        of 5, and a width (corresponding to x) of 2.
+        
+        The documentation for histogram2d gives the signature as:
+            numpy.histogram2d(x, y, bins=10, range=None, normed=None, weights=None, density=None)
+        
+            Returns:
+                H : ndarray, shape(nx, ny)
+                    The bi-dimensional histogram of samples x and y. Values in x are 
+                    histogrammed along the first dimension and values in y are histogrammed 
+                    along the second dimension.
+                xedges : ndarray, shape(nx+1,)
+                    The bin edges along the first dimension.
+                yedges : ndarray, shape(ny+1,)
+                    The bin edges along the second dimension.
+        
+        Note the order in the Returns section: data given as `x` is histogrammed along the
+        _first_ dimension, which in NumPy parlance, would _usually_ be labelled `y`.
+        The use of `x`, `y` is self-consistent within this page, but misleading
+        in the context of other NumPy functions. 
+        
+        By invoking `y` as the first axis, and then returning edges as [xedges, yedges],
+        we are internally consistent with the mathematical notation that I have used throughout
+        opexebo (i.e. to call x, then y)
+        '''
+        hist, yedges, xedges = np.histogram2d(in_range_y, in_range_x, bins=bins, range=limits)
+        edges = [xedges, yedges]
+
+    else: # is not 2d
         x = pos
         if limits is None:
             limits = [np.nanmin(x), np.nanmax(x)*1.0001]

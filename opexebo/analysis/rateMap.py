@@ -121,7 +121,6 @@ def rate_map(occupancy_map, spikes_tracking, **kwargs):
     rmap = spike_map / (occupancy_map + np.spacing(1)) 
     # spacing adds floating point precision to avoid DivideByZero errors
     # These should be impossible due to masking, but included nevertheless
-
     return rmap
     
     
