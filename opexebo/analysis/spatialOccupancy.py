@@ -110,19 +110,14 @@ def spatial_occupancy(time, position, speed, **kwargs):
     
     # Handle NaN positions by converting to a Masked Array
     position = np.ma.masked_invalid(position)
-    
-    
+
     speed_cutoff = kwargs.get("speed_cutoff", default.speed_cutoff)
     debug = kwargs.get("debug", False)
-    
 
-
-    
     if debug:
         print("Number of time stamps: %d" % len(time))
         print("Maximum time stamp value: %.2f" % time[-1])
         print("Time stamp delta: %f" % np.min(np.diff(time)))
-   
 
     good = np.ma.greater_equal(speed, speed_cutoff)
     x = position[0,:][good]
@@ -139,8 +134,7 @@ def spatial_occupancy(time, position, speed, **kwargs):
     occupancy_map_time = occupancy_map * frame_duration
     
     if debug:
-        print("Time length included in histogram: %.2f (%.3f)" % (np.sum(occupancy_map_time), np.sum(occupancy_map_time)/time[-1]) )
-    
+        print("Time length included in histogram: %.2f (%.3f)" % (np.sum(occupancy_map_time), np.sum(occupancy_map_time)/time[-1]))
 
     masked_map = np.ma.masked_where(occupancy_map < 0.001, occupancy_map_time)
     
@@ -151,7 +145,6 @@ def spatial_occupancy(time, position, speed, **kwargs):
     # accessible
     
     arena_size = kwargs.get("arena_size")
-    bin_width = kwargs.get("bin_width", default.bin_width)
     shape = kwargs.get("arena_shape", default.shape)
     
     if shape.lower() in default.shapes_square:
@@ -162,8 +155,8 @@ def spatial_occupancy(time, position, speed, **kwargs):
         elif type(arena_size) in (tuple, list, np.ndarray):
             diameter = arena_size[0]
         in_field, _ = opexebo.general.circular_mask(bin_edges, diameter)
-        
-        coverage = min(1.0, np.count_nonzero(occupancy_map) / (np.sum(in_field)))
+        coverage = np.count_nonzero(occupancy_map) / (np.sum(in_field))
+        coverage = min(1.0, coverage)
             # Due to the thresholding, coverage might be calculated to be  > 1
             # In this case, cut off to a maximum value of 1.
     elif shape.lower() in default.shapes_linear:
@@ -171,7 +164,7 @@ def spatial_occupancy(time, position, speed, **kwargs):
                                   " support linear arenas")
     else:
         raise NotImplementedError(f"Arena shape '{shape}' not understood")
-    
+
     return masked_map, coverage, bin_edges
     
     
