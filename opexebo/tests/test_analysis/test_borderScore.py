@@ -69,7 +69,7 @@ def rmap1():
     f1 = field(f, (6,32), (3, 3), 10)
     rmap1 = f0 + f1
     fmap1 = rmap1>3
-    fields = [{"map":f0}, {"map":f1}]
+    fields = [{"field_map":f0}, {"field_map":f1}]
     return rmap1, fmap1, fields
 
 ###############################################################################
