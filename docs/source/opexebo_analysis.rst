@@ -18,6 +18,7 @@ Overview
 	opexebo.analysis.place_field
 	opexebo.analysis.autocorrelation
 	opexebo.analysis.grid_score
+	opexebo.analysis.speed_score
 	
 .. rubric:: Angular analysis
 
@@ -25,11 +26,14 @@ Overview
 	opexebo.analysis.angular_occupancy
 	opexebo.analysis.tuning_curve
 	opexebo.analysis.tuning_curve_stats
+
+.. rubric:: Miscellanious
+    opexebo.analysis.population_vector_correlation
+    opexebo.analysis.theta_modulation
 	
 .. rubric:: Experimental
 
 .. autosummary::
-	opexebo.analysis.speed_score
 	opexebo.analysis.border_coverage
 	opexebo.analysis.border_score
 	
