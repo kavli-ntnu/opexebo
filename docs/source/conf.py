@@ -14,7 +14,10 @@
 #
 import os
 import sys
+import re
 sys.path.insert(0, os.path.abspath('../../opexebo'))
+
+os.environ['MPLBACKEND'] = 'Agg'  # avoid tkinter import errors on rtfd.io
 
 
 # -- Project information -----------------------------------------------------
@@ -24,9 +27,9 @@ copyright = '2019, Simon Ball'
 author = 'Simon Ball'
 
 # The short X.Y version
-version = u'0.2.0'
+version = '0.4.2'
 # The full version, including alpha/beta/rc tags
-release = u'0.2.0'
+release = '0.4.2'
 
 
 # -- General configuration ---------------------------------------------------
@@ -40,15 +43,17 @@ release = u'0.2.0'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
+    'numpydoc',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
     'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
+    'sphinx.ext.doctest',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.graphviz',
     'sphinx.ext.ifconfig',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.autosummary'
+    'matplotlib.sphinxext.plot_directive',
+    'IPython.sphinxext.ipython_console_highlighting',
+    'IPython.sphinxext.ipython_directive',
+    'sphinx.ext.imgmath',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
