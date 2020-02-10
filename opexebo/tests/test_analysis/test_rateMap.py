@@ -84,7 +84,7 @@ def test_1d_ratemap():
 def test_2d_ratemap():
     arena_size = (80, 120)
     bin_number = (16, 24)
-    tmap = np.ones(bin_number).T
+    tmap = np.ones(bin_number).T # Want to be [x] 16 by [y] 24, whereas Numpy writes this the opposite, so transpose
     n = 5000
     times = np.sort(np.random.rand(n)) * 1200 # 20 minute session
     speeds = np.random.rand(n) * 10 # linearly distributed speeds up to 10cm/s
@@ -101,7 +101,7 @@ def test_2d_ratemap():
 
 
 
-#if __name__ == '__main__':
-#    test_rmap_invalid_inputs()
-#    test_1d_ratemap()
-#    test_2d_ratemap()
+if __name__ == '__main__':
+    test_rmap_invalid_inputs()
+    test_1d_ratemap()
+    test_2d_ratemap()
