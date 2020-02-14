@@ -20,21 +20,18 @@ def autocorrelation(firing_map):
 
     Returns
     -------
-    acorr : np.ndarray
+    acorr: np.ndarray
         Resulting correlation matrix, which is a 2D numpy array.
-        
-    See also
+
+    See Also
     --------
-    BNT.+analyses.autocorrelation
-    
     opexebo.general.normxcorr2_general
         
-    Copyright (C) 2018 by Vadim Frolov
+    Notes
+    -----
+    BNT.+analyses.autocorrelation
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or
-    (at your option) any later version.
+    Copyright (C) 2018 by Vadim Frolov
     """
 
     # overlap_amount is a parameter that is intentionally not exposed to

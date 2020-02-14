@@ -42,63 +42,60 @@ def grid_score(aCorr, **kwargs):
     ----------
     acorr: np.ndarray
         A 2D autocorrelogram.
-    **kwargs
-        min_orientation : int
-            See function "grid_score_stats"
-        search_method : str
-            Peak searching method, currently limited to either `default` or `sep`
-        bin_width : float
-            Size of the bins. Distance units will be returned in the same units
-            If not provided, distance units will be retuned in units [bins]
+    
+    Other Parameters
+    ----------------
+    min_orientation: int
+        See function "grid_score_stats"
+    search_method: str
+        Peak searching method, currently limited to either `default` or `sep`
+    bin_width: float
+        Size of the bins. Distance units will be returned in the same units
+        If not provided, distance units will be retuned in units [bins]
 
     Returns
     -------
-    grid_score : float
+    grid_score: float
         Always returns a gridness score value. It ranges from -2 to 2. 2 is
         more of a theoretical bound for a perfect grid. More practical value for
         a good grid is around 1.3. If function can not calculate a gridness
         score, NaN value is returned.
-    grid_stats : dictionary
-        grid_spacings              : np.array
+    grid_stats: dictionary
+        grid_spacings: np.array
             Spacing of three adjacent fields closest to center in autocorr
             (in [bins] if keyword `bin_width` is not given)
-        grid_spacing                : float
+        grid_spacing: float
             Nanmean of 'spacings' (in [bins] if keyword `bin_width` is not
             given)
-        grid_orientations           : np.array
+        grid_orientations: np.array
             Orientation of three adjacent fields closest to center in autocorr
             (in [degrees])
-        grid_orientations_std       : float
+        grid_orientations_std: float
             Standard deviation of orientations % 60
-        grid_orientation            : float
+        grid_orientation: float
             Orientation of grid in [degrees] (mean of fields of 3 main axes)
-        grid_positions              : np.array
+        grid_positions: np.array
             [y,x] coordinates of six fields closest to center
-        grid_ellipse                : np.array
+        grid_ellipse: np.array
             Ellipse fit returning 
             [x coordinate, y coordinate, major radius, minor radius, theta]
-        grid_ellipse_aspect_ratio   : float
+        grid_ellipse_aspect_ratio: float
             Ellipse aspect ratio (major radius / minor radius)
-        grid_ellipse_theta          : float
+        grid_ellipse_thet: float
             Ellipse theta (corrected according to previous BNT standard) in [degrees]
 
     See Also
     --------
-    BNT.+analyses.gridnessScore
-    
     opexebo.analysis.placefield
 
-    Copyright (C) 2018 by Vadim Frolov, (C) 2019 by Simon Ball, Horst Obenhaus
+    Notes
+    -----
+    BNT.+analyses.gridnessScore
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or
-    (at your option) any later version.
+    Copyright (C) 2018 by Vadim Frolov, (C) 2019 by Simon Ball, Horst Obenhaus
     """
-    # Arrange keyword arguments
-#    fieldThreshold = kwargs.get("field_threshold", default.field_threshold)
-#    minOrientation = kwargs.get("min_orientation", default.min_orientation)
     debug = kwargs.get("debug", False)
+
     # normalize aCorr in order to find contours
     aCorr = aCorr / aCorr.max()
     centre = -0.5 + np.array(aCorr.shape)/2 # centre : also [y, x]
