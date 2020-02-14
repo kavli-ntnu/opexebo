@@ -16,35 +16,39 @@ def peak_search(image, **kwargs):
     """Given a 1D or 2D array, return a list of co-ordinates of the local 
     maxima or minima
     
-    Multiple searching techniques are provided
+    Multiple searching techniques are provided:
+        
+        * `default`: uses `skimage.morphology.get_maxima`
+        * `sep`: uses the Python wrapper to the Source Extractor astronomy tool
+          to identify peaks
     
     Parameters
     ----------
-    image : np.ndarray
+    image: np.ndarray
         1D or 2D array of data
-    kwargs
-        search_method : str
-        maxima : bool
-            If True, return the local maxima. Else, return the local minima.
-            Default True
-        mask : np.ndarray
-            Same dimensions as image, True where values of image are to be ignored
-            Only relevant to search method 'sep'
-        null_background : bool
-            Set the image background to zero for calculation purposes
-            Only relevant to 'sep' : astronomical images typically have both a 
-            background gradient and randomised noise in the image. SEP can
-            generate a compensation for this - but the images we typically work
-            with do not suffer the same problem. This should generally be True,
-            unless you know exactly why it shouldn't be. 
+    search_method : str, optional, {"default", "sep"}
+    mask : np.ndarray
+        Array of masked locations in the image with the same dimensions.
+        Locations where the mask value is True are ignored for the purpose of
+        searching.
+    maxima: bool, optional
+        [`default` search method only] Define whether to search for maxima or
+        minima in the provided array
+    null_background: bool
+        [`sep` search method only] Set the image background to zero for
+        calculation purposes rather than attempt to calculate a background
+        gradient. This should generally be True, as our images are not directly
+        comparable to standard telescope output
+    threshold : float, optional
+        [`sep` search method only] Threshold for identifiying maxima area
     
     Returns
     -------
-    peak_coords : tuple
+    peak_coords: tuple
         Co-ordinates of peaks, in the form ((x0, x1, x2...), (y0, y1, y2...))
     
     
-    See also
+    Notes
     --------
     Copyright (C) 2019 by Simon Ball
     """
@@ -117,7 +121,6 @@ def _peak_search_sep_wrapper(firing_map, **kwargs):
     If the user tries to invoke the 'sep' routines, this will try to do so
     If it fails due to ModuleNotFound, it will use the default algorithm instead
     with a warning to the user
-    
     '''
     try:
         import sep
@@ -148,7 +151,7 @@ def _peak_search_sep(firing_map, **kwargs):
     import sep
     
     mask = kwargs.get("mask", np.zeros(firing_map.shape, dtype=bool))
-    null_background = kwargs.get("null_background", False)
+    null_background = kwargs.get("null_background", True)
     threshold = kwargs.get("threshold", 0.2)
     
     tmp_firing_map = firing_map.copy('C')

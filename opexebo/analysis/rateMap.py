@@ -26,34 +26,31 @@ def rate_map(occupancy_map, spikes_tracking, **kwargs):
         Nx3 or Nx4 array of spikes tracking: [t, speed, x] or [t, speed, x, y].
         Speeds are used for the same purpose as in Spatialoccupancy - spikes
         occurring with an instaneous speed below the threshold are discarded
-    bin_width: float
-        Bin size in cm. Bins are always assumed square default 2.5 cm. One
-        of `bin_width`, `bin_number`, `bin_edges` must be provided
-    bin_number: int or tuple of int
-        Number of bins. If a tuple is provided, then (x, y). Either square
-        or rectangular bins are supported. One of `bin_width`, `bin_number`,
-        `bin_edges` must be provided
-    bin_edges: array-like
-        Edges of the bins. Provided either as `edges` or `(x_edges, y_edges)`. One
-        of `bin_width`, `bin_number`, `bin_edges` must be provided
     speed_cutoff: float
-        Timestamps with instantaneous speed beneath this value are ignored.
-        Default 0
-    arena_size: float or tuple of floats
-        Dimensions of arena (in cm)
-        For a linear track, length
-        For a circular arena, diameter
-        For a square arena, length or (length, length)
-        For a non-square rectangle, (length1, length2)
-        In this function, a circle and a square are treated identically.
+        Timestamps with instantaneous speed beneath this value are ignored. Default 0
+    bin_width: float
+        Bin size in cm. Default 2.5cm. If bin_width is supplied, `limit` must
+        also be supplied. One of `bin_width`, `bin_number`, `bin_edges` must be
+        provided
+    bin_number: int or tuple of int
+        Number of bins. If provided as a tuple, then `(x_bins, y_bins)`. One
+        of `bin_width`, `bin_number`, `bin_edges` must be provided
+    bin_edges: array-like
+        Edges of the bins. Provided either as `edges` or `(x_edges, y_edges)`.
+        One of `bin_width`, `bin_number`, `bin_edges` must be provided
     limits: tuple or np.ndarray
-        (`x_min`, `x_max`) or (`x_min`, `x_max`, `y_min`, `y_max`)
+        (x_min, x_max) or (x_min, x_max, y_min, y_max)
         Provide concrete limits to the range over which the histogram searches
         Any observations outside these limits are discarded
         If no limits are provided, then use np.nanmin(data), np.nanmax(data)
         to generate default limits.
         As is standard in python, acceptable values include the lower bound
         and exclude the upper bound
+    arena_size: float or tuple of floats
+        Dimensions of arena (in cm)
+            * For a linear track, length
+            * For a circular arena, diameter
+            * For a rectangular arena, length or (length, length)
 
     Returns
     -------
@@ -61,12 +58,10 @@ def rate_map(occupancy_map, spikes_tracking, **kwargs):
         2D array, masked at locations of very low occupancy (t<1ms).
         Each cell gives the rate of neuron firing at that location.
 
-    Raises
-    ------
-    ValueError
-        If input values do not match expectations
-    KeyError
-        Absence of arena information
+    See Also
+    --------
+    opexebo.general.accumulate_spatial
+    opexebo.general.bin_width_to_bin_number
 
     Notes
     --------

@@ -13,15 +13,16 @@ def accumulate_spatial(pos, **kwargs):
     The complexity in this function comes down to selecting where the edges of
     the arena are, and generating the bins within those limits.
 
-    The histogram bin edges must be defined in one of 3 different ways:
-        * bin_width : based on the keyword `arena_size`, the number of bins will
-        be calculated as:
-            opexebo.general.bin_width_to_bin_number
-        The histogram will use num_bins between the minimum and maximum of the
-        positions (or `limit` if provided)
-        * bin_number : the histogram will use bin_number of bins between the
-        minimum and maximum of the positions (or `limit` if provided)
-        * bin_edges : the histogram will use the provided bin_edge arrays
+    The histogram bin edges must be defined in one of 3 different ways
+    
+        * bin_width: based on the keyword `arena_size`, the number of bins will
+          be calculated as
+            `opexebo.general.bin_width_to_bin_number`
+          The histogram will use `num_bins` between the minimum and maximum of the
+          positions (or `limit` if provided)
+        * bin_number: the histogram will use bin_number of bins between the
+          minimum and maximum of the positions (or `limit` if provided)
+        * bin_edges: the histogram will use the provided `bin_edg`e arrays
 
     Either zero or one of the three bin_* keyword arguments must be defined.
     If none are defined, then a default bin_width is used. If more than 1 is
@@ -30,24 +31,18 @@ def accumulate_spatial(pos, **kwargs):
     Parameters
     ----------
     pos: np.ndarray
-        Nx1 or Nx2 array of positions  in row-major format, i.e. `x` = pos[0],
-        `y` = pos[1]. This matches the simplest input creation pos = np.array( [x, y] )
+        1D or 2D array of positions  in row-major format, i.e. `x` = pos[0],
+        `y` = pos[1]. This matches the simplest input creation pos = np.array( [`x`, `y`] )
     bin_width: float
-        Bin size in cm. Bins are always assumed square default 2.5 cm. If
-        bin_width is supplied, `limit` must also be supplied. One of
-        `bin_width`, `bin_number`, `bin_edges` must be provided
+        Bin size in cm. Default 2.5cm. If bin_width is supplied, `limit` must
+        also be supplied. One of `bin_width`, `bin_number`, `bin_edges` must be
+        provided
     bin_number: int or tuple of int
-        Number of bins. If provided as a tuple, then (x_bins, y_bins). One
+        Number of bins. If provided as a tuple, then `(x_bins, y_bins)`. One
         of `bin_width`, `bin_number`, `bin_edges` must be provided
     bin_edges: array-like
         Edges of the bins. Provided either as `edges` or `(x_edges, y_edges)`.
         One of `bin_width`, `bin_number`, `bin_edges` must be provided
-        Dimensions of arena (in cm)
-        For a linear track, length
-        For a circular arena, diameter
-        For a square arena, length or (length, length)
-        For a non-square rectangle, (length1, length2)
-        In this function, a circle and a square are treated identically.
     limits: tuple or np.ndarray
         (x_min, x_max) or (x_min, x_max, y_min, y_max)
         Provide concrete limits to the range over which the histogram searches
@@ -58,11 +53,9 @@ def accumulate_spatial(pos, **kwargs):
         and exclude the upper bound
     arena_size: float or tuple of floats
         Dimensions of arena (in cm)
-        For a linear track, length
-        For a circular arena, diameter
-        For a square arena, length or (length, length)
-        For a non-square rectangle, (length1, length2)
-        In this function, a circle and a square are treated identically.
+            * For a linear track, length
+            * For a circular arena, diameter
+            * For a rectangular arena, length or (length, length)
 
     Returns
     -------
@@ -75,6 +68,10 @@ def accumulate_spatial(pos, **kwargs):
         `x`, or (`x`, `y`), where `x`, `y` are 1d np.ndarrays
         Here `x`, `y` correspond to the output histogram
 
+    See Also
+    --------
+    opexebo.general.bin_width_to_bin_number
+    
     Notes
     --------
     BNT.+analyses.map()

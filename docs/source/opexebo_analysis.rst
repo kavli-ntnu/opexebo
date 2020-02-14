@@ -28,8 +28,10 @@ Overview
 	opexebo.analysis.tuning_curve_stats
 
 .. rubric:: Miscellanious
-    opexebo.analysis.population_vector_correlation
-    opexebo.analysis.theta_modulation
+
+.. autosummary::
+	opexebo.analysis.population_vector_correlation
+	opexebo.analysis.theta_modulation
 	
 .. rubric:: Experimental
 

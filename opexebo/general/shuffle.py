@@ -6,17 +6,16 @@ import time
 def shuffle(times, offset_lim, iterations, **kwargs):
     '''
     Increment the provided time series by a random period of time in order to 
-    destroy the correlation between spike times and animal behaviour. 
-    
-    STATUS : EXPERIMENTAL
+    destroy the correlation between spike times and animal behaviour.
     
     The increment behaves circularly
-    * initially, we have two time series, Tracking and SpikeTimes, both with 
-    values in the range [t0, t1]. 
-    * after incrementing by T, we have Tracking in [t0, t1] and SpikeTimes
-    in [t0+T, t1+T]
-    * Take all spike times in the range [t1, t1+T] and map back to [t0, t0+T]
-    by subtracting (t1-t0)
+    
+    * Initially, we have two time series, Tracking and SpikeTimes, both with 
+      values in the range `[t0, t1]`. 
+    * After incrementing the SpikeTimes by T, we have Tracking in `[t0, t1]`
+      and SpikeTimes in `[t0+T, t1+T]`.
+    * Take all spike times in the range `[t1, t1+T]` and map back to `[t0, t0+T]`
+      by subtracting `(t1-t0)`
     
     The end result should be a series of times also in the range [t0, t1], 
     with the same intervals between times, but the exact value of those times
@@ -24,42 +23,43 @@ def shuffle(times, offset_lim, iterations, **kwargs):
     first, last) will noe have zero spacing
     
     The random numbers are drawn from a pseudorandom, uniform, distribution in 
-    the range [offset_lim, t1-offset_lim]
+    the range `[offset_lim, t1-offset_lim]`
         
     
     Parameters
     ----------
-    times : np.ndarray
-        Nx1 array of times
-    offset_lim : float
+    times: np.ndarray
+        1D array of times to be shuffled
+    offset_lim: float
         Defines the range of values by which each iteration can be offset. Each
-        iteration will have an offset in [offset_lim, max(times)-offset_lim]
-    iterations : int
+        iteration will have an offset in `[offset_lim, max(times)-offset_lim]`
+    iterations: int
         How many copies of times should be returned (each copy incremented by a
-        random offset limited by offset_lim)
-    kwargs
-        'debug' : bool
-            Enable additional debugging output
-        'tracking_range' : array_like
-            The time range over which tracking behaviour exists, defining the
-            times at which spike indexes are looped back on themselves
-            This can be provided either as a 2-element tuple (t0, t1), or as 
-            the entire list of tracking timestamps. In each case, the min and 
-            max values are used as t0, t1
-            If no values are provided, then the first and last spike times
-            are used. This is not desirable behaviour, since it will then guarantee 
-            that in the shuffled output, two spikes will occur simultaneously
+        random offset limited by `offset_lim`)
+    tracking_range: array_like, optional
+        The time range over which tracking behaviour exists, defining the
+        times at which spike indexes are looped back on themselves
+        This can be provided either as a 2-element tuple `[t0, t1]`, or as 
+        the entire list of tracking timestamps. In each case, the min and 
+        max values are used as `t0`, `t1`.
+        If no values are provided, then the first and last spike times
+        are used. This is not desirable behaviour, since it will then guarantee 
+        that in the shuffled output, two spikes will occur simultaneously
+    debug: bool, optional
+        Enable additional debugging output
     
     Returns
     -------
-    output : np.ndarray
+    output: np.ndarray
         iterations x N array of times. To access a single iteration, output[i,:] or output[i]
     increments : np.ndarray
-        1xN array of offset values used.
+        1D array of offset values used.
     
-    See also
+    Notes
     --------
     BNT.+scripts.shuffling around line 350
+    
+    Copyright (C) 2019 by Simon Ball
     '''
     
     # Check values
@@ -164,11 +164,11 @@ def shuffle(times, offset_lim, iterations, **kwargs):
     
     return output, increments
     
-if __name__ == '__main__':
-    times = [2, 12, 27, 54, 82, 113, 115, 207, 300]
-    t_min = 20
-    iterations = 3
-    s = shuffle(times, t_min, iterations, debug=False, tracking_range=(0,349))
-    #print(s)
+#if __name__ == '__main__':
+#    times = [2, 12, 27, 54, 82, 113, 115, 207, 300]
+#    t_min = 20
+#    iterations = 3
+#    s = shuffle(times, t_min, iterations, debug=False, tracking_range=(0,349))
+#    #print(s)
 
     

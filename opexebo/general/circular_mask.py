@@ -11,27 +11,26 @@ def circular_mask(axes, diameter, **kwargs):
     
     Parameters
     ----------
-        axes : list of np.ndarray
-            [x, y] - pair of nd-arrays defining the _edges_ of the pixels. This
-            is the return value from np.histogram2d, for instance
+        axes: list of np.ndarray
+            [`x`, `y`] - pair of nd-arrays defining the edges of the pixels. This
+            is the return value from np.histogram2d, for instance. 
             Each one is size+1 relative to the number of pixels
             This function assumes that each dimension has a CONSTANT bin width,
             although each dimension may have its own bin width. 
-       diameter : float
+       diameter: float
            diameter of the circle
-        keywords
-            origin : list of floats
-                [x,y] co-ordinates of the centre of the arena.
-                Optional, defaults to (0,0)
+       origin: list of floats
+           [`x`, `y`] co-ordinates of the centre of the arena. Optional,
+           defaults to `(0,0)`
     
     Returns
     -------
-    in_field : np.ndarray
-        2D boolean array of dimensions (axes[0].size-1, axs[1].size-1)
-        Values are TRUE if INSIDE circle and FALSE if OUTSIDE
-    distance_map : np.ndarray
-        2D float array of same size.
-        Values are the distance of the centre of the pixel from the origin
+    in_field: np.ndarray
+        2D boolean array of dimensions `(axes[0].size-1, axs[1].size-1)`
+        Values are `true` if INSIDE circle and `false` if OUTSIDE
+    distance_map: np.ndarray
+        2D float array of same size. Values are the distance of the centre of
+        the pixel from the origin
     '''
     origin = kwargs.get("origin", (0,0))
     radius = diameter / 2

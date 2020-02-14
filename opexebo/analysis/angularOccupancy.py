@@ -18,9 +18,8 @@ def angular_occupancy(time, angle, **kwargs):
     angle : numpy array
         Head angle in radians
         Nx1 array
-    **kwargs : 
-        bin_width : float
-            Width of histogram bin in degrees
+    bin_width : float, optional
+        Width of histogram bin in degrees
 
     Returns
     -------
@@ -34,7 +33,7 @@ def angular_occupancy(time, angle, **kwargs):
         x, or (x, y), where x, y are 1d np.ndarrays
         Here x, y correspond to the output histogram
     
-    See also
+    Notes
     --------
     Copyright (C) 2019 by Simon Ball, Horst Obenhaus
 

@@ -13,16 +13,19 @@ import numpy as np
 import numpy.matlib  # Not included in the default numpy namespace
 from scipy.signal import convolve2d
 
-def normxcorr2_general(map):
+def normxcorr2_general(array):
     """Calculate spatial autocorrelation.
 
-    Python adaption of more general matlab function for calculating cross 
-    correlation
+    Python implementation of the Matlab `generalized-normalized cross correlation`
+    function, adapted by Vadim Frolov. Some generality was abandoned in the adaption
+    as unnecessary for autocorrelogram calculation.
+    
+    For the original function, see https://se.mathworks.com/matlabcentral/fileexchange/29005-generalized-normalized-cross-correlation
 
     Parameters
     ----------
-    map: NxM matrix
-        firing map. map is not necessary a numpy array. Must not contain NaNs!
+    array: NxM matrix
+        firing array. array is not necessary a numpy array. Must not contain NaNs!
 
     Returns
     -------
@@ -30,12 +33,14 @@ def normxcorr2_general(map):
         Resulting correlation matrix
     """
 
-    if not isinstance(map, np.ndarray):
-        map = np.array(map)
+    if not isinstance(array, np.ndarray):
+        array = np.array(array)
+    if not np.sum(np.isfinite(array)) == array.size:
+        raise ValueError("Input array contains NaN values.")
 
     requiredNumberOfOverlapPixels = 0
-    A = _shiftData(map)
-    T = _shiftData(map)
+    A = _shiftData(array)
+    T = _shiftData(array)
 
     numberOfOverlapPixels = _local_sum(np.ones(A.shape), T.shape[0], T.shape[1])
 

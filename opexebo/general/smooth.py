@@ -42,43 +42,35 @@ def smooth(data, sigma, **kwargs):
 
     Parameters:
     ----------
-    data : np.ndarray or np.ma.MaskedArray
+    data: np.ndarray or np.ma.MaskedArray
         Data that will be smoothed
-    sigma : float
+    sigma: float
         Standard deviations for Gaussian kernel in units of pixels/bins
-    kwargs
-        mask_fill : float
-            The value that masked locations should be treated as
-            This can either be provided as an absolute number (e.g. 0), or nan
-            If nan, then each masked location will get a value by interpolating
-            from nearby cells. This will only apply if the input is a
-            MaskedArray to start with. If the input is a standard np.ndarray,
-            then no values will be substituted, even if there are nans present.
-        circle : bool
-            If True, then smoothing at the edge of the array will be handled in
-            a circular manner, i.e. the value to the left of data[0] will be
-            data[-1]
-            If False, the edge will be handled by padding with values equal to
-            the boundary value. 
-            Default False
+    mask_fill: float, optional
+        The value that masked locations should be treated as
+        This can either be provided as an absolute number (e.g. 0), or nan
+        If nan, then each masked location will get a value by interpolating
+        from nearby cells. This will only apply if the input is a
+        MaskedArray to start with. If the input is a standard np.ndarray,
+        then no values will be substituted, even if there are nans present.
+    circle: bool, optional
+        If True, then smoothing at the edge of the array will be handled in
+        a circular manner, i.e. the value to the left of data[0] will be
+        data[-1]. If False, the edge will be handled by padding with values
+        equal to the boundary value. Default False
 
     Returns
     -------
-    smoothed_data : np.ndarray or np.ma.MaskedArray
+    smoothed_data: np.ndarray or np.ma.MaskedArray
         Smoothed data
 
-    See also
+    Notes
     --------
     BNT.+general.smooth
     http://docs.astropy.org/en/stable/convolution/index.html
     https://github.com/astropy/astropy/issues/6511
 
     Copyright (C) 2019 by Simon Ball
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or
-    (at your option) any later version.
     '''
     d = data.ndim
     if  d == 2:

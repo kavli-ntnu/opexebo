@@ -26,37 +26,34 @@ def spatial_occupancy(time, position, speed, **kwargs):
         that `position[0]` corresponds to all `x`; and `position[1]` to all `y`
     speed: np.ndarray
         1d array of speeds at timestamps
+    speed_cutoff: float
+        Timestamps with instantaneous speed beneath this value are ignored. Default 0
     arena_shape: {"square", "rect", "circle", "line"}
         Rectangular and square are equivalent. Elliptical or n!=4 polygons
         not currently supported. Defaults to Rectangular
-    arena_size: float or tuple of floats
-        Dimensions of arena (in cm)
-        For a linear track, length
-        For a circular arena, diameter
-        For a square arena, length or (x_length, y_length)
-        For a non-square rectangle, (x_length, y_length)
-        In this function, a circle and a square are treated identically.
-    bin_width: float, optional
-        Bin size in cm. Bins are always assumed square, default 2.5 cm. If
-        `bin_width` is supplied, `limit` must also be supplied. One of
-        `bin_width`, `bin_number`, `bin_edges` must be provided
-    bin_number: int or tuple of int, optional
-        Number of bins. If provided as a tuple, then (`x_bins`, `y_bins`). One
+    bin_width: float
+        Bin size in cm. Default 2.5cm. If bin_width is supplied, `limit` must
+        also be supplied. One of `bin_width`, `bin_number`, `bin_edges` must be
+        provided
+    bin_number: int or tuple of int
+        Number of bins. If provided as a tuple, then `(x_bins, y_bins)`. One
         of `bin_width`, `bin_number`, `bin_edges` must be provided
-    bin_edges: array-like, optional
+    bin_edges: array-like
         Edges of the bins. Provided either as `edges` or `(x_edges, y_edges)`.
         One of `bin_width`, `bin_number`, `bin_edges` must be provided
-    speed_cutoff: float, optional
-        Timestamps with instantaneous speed beneath this value are ignored.
-        Default 0
-    limits : tuple or ndarray, optional
-        (`x_min`, `x_max`) or (`x_min`, `x_max`, `y_min`, `y_max`)
+    limits: tuple or np.ndarray
+        (x_min, x_max) or (x_min, x_max, y_min, y_max)
         Provide concrete limits to the range over which the histogram searches
         Any observations outside these limits are discarded
-        If no limits are provided, then use `np.nanmin(data)`, `np.nanmax(data)`
+        If no limits are provided, then use np.nanmin(data), np.nanmax(data)
         to generate default limits.
         As is standard in python, acceptable values include the lower bound
         and exclude the upper bound
+    arena_size: float or tuple of floats
+        Dimensions of arena (in cm)
+            * For a linear track, length
+            * For a circular arena, diameter
+            * For a rectangular arena, length or (length, length)
     debug: bool, optional
         If `true`, print out debugging information throughout the function.
         Default `False`
@@ -72,6 +69,11 @@ def spatial_occupancy(time, position, speed, **kwargs):
     bin_edges: ndarray or tuple of ndarray
         x, or (x, y), where x, y are 1d np.ndarrays
         Here x, y correspond to the output histogram
+
+    See Also
+    --------
+    opexebo.general.accumulate_spatial
+    opexebo.general.bin_width_to_bin_number
 
     Notes
     --------
