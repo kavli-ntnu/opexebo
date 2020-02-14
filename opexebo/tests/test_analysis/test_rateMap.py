@@ -48,7 +48,7 @@ def test_rmap_invalid_inputs():
         tmap = np.ones(10)
         spikes = ([0.23,1], [0.5, 1.2], [0.75, -3]) #! spikes should be an ndarray
         func(tmap, spikes, arena_size=1)
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         tmap = np.ones((10,10))
         spikes = np.ones((3, 100)) # t, x, y
         func(tmap, spikes) #! missing arena_size
@@ -95,13 +95,9 @@ def test_2d_ratemap():
     rmap = func(tmap, spikes_tracking, bin_number=bin_number, speed_cutoff=speed_cutoff, arena_size=arena_size)
     assert rmap.ndim == 2
     assert rmap.shape == tmap.shape
-    
-    
-    
 
 
-
-if __name__ == '__main__':
-    test_rmap_invalid_inputs()
-    test_1d_ratemap()
-    test_2d_ratemap()
+#if __name__ == '__main__':
+#    test_rmap_invalid_inputs()
+#    test_1d_ratemap()
+#    test_2d_ratemap()

@@ -7,7 +7,7 @@ from opexebo import defaults as default
 
 
 
-def spatial_occupancy(time, position, speed, **kwargs):
+def spatial_occupancy(time, position, speed, arena_size, **kwargs):
     '''
     Generate an occpuancy map: how much time the animal spent in each location
     in the arena.
@@ -26,6 +26,11 @@ def spatial_occupancy(time, position, speed, **kwargs):
         that `position[0]` corresponds to all `x`; and `position[1]` to all `y`
     speed: np.ndarray
         1d array of speeds at timestamps
+    arena_size: float or tuple of floats
+        Dimensions of arena (in cm)
+            * For a linear track, length
+            * For a circular arena, diameter
+            * For a rectangular arena, length or (length, length)
     speed_cutoff: float
         Timestamps with instantaneous speed beneath this value are ignored. Default 0
     arena_shape: {"square", "rect", "circle", "line"}
@@ -49,11 +54,6 @@ def spatial_occupancy(time, position, speed, **kwargs):
         to generate default limits.
         As is standard in python, acceptable values include the lower bound
         and exclude the upper bound
-    arena_size: float or tuple of floats
-        Dimensions of arena (in cm)
-            * For a linear track, length
-            * For a circular arena, diameter
-            * For a rectangular arena, length or (length, length)
     debug: bool, optional
         If `true`, print out debugging information throughout the function.
         Default `False`
@@ -89,9 +89,6 @@ def spatial_occupancy(time, position, speed, **kwargs):
         raise ValueError("Speed array has the wrong number of columns")
     if speed.size != num_samples:
         raise ValueError("Speed array does not have the same number of samples as Positions")
-    if "arena_size" not in kwargs:
-        raise KeyError("Arena dimensions not provided. Please provide dimensions"\
-                       " using keyword 'arena_size'.")
 
     # Handle NaN positions by converting to a Masked Array
     position = np.ma.masked_invalid(position)
@@ -108,7 +105,7 @@ def spatial_occupancy(time, position, speed, **kwargs):
     pos = np.array([position[0, :][good],
                     position[1, :][good]])
 
-    occupancy_map, bin_edges = opexebo.general.accumulate_spatial(pos, **kwargs)
+    occupancy_map, bin_edges = opexebo.general.accumulate_spatial(pos, arena_size, **kwargs)
     if debug:
         print(f"Frames included in histogram: {np.sum(occupancy_map)}"\
               f" ({np.sum(occupancy_map)/len(time):3})")
@@ -130,7 +127,7 @@ def spatial_occupancy(time, position, speed, **kwargs):
     # Does not take account of a circular arena, where not all locations are
     # accessible
 
-    arena_size = kwargs.get("arena_size")
+#    arena_size = kwargs.get("arena_size")
     shape = kwargs.get("arena_shape", default.shape)
 
     if shape.lower() in default.shapes_square:

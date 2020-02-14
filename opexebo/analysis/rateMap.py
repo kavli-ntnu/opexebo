@@ -7,7 +7,7 @@ import opexebo
 import opexebo.defaults as default
 
 
-def rate_map(occupancy_map, spikes_tracking, **kwargs):
+def rate_map(occupancy_map, spikes_tracking, arena_size, **kwargs):
     ''' Calculate the spatially correlated firing rate map
 
     The rate map is calculated by the number of spikes in a bin divided by the
@@ -26,6 +26,11 @@ def rate_map(occupancy_map, spikes_tracking, **kwargs):
         Nx3 or Nx4 array of spikes tracking: [t, speed, x] or [t, speed, x, y].
         Speeds are used for the same purpose as in Spatialoccupancy - spikes
         occurring with an instaneous speed below the threshold are discarded
+    arena_size: float or tuple of floats
+        Dimensions of arena (in cm)
+            * For a linear track, length
+            * For a circular arena, diameter
+            * For a rectangular arena, length or (length, length)
     speed_cutoff: float
         Timestamps with instantaneous speed beneath this value are ignored. Default 0
     bin_width: float
@@ -46,11 +51,6 @@ def rate_map(occupancy_map, spikes_tracking, **kwargs):
         to generate default limits.
         As is standard in python, acceptable values include the lower bound
         and exclude the upper bound
-    arena_size: float or tuple of floats
-        Dimensions of arena (in cm)
-            * For a linear track, length
-            * For a circular arena, diameter
-            * For a rectangular arena, length or (length, length)
 
     Returns
     -------
@@ -87,10 +87,6 @@ def rate_map(occupancy_map, spikes_tracking, **kwargs):
             " dimensions as positions ([t, s, x] or [t, s, x, y]). You have provided"\
             f" {dims_s} columns of spikes, and {dims_p} columns of positions")
 
-    if "arena_size" not in kwargs:
-        raise KeyError("No arena dimensions provided. Please provide the"\
-                    " dimensions of the arena by using keyword 'arena_size'.")
-
     if isinstance(occupancy_map, np.ndarray):
         occupancy_map = np.ma.MaskedArray(occupancy_map)
 
@@ -106,7 +102,7 @@ def rate_map(occupancy_map, spikes_tracking, **kwargs):
         spikes = np.array((spikes_x, spikes_y))
 
     # Histogram of spike positions
-    spike_map, _ = opexebo.general.accumulate_spatial(spikes, **kwargs)
+    spike_map, _ = opexebo.general.accumulate_spatial(spikes, arena_size, **kwargs)
 
     if spike_map.shape != occupancy_map.shape:
         raise ValueError("Rate Map and Occupancy Map must have the same"\

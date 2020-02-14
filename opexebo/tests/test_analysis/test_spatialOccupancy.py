@@ -55,7 +55,7 @@ def test_invalid_inputs():
         func(times, positions, speeds, arena_size = 1)
     
     # No arena size
-    with pytest.raises(KeyError):       
+    with pytest.raises(TypeError):       
         times = np.arange(n)
         positions = np.ones((2, n))
         speeds = np.ones(n)
@@ -71,8 +71,6 @@ def test_invalid_inputs():
         func(times, positions, speeds, arena_size = 1)
     
     print("test_invalid_inputs passed")
-        
-        
 
 #if __name__ == '__main__':
 #    test_circular_arena()

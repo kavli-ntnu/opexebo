@@ -5,7 +5,7 @@ from opexebo.general import validatekeyword__arena_size, bin_width_to_bin_number
 import opexebo.defaults as default
 
 
-def accumulate_spatial(pos, **kwargs):
+def accumulate_spatial(pos, arena_size, **kwargs):
     """
     Given a list of positions, create a histogram of those positions. The
     resulting histogram is typically referred to as a map.
@@ -33,6 +33,11 @@ def accumulate_spatial(pos, **kwargs):
     pos: np.ndarray
         1D or 2D array of positions  in row-major format, i.e. `x` = pos[0],
         `y` = pos[1]. This matches the simplest input creation pos = np.array( [`x`, `y`] )
+    arena_size: float or tuple of floats
+        Dimensions of arena (in cm)
+            * For a linear track, length
+            * For a circular arena, diameter
+            * For a rectangular arena, length or (length, length)
     bin_width: float
         Bin size in cm. Default 2.5cm. If bin_width is supplied, `limit` must
         also be supplied. One of `bin_width`, `bin_number`, `bin_edges` must be
@@ -51,11 +56,6 @@ def accumulate_spatial(pos, **kwargs):
         to generate default limits.
         As is standard in python, acceptable values include the lower bound
         and exclude the upper bound
-    arena_size: float or tuple of floats
-        Dimensions of arena (in cm)
-            * For a linear track, length
-            * For a circular arena, diameter
-            * For a rectangular arena, length or (length, length)
 
     Returns
     -------
@@ -87,7 +87,7 @@ def accumulate_spatial(pos, **kwargs):
 
     # Get kwargs values
     debug = kwargs.get("debug", False)
-    arena_size = kwargs.get("arena_size")
+#    arena_size = kwargs.get("arena_size")
     limits = kwargs.get("limits", None)
     if not isinstance(limits, (tuple, list, np.ndarray, type(None))):
         raise ValueError("You must provide an array-like 'limits' value, e.g."\
