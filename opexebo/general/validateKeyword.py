@@ -92,7 +92,7 @@ def validate_keyword_arena_shape(arena_shape):
     if arena_shape in default.shapes_square:
         # this is ok
         pass
-    elif arena_shape in default.shapes_circ:
+    elif arena_shape in default.shapes_circle:
         # this is ok
         pass
     elif arena_shape in default.shapes_linear:

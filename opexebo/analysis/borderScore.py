@@ -35,62 +35,54 @@ def border_score(rate_map, fields_map, fields, **kwargs):
     
     Parameters
     ----------
-    rate_map    :   np.ma.MaskedArray
+    rate_map:   np.ma.MaskedArray
         rate map: N x M array where each cell value is the firing rate of the cell
-    fields_map  :   np.ma.MaskedArray
+    fields_map:   np.ma.MaskedArray
         Integer array of labelled fields. Each cell value is a positive integer. 
         Cells that are members of field have the value corresponding to field_id 
         (non-zero positive  unique integers. Not necessarily contiguous 
         (e.g. 1, 2, 3, 5)). Cells that are not members of fields have value zero
-    fields      :  list of  dict
+    fields:  list of  dict
         List of dictionaries of firing fields. 
         Each dictionary must, at least, contain the keyword "field_map", yielding a 
         binary map of that field within the overall arena
-    kwargs
-        arena_shape : str
-            accepts: ("square", "rectangle", "rectangular", "rect", "s", "r")
-                    ("circ", "circular", "circle", "c")
-                    ("linear", "line", "l")
-            Rectangular and square are equivalent. Elliptical or n!=4 polygons
-            not currently supported. Defaults to Rectangular
-        search_width : int
-            rate_map and fields_map have masked values, which may occur within 
-            the region of border  pixels. To mitigate this, we check rows/columns
-            within search_width pixels of the border.
-            If no value is supplied, default 8
-        walls : str
-            Definition of walls along which the border score is calculated. Provided by
-            a string which contains characters that stand for walls:
-                      T - top wall (we assume the bird-eye view on the arena)
-                      R - right wall
-                      B - bottom wall
-                      L - left wall
-                      Characters are case insensitive. Default value is 'TRBL' 
-                      meaning that border score is calculated along all walls.
-                      Any combination is possible, e.g.  'R' to calculate along
-                      right wall, 'BL' to calculate along two walls, e.t.c.
+    arena_shape: {"square", "rect", "circle", "line"}
+        Rectangular and square are equivalent. Elliptical or n!=4 polygons
+        not currently supported. Defaults to Rectangular
+    search_width: int
+        rate_map and fields_map have masked values, which may occur within 
+        the region of border  pixels. To mitigate this, we check rows/columns
+        within search_width pixels of the border.
+        If no value is supplied, default 8
+    walls: str
+        Definition of walls along which the border score is calculated. Provided by
+        a string which contains characters that stand for walls:
+                  * T - top wall (we assume the bird-eye view on the arena)
+                  * R - right wall
+                  * B - bottom wall
+                  * L - left wall
+        Characters are case insensitive. Default value is 'TRBL' meaning that border
+        score is calculated along all walls. Any combination is possible, e.g.
+        'R' to calculate along right wall, 'BL' to calculate along two walls, e.t.c.
 
     Returns
     -------
-    score   : float
+    score: float
         Border score in the range [-1, 1].
         A value of -1 is given when no fields are provided
 
-
-    See also
+    See Also
     --------
-    BNT.+analyses.placefield
-    BNT.+analyses.borderScore
-    BNT.+analyses.borderCoverage
     opexebo.analysis.placefield
     opexebo.analysis.bordercoverage
+
+    Notes
+    -----
+    * BNT.+analyses.placefield
+    * BNT.+analyses.borderScore
+    * BNT.+analyses.borderCoverage
         
     Copyright (C) 2019 by Simon Ball
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or
-    (at your option) any later version.
     '''
 
     # Check that fields exist
