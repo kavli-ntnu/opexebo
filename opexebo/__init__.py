@@ -13,6 +13,7 @@ defaults
     default values for keyword analysis parameters
 """
 from opexebo import defaults
+from opexebo import errors
 from opexebo import analysis
 from opexebo import general
 
