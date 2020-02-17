@@ -16,7 +16,7 @@ print("=== tests_general_accumulate_spatial ===")
 
 def test_invalid_inputs():
     # No `arena_size` keyword
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         pos = np.random.rand(100)
         func(pos)
     # Misdefined bins

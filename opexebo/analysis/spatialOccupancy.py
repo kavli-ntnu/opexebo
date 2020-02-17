@@ -137,7 +137,7 @@ def spatial_occupancy(time, position, speed, arena_size, **kwargs):
             diameter = arena_size
         elif isinstance(arena_size, (tuple, list, np.ndarray)):
             diameter = arena_size[0]
-        in_field, _ = opexebo.general.circular_mask(bin_edges, diameter)
+        in_field, _, _ = opexebo.general.circular_mask(bin_edges, diameter)
         coverage = np.count_nonzero(occupancy_map) / (np.sum(in_field))
         coverage = min(1.0, coverage)
         # Due to the thresholding, coverage might be calculated to be  > 1

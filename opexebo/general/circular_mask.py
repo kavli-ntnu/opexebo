@@ -31,6 +31,10 @@ def circular_mask(axes, diameter, **kwargs):
     distance_map: np.ndarray
         2D float array of same size. Values are the distance of the centre of
         the pixel from the origin
+    angular_map: np.ndarray
+        2D float array of the same size. Values are the angle from the origin
+        to the pixel, in degrees. Angles are given with 0° pointing to increasing
+        `y`, clockwise. 
     '''
     origin = kwargs.get("origin", (0,0))
     radius = diameter / 2
@@ -39,5 +43,7 @@ def circular_mask(axes, diameter, **kwargs):
     y_centres = axes[1][:-1] + (bin_width[1] / 2) - origin[1]
     X, Y = np.meshgrid(x_centres, y_centres)
     distance_map = np.sqrt(np.power(X,2) + np.power(Y,2))
-    in_field = distance_map<=radius
-    return in_field, distance_map
+    angular_map_rad = np.arctan2(Y, X).transpose()
+    angular_map_deg = np.degrees(angular_map_rad) % 360
+    in_field = (distance_map <= radius)
+    return in_field, distance_map, angular_map_deg
