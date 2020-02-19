@@ -60,9 +60,9 @@ def test_perfect_grid_cell():
 #    plt.figure()
 #    plt.imshow(acorr)
 #    plt.show()
-    gs, stats = func(acorr, debug=True, search_method="default")#"sep")
-    print(gs)
-    print(stats)
+    gs, stats = func(acorr, debug=True, search_method="default")
+    assert stats["grid_ellipse_aspect_ratio"] > 0.985
+    assert stats["grid_ellipse_aspect_ratio"] < 1.15
 
 #if __name__ == '__main__':
 #    test_perfect_grid_cell()
