@@ -1,7 +1,7 @@
 import numpy as np
-import warnings
 import opexebo.defaults as default
 from skimage import measure, morphology
+from scipy.ndimage import distance_transform_cdt
 
 
 #import sep
@@ -27,7 +27,7 @@ def peak_search(image, **kwargs):
     image: np.ndarray
         1D or 2D array of data
     search_method : str, optional, {"default", "sep"}
-    mask : np.ndarray
+    mask : np.ndarray, optional
         Array of masked locations in the image with the same dimensions.
         Locations where the mask value is True are ignored for the purpose of
         searching.
@@ -85,19 +85,33 @@ def peak_search(image, **kwargs):
 def _peak_search_skimage(image, **kwargs):
     '''Default peak detection method:
         skimage.morphology.get_m**ima (either minima or maxima)
+    Since skimage doesn't handle masked arrays, the masking is a bit of a bodge
+    job here. The basic plan is as follows:
+        * Set the area of the image covered by the mask to a value that cannot include a maxima (or minima, as appropriate)
+        * Search for peak coordinates
+        * Check if, after rounding, any of the peaks are outside the image dimensions
+        * Check if, after rounding, any of the peaks are extremely close to the mask
+    
+    Since the mask is a ahrd-edged area, if there is even a slight rise just
+    outside it, spurious peaks can be detected. Therefore, we automatically reject
+    any peaks for a short distance outside the actual mask
+    
     '''
+    connectivity = 2
     get_maxima = kwargs.get("maxima", True)
     mask = kwargs.get("mask", np.zeros(image.shape, dtype=bool))
     image_copy = image.copy()
     if get_maxima:
-        image_copy[mask] = 0
-        regionalMaxMap = morphology.local_maxima(image_copy, connectivity=2, allow_borders=True)
+        image_copy[mask] = np.nanmin(image_copy)
+        regionalMaxMap = morphology.local_maxima(image_copy, connectivity=connectivity, allow_borders=True)
     else:
-        image_copy[mask] = np.max(image_copy)
-        regionalMaxMap = morphology.local_minima(image_copy, connectivity=2, allow_borders=True)
-    labelled_max = measure.label(regionalMaxMap, connectivity=2)
+        image_copy[mask] = np.nanmax(image_copy)
+        regionalMaxMap = morphology.local_minima(image_copy, connectivity=connectivity, allow_borders=True)
+    labelled_max = measure.label(regionalMaxMap, connectivity=connectivity)
     regions = measure.regionprops(labelled_max)
     peak_coords = np.zeros(shape=(len(regions), 2), dtype=np.int)
+    
+    distance_from_mask = distance_transform_cdt(image_copy * (1-mask))
 
     for i, props in enumerate(regions):
         y0, x0 = props.centroid
@@ -108,8 +122,10 @@ def _peak_search_skimage(image, **kwargs):
         for j in range(image_copy.ndim):
             if peak[j] > image_copy.shape[j]:
                 peak[j] = image_copy.shape[j] - 1
-
-        peak_coords[i, :] = peak
+        
+        peak_index = tuple(np.round(peak, 0).astype(int)) # indexing with a floating point array sucks, so convert to a more convenient form
+        if distance_from_mask[peak_index] > 2*connectivity:
+            peak_coords[i, :] = peak
     return peak_coords
 
 

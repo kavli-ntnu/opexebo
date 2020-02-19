@@ -127,7 +127,6 @@ def spatial_occupancy(time, position, speed, arena_size, **kwargs):
     # Does not take account of a circular arena, where not all locations are
     # accessible
 
-#    arena_size = kwargs.get("arena_size")
     shape = kwargs.get("arena_shape", default.shape)
 
     if shape.lower() in default.shapes_square:
