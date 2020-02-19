@@ -34,7 +34,7 @@ def tuning_curve(angular_occupancy, spike_angles, **kwargs):
         unsmoothed array of firing rate as a function of angle
         Nx1 array
 
-    See also
+    Notes
     --------
     BNT.+analyses.turningcurve
 
