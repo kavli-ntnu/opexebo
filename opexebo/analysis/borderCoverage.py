@@ -2,9 +2,6 @@
 
 import numpy as np
 from scipy.ndimage import distance_transform_edt
-import cv2
-# TODO TODO TODO
-import matplotlib.pyplot as plt
 
 import opexebo.defaults as default
 from opexebo.general import validate_keyword_arena_shape, circular_mask
@@ -31,10 +28,13 @@ def border_coverage(fields, arena_shape, **kwargs):
     Parameters
     ----------
     fields: dict or list of dicts
-        One dictionary per field. Each dictionary must contain the keyword "map"
+        One dictionary per field. Each dictionary must contain the keyword field_map
     arena_shape: {"square", "rect", "circle", "line"}
         Rectangular and square are equivalent. Elliptical or n!=4 polygons
-        not currently supported. Defaults to Rectangular
+        not currently supported.
+    
+    Other Parameters
+    ----------------
     search_width: int
         rate_map and fields_map have masked values, which may occur within the
         region of border pixels. To mitigate this, we check rows/columns within
@@ -80,8 +80,9 @@ def border_coverage(fields, arena_shape, **kwargs):
     Copyright (C) 2019 by Simon Ball
     '''
     # Process input arguments
-    debug= kwargs.get("debug", False)
+    debug = kwargs.get("debug", False)
     arena_shape = validate_keyword_arena_shape(arena_shape)
+    kw_field_map = "field_map"
     
     if arena_shape in default.shapes_square:
         calculate_coverage = _calculate_coverage_rect
@@ -96,8 +97,8 @@ def border_coverage(fields, arena_shape, **kwargs):
     elif not isinstance(fields, (list, tuple, np.ndarray)):
         raise ValueError(f"You must supply either a dictionary, or list of dictionaries, of fields. You provided type '{type(fields)}'")
     for i, field in enumerate(fields):
-        if "map" not in field.keys():
-            raise KeyError(f"field dictionary {i} does not have keyword 'map'.")
+        if kw_field_map not in field.keys():
+            raise KeyError(f"field dictionary {i} does not have keyword '{kw_field_map}'.")
 
     # Extract keyword arguments or set defaults
     search_width = kwargs.get('search_width', default.search_width)
@@ -115,7 +116,7 @@ def border_coverage(fields, arena_shape, **kwargs):
 
     coverage = 0
     for field in fields:
-        fmap = field["map"]
+        fmap = field[kw_field_map]
         for wall in walls:
             c = calculate_coverage(fmap, wall, search_width, debug)
             coverage = max(coverage, c)
@@ -154,13 +155,13 @@ def _calculate_coverage_circ(fmap, wall, search_width, debug):
     
     # Create a border wall mask, and a distance map
     # use cv2 to 
-    raise NotImplementedError
+    raise NotImplementedError("Border Coverage is not currently functional for circular arenas")
     # Below - using cv2 to find the minimum enclosing circular contour
     # The trouble is this only works on the _entire_ ratemap (and it seems to work fairly well)
     # It won't work at all on single fields. 
     # At least it would need to be run on the entire, summed, fields_map. 
     # Better still, it would be run on the ratemap. 
-    '''
+    
     fmap_threshold = np.uint8(fmap>0)
     centres = cv2.findContours(fmap_threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
     x = y = radius = 0
@@ -175,7 +176,7 @@ def _calculate_coverage_circ(fmap, wall, search_width, debug):
     
     if debug:
         print(f"radius (bins): {radius}")
-    '''
+    
     
     
 
@@ -257,6 +258,7 @@ def _calculate_coverage_circ(fmap, wall, search_width, debug):
     # sort by border_distance and then work with co-ordinates to index between the three arrays (fmap, border_distance, angle)
     locations_to_search =  np.argwhere(border_distance_int == 0)
     if debug:
+        import matplotlib.pyplot as plt
         fig, ax = plt.subplots(ncols=2)
         ax[0].imshow(fmap)
         ax[1].imshow(border_distance_int)
