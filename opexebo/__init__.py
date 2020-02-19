@@ -13,9 +13,10 @@ defaults
     default values for keyword analysis parameters
 """
 from opexebo import defaults
+from opexebo import errors
 from opexebo import analysis
 from opexebo import general
 
 __author__ = """Simon Ball"""
 __email__ = 'simon.ball@ntnu.no'
-__version__ = '0.4.2'
+__version__ = '0.4.3'

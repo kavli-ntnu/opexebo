@@ -48,7 +48,7 @@ def test_rmap_invalid_inputs():
         tmap = np.ones(10)
         spikes = ([0.23,1], [0.5, 1.2], [0.75, -3]) #! spikes should be an ndarray
         func(tmap, spikes, arena_size=1)
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         tmap = np.ones((10,10))
         spikes = np.ones((3, 100)) # t, x, y
         func(tmap, spikes) #! missing arena_size
@@ -84,7 +84,7 @@ def test_1d_ratemap():
 def test_2d_ratemap():
     arena_size = (80, 120)
     bin_number = (16, 24)
-    tmap = np.ones(bin_number).T
+    tmap = np.ones(bin_number).T # Want to be [x] 16 by [y] 24, whereas Numpy writes this the opposite, so transpose
     n = 5000
     times = np.sort(np.random.rand(n)) * 1200 # 20 minute session
     speeds = np.random.rand(n) * 10 # linearly distributed speeds up to 10cm/s
@@ -95,10 +95,6 @@ def test_2d_ratemap():
     rmap = func(tmap, spikes_tracking, bin_number=bin_number, speed_cutoff=speed_cutoff, arena_size=arena_size)
     assert rmap.ndim == 2
     assert rmap.shape == tmap.shape
-    
-    
-    
-
 
 
 #if __name__ == '__main__':

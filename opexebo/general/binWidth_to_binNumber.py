@@ -9,14 +9,14 @@ def bin_width_to_bin_number(length, bin_width):
     
     Parameters
     ----------
-    length : float or np.ndarray
+    length: float or np.ndarray
         Length of a side to be divided into equally spaced bins
-    bin_width : float
+    bin_width: float
         Dimension of a square bin or pixel
     
     Returns
     -------
-    num_bins : int or np.ndarray
+    num_bins: int or np.ndarray
         Same type as `length`. Integer number of bins.
     '''
     if type(length) in (list, tuple):

@@ -2,6 +2,9 @@
 
 import numpy as np
 
+import opexebo.defaults as default
+from opexebo.errors import ArgumentError
+
 def validatekeyword__arena_size(kwv, provided_dimensions):
     '''
     Decipher the possible meanings of the keyword "arena_size".
@@ -11,8 +14,8 @@ def validatekeyword__arena_size(kwv, provided_dimensions):
     
     Parameters:
     ----------
-    kw : float or array-like of floats
-        The value given for the keyword "arena_size
+    kw: float or array-like of floats
+        The value given for the keyword `arena_size`
     provided_dimensions : int
         the number of spatial dimensions provided to the original function.
         Acceptable values are 1 or 2
@@ -64,3 +67,40 @@ def validatekeyword__arena_size(kwv, provided_dimensions):
                          " provide either a float or a tuple of 2 floats. Value"\
                          " provided: '%s'" % str(kwv))
     return arena_size, is_2d
+
+
+def validate_keyword_arena_shape(arena_shape):
+    '''
+    Ensure that the arena_shape is a meaningful value
+    
+    Parameters
+    ----------
+    arena_shape : str
+        the value given for the keyword `arena_shape`
+    
+    Returns
+    -------
+    arena_shape : str
+        A value that is guaranteed to be an acceptable member of one of the
+        recognised groups of arena_shapes
+    '''
+    if not isinstance(arena_shape, str):
+        raise ArgumentError("Keyword `arena_shape` must be a string, not type `{type(arena_shape)}`")
+    else:
+        arena_shape = arena_shape.lower()
+    
+    if arena_shape in default.shapes_square:
+        # this is ok
+        pass
+    elif arena_shape in default.shapes_circle:
+        # this is ok
+        pass
+    elif arena_shape in default.shapes_linear:
+        # this is ok
+        pass
+    else:
+        raise NotImplementedError(f"Arena shape '{arena_shape}' not implemented")
+    
+    return arena_shape
+    
+    

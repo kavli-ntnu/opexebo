@@ -22,51 +22,52 @@ def place_field(firing_map, **kwargs):
 
     Parameters
     ----------
-    firing_map : np.ndarray or np.ma.MaskedArray
+    firing_map: np.ndarray or np.ma.MaskedArray
         smoothed rate map.
         If supplied as an np.ndarray, it is assumed that the map takes values
         of np.nan at locations of zero occupancy. If supplied as an np.ma.MaskedArray,
         it is assumed that the map is masked at locations of zero occupancy
-    **kwargs
-        min_bins : int
-            Fields containing fewer than this many bins will be discarded.
-            Default 9
-        min_peak : float
-            Fields with a peak firing rate lower than this absolute value will
-            be discarded. Default 1 Hz
-        min_mean : float
-            Fields with a mean firing rate lower than this absolute value will
-            be discarded. Default 0 Hz
-        init_thresh : float
-            Initial threshold to search for fields from. Must be in the range [0, 1].
-            Default 0.96
-        search_method : str
-            Peak detection finding method. By default, use skimage.morphology.local_maxima
-            Acceptable values are defined in opexebo.defaults.
-            Not required if peak_coords are provided
-        peak_coords : array-like
-            List of peak co-ordinates to consider instead of auto detection
-            Default None
+    
+    Other Parameters
+    ----------------
+    min_bins: int
+        Fields containing fewer than this many bins will be discarded. Default 9
+    min_peak: float
+        Fields with a peak firing rate lower than this absolute value will
+        be discarded. Default 1 Hz
+    min_mean: float
+        Fields with a mean firing rate lower than this absolute value will
+        be discarded. Default 0 Hz
+    init_thresh: float
+        Initial threshold to search for fields from. Must be in the range [0, 1].
+        Default 0.96
+    search_method: str
+        Peak detection finding method. By default, use `skimage.morphology.local_maxima`
+        Acceptable values are defined in `opexebo.defaults`. Not required if 
+        peak_coords are provided
+    peak_coords: array-like
+        List of peak co-ordinates to consider instead of auto detection. [y, x].
+        Default None
 
     Returns
     -------
-    fields : list (of dict)
-        coords : np.ndarray
+    fields: list of dict
+        coords: np.ndarray
             Coordinates of all bins in the firing field
-        peak_coords : np.ndarray
+        peak_coords: np.ndarray
             Coordinates peak firing rate [y,x]
         centroid_coords: np.ndarray
             Coordinates of centroid (decimal) [y,x]
-        area : int
+        area: int
             Number of bins in firing field. [bins]
-        bbox : tuple
+        bbox: tuple
             Coordinates of bounding box including the firing field
             (y_min, x_min, y_max, y_max)
-        mean_rate : float
+        mean_rate: float
             mean firing rate [Hz]
-        peak_rate : float
+        peak_rate: float
             peak firing rate [Hz]
-        map : np.ndarray
+        map: np.ndarray
             Binary map of arena. Cells inside firing field have value 1, all
             other cells have value 0
     fields_map : np.ndarray
@@ -79,18 +80,13 @@ def place_field(firing_map, **kwargs):
     NotImplementedError
         non-defined peack searching methods
 
-    See also
+    Notes
     --------
     BNT.+analyses.placefieldAdaptive
 
     https://se.mathworks.com/help/images/understanding-morphological-reconstruction.html
 
     Copyright (C) 2018 by Vadim Frolov, (C) 2019 by Simon Ball, Horst Obenhaus
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or
-    (at your option) any later version.
     '''
     ##########################################################################
     #####                   Part 1: Handle inputs

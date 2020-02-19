@@ -4,7 +4,6 @@ import os
 import sys
 sys.path.insert(1, os.path.join(os.getcwd(), '..'))
 os.environ['HOMESHARE'] = r'C:\temp\astropy'
-print(sys.path)
 
 import scipy.io as spio
 import numpy as np
@@ -18,8 +17,16 @@ print("=== tests_analysis_spatial_occupancy ===")
 
 
 def test_circular_arena():
-    # TODO!
-    pass
+    times = np.arange(5)
+    positions = np.array([[0,0], [1,0], [0,1], [-1,0], [0,-1]]).T - 1
+    speeds = np.ones(5)
+    kwargs = {"arena_shape":"circ", "arena_size":3, "bin_width":1, "speed_cutoff":0.1, "limits":(-2, 2.01, -2, 2.01)}
+    map, coverage, bin_edges = func(times, positions, speeds, **kwargs)
+#    import matplotlib.pyplot as plt
+#    plt.imshow(map)
+#    print(coverage, bin_edges)
+    
+    
 
 def test_linear_arena():
     # TODO!
@@ -48,7 +55,7 @@ def test_invalid_inputs():
         func(times, positions, speeds, arena_size = 1)
     
     # No arena size
-    with pytest.raises(KeyError):       
+    with pytest.raises(TypeError):       
         times = np.arange(n)
         positions = np.ones((2, n))
         speeds = np.ones(n)
@@ -64,8 +71,6 @@ def test_invalid_inputs():
         func(times, positions, speeds, arena_size = 1)
     
     print("test_invalid_inputs passed")
-        
-        
 
 #if __name__ == '__main__':
 #    test_circular_arena()

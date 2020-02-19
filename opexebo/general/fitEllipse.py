@@ -49,7 +49,7 @@ def fit_ellipse(X, Y):
         Ellipse orientation (in radians)
 
 
-    See also
+    Notes
     --------
     BNT.+general.fitEllipse
     opexebo.analysis.gridscore

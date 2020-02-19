@@ -64,7 +64,7 @@ def tuning_curve_stats(tuning_curve, **kwargs):
         arc_angle_rad : float
             Angle of the arc defined by percentile
 
-    See also
+    Notes
     --------
     BNT.+analyses.tcStatistics
 

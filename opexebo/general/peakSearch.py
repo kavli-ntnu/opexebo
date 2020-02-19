@@ -1,7 +1,7 @@
 import numpy as np
-import warnings
 import opexebo.defaults as default
 from skimage import measure, morphology
+from scipy.ndimage import distance_transform_cdt
 
 
 #import sep
@@ -16,35 +16,39 @@ def peak_search(image, **kwargs):
     """Given a 1D or 2D array, return a list of co-ordinates of the local 
     maxima or minima
     
-    Multiple searching techniques are provided
+    Multiple searching techniques are provided:
+        
+        * `default`: uses `skimage.morphology.get_maxima`
+        * `sep`: uses the Python wrapper to the Source Extractor astronomy tool
+          to identify peaks
     
     Parameters
     ----------
-    image : np.ndarray
+    image: np.ndarray
         1D or 2D array of data
-    kwargs
-        search_method : str
-        maxima : bool
-            If True, return the local maxima. Else, return the local minima.
-            Default True
-        mask : np.ndarray
-            Same dimensions as image, True where values of image are to be ignored
-            Only relevant to search method 'sep'
-        null_background : bool
-            Set the image background to zero for calculation purposes
-            Only relevant to 'sep' : astronomical images typically have both a 
-            background gradient and randomised noise in the image. SEP can
-            generate a compensation for this - but the images we typically work
-            with do not suffer the same problem. This should generally be True,
-            unless you know exactly why it shouldn't be. 
+    search_method : str, optional, {"default", "sep"}
+    mask : np.ndarray, optional
+        Array of masked locations in the image with the same dimensions.
+        Locations where the mask value is True are ignored for the purpose of
+        searching.
+    maxima: bool, optional
+        [`default` search method only] Define whether to search for maxima or
+        minima in the provided array
+    null_background: bool
+        [`sep` search method only] Set the image background to zero for
+        calculation purposes rather than attempt to calculate a background
+        gradient. This should generally be True, as our images are not directly
+        comparable to standard telescope output
+    threshold : float, optional
+        [`sep` search method only] Threshold for identifiying maxima area
     
     Returns
     -------
-    peak_coords : tuple
+    peak_coords: tuple
         Co-ordinates of peaks, in the form ((x0, x1, x2...), (y0, y1, y2...))
     
     
-    See also
+    Notes
     --------
     Copyright (C) 2019 by Simon Ball
     """
@@ -81,19 +85,33 @@ def peak_search(image, **kwargs):
 def _peak_search_skimage(image, **kwargs):
     '''Default peak detection method:
         skimage.morphology.get_m**ima (either minima or maxima)
+    Since skimage doesn't handle masked arrays, the masking is a bit of a bodge
+    job here. The basic plan is as follows:
+        * Set the area of the image covered by the mask to a value that cannot include a maxima (or minima, as appropriate)
+        * Search for peak coordinates
+        * Check if, after rounding, any of the peaks are outside the image dimensions
+        * Check if, after rounding, any of the peaks are extremely close to the mask
+    
+    Since the mask is a ahrd-edged area, if there is even a slight rise just
+    outside it, spurious peaks can be detected. Therefore, we automatically reject
+    any peaks for a short distance outside the actual mask
+    
     '''
+    connectivity = 2
     get_maxima = kwargs.get("maxima", True)
     mask = kwargs.get("mask", np.zeros(image.shape, dtype=bool))
     image_copy = image.copy()
     if get_maxima:
-        image_copy[mask] = 0
-        regionalMaxMap = morphology.local_maxima(image_copy, connectivity=2, allow_borders=True)
+        image_copy[mask] = np.nanmin(image_copy)
+        regionalMaxMap = morphology.local_maxima(image_copy, connectivity=connectivity, allow_borders=True)
     else:
-        image_copy[mask] = np.max(image_copy)
-        regionalMaxMap = morphology.local_minima(image_copy, connectivity=2, allow_borders=True)
-    labelled_max = measure.label(regionalMaxMap, connectivity=2)
+        image_copy[mask] = np.nanmax(image_copy)
+        regionalMaxMap = morphology.local_minima(image_copy, connectivity=connectivity, allow_borders=True)
+    labelled_max = measure.label(regionalMaxMap, connectivity=connectivity)
     regions = measure.regionprops(labelled_max)
     peak_coords = np.zeros(shape=(len(regions), 2), dtype=np.int)
+    
+    distance_from_mask = distance_transform_cdt(image_copy * (1-mask))
 
     for i, props in enumerate(regions):
         y0, x0 = props.centroid
@@ -104,8 +122,10 @@ def _peak_search_skimage(image, **kwargs):
         for j in range(image_copy.ndim):
             if peak[j] > image_copy.shape[j]:
                 peak[j] = image_copy.shape[j] - 1
-
-        peak_coords[i, :] = peak
+        
+        peak_index = tuple(np.round(peak, 0).astype(int)) # indexing with a floating point array sucks, so convert to a more convenient form
+        if distance_from_mask[peak_index] > 2*connectivity:
+            peak_coords[i, :] = peak
     return peak_coords
 
 
@@ -117,7 +137,6 @@ def _peak_search_sep_wrapper(firing_map, **kwargs):
     If the user tries to invoke the 'sep' routines, this will try to do so
     If it fails due to ModuleNotFound, it will use the default algorithm instead
     with a warning to the user
-    
     '''
     try:
         import sep
@@ -148,7 +167,7 @@ def _peak_search_sep(firing_map, **kwargs):
     import sep
     
     mask = kwargs.get("mask", np.zeros(firing_map.shape, dtype=bool))
-    null_background = kwargs.get("null_background", False)
+    null_background = kwargs.get("null_background", True)
     threshold = kwargs.get("threshold", 0.2)
     
     tmp_firing_map = firing_map.copy('C')

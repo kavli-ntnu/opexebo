@@ -9,8 +9,6 @@ def speed_score(spike_times, tracking_times, tracking_speeds, **kwargs):
     '''
     Calculate Speed score.
 
-    STATUS : EXPERIMENTAL
-
     Speed score is a correlation between cell firing *rate* and animal speed.
     The Python version is based on BNT.+scripts.speedScore. At Edvard's request,
     both the 2015 and 2016 scores are calculated. The primary difference is how
@@ -30,7 +28,7 @@ def speed_score(spike_times, tracking_times, tracking_speeds, **kwargs):
     Summary:
         * The intention is to correlate (spike firing rate) with (animal speed)
         * Convert an N-length array of spike firing times into an M-length array
-        of spike firing rates, where M is the same length as tracking times
+          of spike firing rates, where M is the same length as tracking times
         * Optional: smooth firing rates
         * Optional: smooth speeds
         * Optional: apply a bandpass filter to speeds
@@ -38,48 +36,49 @@ def speed_score(spike_times, tracking_times, tracking_speeds, **kwargs):
 
     Parameters
     ----------
-    spike_times : np.ndarray
+    spike_times: np.ndarray
         N-length array listing the times at which spikes occurred. [s]
 
-    tracking_times : np.ndarray
+    tracking_times: np.ndarray
         M-length array of time stamps of tracking frames
 
-    tracking_speeds : np.ndarray
+    tracking_speeds: np.ndarray
         M-length array of animal speeds at time stamps given in `tracking_times`
 
-    kwargs:
-        bandpass : str
-            Type of bandpass filter applied to animal speeds. Acceptable values
-            are:
-                * "none" - No speed based filtering is applied
-                * "fixed" - a fixed lower and upper speed bound are used, based
-                on keywords "lower_bound_speed", "upper_bound_speed"
-                * "adaptive" - a fixed lower speed bound is used, based on
-                keyword "lower_bound_speed"
-                    An upper speed bound is determined based on keywords
-                    "upper_bound_time" and "speed_bandwidth"
-        lower_bound_speed' : float
-            Speed in [cm/s] used as the lower edge of the speed bandpass filter
-            ("fixed" and "adaptive")
-        lower_bound_speed' : float
-            Speed in [cm/s] used as the upper edge of the speed bandpass filter
-            ("fixed" only)
-        upper_bound_time : float
-            Duration in [s] used for determining the upper edge of the speed
-            bandpass filter ("adaptive" only)
-        speed_bandwidth : float
-            Range of speeds in [cm/s] used for determining the upper edge of the
-            speed bandpass filter ("adaptive" only)
-        sigma: float
-            Standard deviation in [s] of Gaussian smoothing kernel for smoothing
-            both speed and firing rate data.
-        debug : bool
+    Other Parameters
+    ----------------
+    bandpass: str
+        Type of bandpass filter applied to animal speeds. Acceptable values
+        are
+            * `"none"` - No speed based filtering is applied
+            * `"fixed"` - a fixed lower and upper speed bound are used, based
+              on keywords `"lower_bound_speed"`, `"upper_bound_speed"`
+            * `"adaptive"` - a fixed lower speed bound is used, based on
+              keyword `"lower_bound_speed"`. An upper speed bound is determined
+              based on keywords `"upper_bound_time"` and "`speed_bandwidth"`
+        Default `none`
+    lower_bound_speed: float
+        Speed in [cm/s] used as the lower edge of the speed bandpass filter
+        (`"fixed"` and `"adaptive"`). Default 2cm/s
+    upper_bound_speed: float
+        Speed in [cm/s] used as the upper edge of the speed bandpass filter
+        (`"fixed"` only). Default 15cm/s
+    upper_bound_time: float
+        Duration in [s] used for determining the upper edge of the speed
+        bandpass filter (`"adaptive"` only). Default 10s
+    speed_bandwidth: float
+        Range of speeds in [cm/s] used for determining the upper edge of the
+        speed bandpass filter (`"adaptive"` only). Default 2cm/s
+    sigma: float
+        Standard deviation in [s] of Gaussian smoothing kernel for smoothing
+        both speed and firing rate data. Default 0.5s
+    debug: bool
 
     Returns
     -------
-    scores : dict
-        '2015' : float
-        '2016' : float
+    scores: dict
+        2015: float
+        2016: float
             Variations on the speed score. '2015' is based on the code in the paper
             above, but additionally including an upper speed filter
             '2016' is a modification involving a slightly different approach to
@@ -89,16 +88,11 @@ def speed_score(spike_times, tracking_times, tracking_speeds, **kwargs):
         Most useful in the case of the adaptive filter, because there is no
         other way to find out what was actually used.
 
-    See also
-    --------
+    Notes
+    -----
     BNT.+scripts.speedScore
 
     Copyright (C) 2019 by Simon Ball
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or
-    (at your option) any later version.
     '''
     # Check that the provided arrays have correct dimensions
     if spike_times.ndim != 1:

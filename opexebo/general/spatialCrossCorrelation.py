@@ -13,32 +13,35 @@ def spatial_cross_correlation(arr_0, arr_1, **kwargs):
 
     Parameters
     ----------
-    arr_0 : np.ndarray
+    arr_0: np.ndarray
         1d or 2d array. Must either contain no NaNs, or be an np.ma.MaskedArray
         with NaN values masked. 
     
-    arr_1 : np.ndarray
-        2nd array to correlate with. Must have the same dimensions as ratemap_0
+    arr_1: np.ndarray
+        2nd array to correlate with. Must have the same dimensions as `arr_0`
     
-    kwargs
-        row_major : bool
-            If the arrays are 2D, process first by row, or first by column.
-            Default True
+    Other Parameters
+    ----------------
+    row_major: bool, optional
+        If the arrays are 2D, process first by row, or first by column.
+        Default `True`
 
     Returns
     -------
-    output_single : float
+    output_single: float
         Pearson correlation coefficient between entire arrays. 2d input arrays
         are flattened to 1d to calculate
-    output_array : np.ndarray
+    output_array: np.ndarray
         1D array of pearson correlation coefficients, where the i'th value is
         the coefficient between the i'th rows (if row_major), or the i'th columns
         of the two arrays
         Return value is np.nan if 1d arrays are supplied
 
-    See Also
+    Notes
     --------
-    BNT.+analyses.spatialCrossCorrelation
+    BNT.+analyses.spatialCrossCorrelation()
+
+    Copyright (C) 2019 by Simon Ball
     '''
     debug = kwargs.get("debug", False)
     arr_0 = _check_single_array(arr_0, 0, **kwargs)

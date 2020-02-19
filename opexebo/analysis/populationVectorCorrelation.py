@@ -14,88 +14,80 @@ def population_vector_correlation(stack_0, stack_1, **kwargs):
     Take a single column through the stack (i.e. 1 single bin/location in
     arena, with a firing rate for each cell), from each stack
     
-    In the original MatLab implementation, three output modes were supported:
-    - 1D: (1x numYbins)
-        iterate over i
-            Take a 2D slice from each stack - all cells at all X positions at a
-            single Y position i
-            Reshape from 2D to 1D 
-            Calculate the Pearson correlation coefficient between the two 1D
-            arrays
-            The value of pv_corr[i] is the Pearson correlation coefficient
-            arising from Y position i
-    - 2D (numXbins x numYbins)
-        iterate over i
-            Take a 2D slice from each stack - all cells at all X positions at a
-            single Y position i
-            Calculate the 2D array (numXbins x numYbins) where the [j,k]th
-            value is the Pearson correlation coefficient between all
-            observations at the j'th X location in stack_left and the k'th
-            location in stack_right
-            The i'th row of pv_corr is the DIAGONAL of the correlation matrix
-            i.e. where j==k i.e. the correlation of the the SAME location in
-            each stack for all observations (numCells)
-    - 3D (numXbins x numYbins x iteration(=numYbins))
-        Same as 2D BUT take the whole correlation matrix, not the diagonal
-        i.e. the full [j,k] correlatio between all X locations
+    In the original MatLab implementation, three output modes were supported
+        * 1D: (`numYbins`) - iterate over `i`
+            1) Take a 2D slice from each stack - all cells at all `X` positions at a
+              single `Y` position `i`
+            2) Reshape from 2D to 1D 
+            3) Calculate the Pearson correlation coefficient between the two 1D
+              arrays
+            4) The value of `pv_corr_1d[i]` is the Pearson correlation coefficient
+              arising from `Y` position `i`
+        * 2D (`numXbins` x `numYbins`) - iterate over `i`
+            1) Take a 2D slice from each stack - all cells at all `X` positions at a
+              single `Y` position `i`
+            2) Calculate the 2D array (`numXbins` x `numYbins`) where the `[j,k]`th
+              value is the Pearson correlation coefficient between all
+              observations at the `j`'th `X` location in `stack_left` and the `k`'th
+              location in `stack_right`
+            3) The `i`'th row of `pv_corr_2d` is the DIAGONAL of the correlation matrix
+              i.e. where `j==k` i.e. the correlation of the the SAME location in
+              each stack for all observations (`numCells`)
+        * 3D (`numXbins` x `numYbins` x iteration(=`numYbins`))
+            Same as 2D BUT take the whole correlation matrix, not the diagonal
+            i.e. the full [j,k] correlatio between all X locations
     
     A note on correlation in Numpy vs Matlab
-        Matlab's `corr(a, b)` function returns the correlation of ab
-        Numpy's `corrcoef` function returns the normalised covariance matrix,
-        which is:
-                aa  ab
-                ba  aa
-        The normalised covariance matrix *should* be hermitian, but due to
-        floating point accuracy, this is not actually guaranteed
-        the MatLab function can be reproduced by taking either [0, 1] or [1,0]
-        of the normalised covariance matrix. 
     
-        If `a`, `b` are 2D matricies, then they should have shape
-            (num_variables, num_observations)
-        In the case of this function, where the iterator is over the Y values
-        of the rate map, that means:
-            (x_bins, num_cells)
-            
+    Matlab's `corr(a, b)` function returns the correlation of ab
+    Numpy's `corrcoef` function returns the normalised covariance matrix,
+    which is:
+            aa  ab
+            ba  aa
+    The normalised covariance matrix *should* be hermitian, but due to
+    floating point accuracy, this is not actually guaranteed
+    the MatLab function can be reproduced by taking either [0, 1] or [1,0]
+    of the normalised covariance matrix. 
+
+    If `a`, `b` are 2D matricies, then they should have shape `(num_variables, num_observations)`
+    In the case of this function, where the iterator is over the `Y` values
+    of the rate map, that means: `(x_bins, num_cells)`
 
     Parameters
     ----------
-    stack_0 : 3D array -or- list of 2D arrays
-    stack_1 : 3D array -or- list of 2D arrays
-        stack_x[i] should return the i'th ratemap. This corresponds to a 
+    stack_0: 3D array -or- list of 2D arrays
+    stack_1: 3D array -or- list of 2D arrays
+        `stack_x[i]` should return the `i`'th ratemap. This corresponds to a 
         constructor like:
-            np.zeros(num_layers, y_bins, x_bins)
+            `np.zeros(num_layers, y_bins, x_bins)`
+            
         Alternatively, a list or tuple of 2D arrays may be supplied:
-            stack_x = (ratemap_0, ratemap_1, ratemap_2, ...)
-    row_major : bool
-        Direction of iteration. If True, then each row is iterated over in turn
+            `stack_x` = (`ratemap_0`, `ratemap_1`, `ratemap_2`, ...)
+    row_major: bool
+        Direction of iteration. If `True`, then each row is iterated over in turn
         and correlation is calculated per row. 
-        If false, then each column is iterated over in turn, and correlation is 
+        If `False`, then each column is iterated over in turn, and correlation is 
         calculated per column. 
         Default True (same behavior as in BNT)
-            
 
     Returns
     -------
     (p1, p2, p3)
-    p1 : np.ndarray (1D, iterator x 1)
+    p1: np.ndarray (1D, iterator x 1)
         Array of Pearson correlation coefficients. i'th value is given by the 
         correlation of the i'th flattened slice of stack_0 to the i'th
         flattened slice  of stack_1
-    p2 : np.ndarray (2D, iterator x non-iterator)
-        
-        
-        
+    p2: np.ndarray (2D, iterator x non-iterator)
+        i'th row is the diagonal of the correlation matrix, i.e. the correlation
+        of the same location (location i) in each stack, i.e. where j==k
+    p3: np.ndarray(3D, iterator x non-iterator x non-iterator)
+        i'th array is the entire correlation matrix, rather than just the diagonal
 
-    See Also
+    Notes
     --------
     BNT.+analyses.populationVectorCorrelation
 
     Copyright (C) 2019 by Simon Ball
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or
-    (at your option) any later version.
     """
     debug = kwargs.get("debug", False)
     row_major = kwargs.get("row_major", True)

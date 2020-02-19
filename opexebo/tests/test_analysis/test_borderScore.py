@@ -69,7 +69,7 @@ def rmap1():
     f1 = field(f, (6,32), (3, 3), 10)
     rmap1 = f0 + f1
     fmap1 = rmap1>3
-    fields = [{"map":f0}, {"map":f1}]
+    fields = [{"field_map":f0}, {"field_map":f1}]
     return rmap1, fmap1, fields
 
 ###############################################################################
@@ -80,7 +80,8 @@ def test_zero_fields():
     rmap = np.zeros((40, 40))
     fmap = rmap.copy()
     fields = []
-    assert(func(rmap, fmap, fields) == -1)
+    bs, cov = func(rmap, fmap, fields, arena_shape="s")
+    assert(bs == -1)
     print("test_zero_fields() passed")
 
 def test_perfect_fields():
@@ -88,9 +89,8 @@ def test_perfect_fields():
     width and infinitesimal depth. Here we are testing with a 40x40 field, and
     a perfect score is 0.7288348...
     '''
-    result = func(*rmap1(), walls="B")
-    print(result)
-    assert(result >=0.728 and result <=0.729) 
+    bs, cov = func(*rmap1(), arena_shape="s", walls="B")
+    assert(bs >=0.728 and bs <=0.729) 
 
 
 
