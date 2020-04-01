@@ -1,5 +1,8 @@
 """Provide function for calculating coherence of a Rate Map"""
-
+# Hack to speed up the borked Astropy configuration search
+import os
+import pathlib
+os.environ["HOMESHARE"] = str(pathlib.Path.home())
 
 import numpy as np
 from astropy.convolution import convolve
