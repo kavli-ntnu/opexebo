@@ -13,7 +13,7 @@ import pytest
 import test_helpers as th
 from opexebo.general import circular_mask
 from opexebo.analysis import border_coverage as func
-from opexebo.analysis.borderCoverage import _validate_keyword_walls as validate_func
+from opexebo.analysis.border_coverage import _validate_keyword_walls as validate_func
 from opexebo.errors import ArgumentError
 
 print("=== tests_analysis_border_coverage ===")
