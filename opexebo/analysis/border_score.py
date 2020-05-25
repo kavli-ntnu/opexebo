@@ -1,8 +1,12 @@
 """Provide function for calculating a Border Score"""
 
-import cv2
 import numpy as np
 from scipy.ndimage import distance_transform_cdt
+try:
+    import cv2
+    HAS_CV2 = True
+except:
+    HAS_CV2 = False
 
 
 from opexebo.analysis import border_coverage
@@ -191,6 +195,8 @@ def _identify_border(rmap, arena_shape, debug=False):
         angle: np.ndarray, optional
             [Circular arenas only] Array of angles from the centre. 
     '''
+    if not HAS_CV2:
+        raise ImportError("You must install OpenCV to use this function: `pip install opencv-python`")
     out = {}
     if arena_shape in default.shapes_square:
         mask = np.ones(rmap.shape, dtype=bool)

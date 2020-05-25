@@ -22,9 +22,6 @@ def speed_score(spike_times, tracking_times, tracking_speeds, **kwargs):
     not the default behaviour, I have not (yet) added that Kalman filter to opexebo.
     Its addition is contingent on the score similarity to BNT.
 
-    Discussion on Python equivalent to matlab corr() is found here
-    https://stackoverflow.com/questions/16698811/what-is-the-difference-between-matlab-octave-corr-and-python-numpy-correlate
-
     Summary:
         * The intention is to correlate (spike firing rate) with (animal speed)
         * Convert an N-length array of spike firing times into an M-length array
@@ -106,9 +103,6 @@ def speed_score(spike_times, tracking_times, tracking_speeds, **kwargs):
                          f" {tracking_speeds.ndim} dimensions")
     if tracking_times.size != tracking_speeds.size:
         raise ValueError("tracking_times and tracking_speeds must be the same length")
-
-    if np.isnan(tracking_speeds).any():
-        raise ValueError("tracking_speed cannot have NaN values")
 
     # Get kwargs values
     speed_bandwidth = kwargs.get('speed_bandwidth', default.speed_bandwidth)
@@ -221,7 +215,7 @@ def _bandpass_adaptive(speed, sampling_rate, lower_speed, upper_time, speed_bw, 
     if upper_speed is not None:
         _filter = _bandpass_fixed(speed, lower_speed, upper_speed, **kwargs)
     else:
-        raise ValueError(f"The animal did not speed {upper_time}s within a speed"\
+        raise ValueError(f"The animal did not spend {upper_time}s within a speed"\
                          f" bandwidth of {speed_bw} cm/s. Try using a"\
                          " larger speed-bandwidth")
     return _filter, upper_speed

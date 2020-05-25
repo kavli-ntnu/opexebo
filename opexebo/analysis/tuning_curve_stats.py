@@ -1,3 +1,8 @@
+# Hack to speed up the borked Astropy configuration search
+import os
+import pathlib
+os.environ["HOMESHARE"] = str(pathlib.Path.home())
+
 import numpy as np
 import astropy.stats.circstats as cs
 import opexebo.defaults as default
