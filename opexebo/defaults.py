@@ -47,7 +47,7 @@ power_spectrum_method = "welch"
 psd_resolution_welch = 1
 
 #: Default return scale, i.e. linear or decibel scale
-psd_return_scale = "linear"
+psd_return_scale = "log"
 
 
 
