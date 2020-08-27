@@ -15,7 +15,7 @@
 import os
 import sys
 import re
-sys.path.insert(0, os.path.abspath('../opexebo'))
+sys.path.insert(0, os.path.abspath('..'))
 
 os.environ['MPLBACKEND'] = 'Agg'  # avoid tkinter import errors on rtfd.io
 
