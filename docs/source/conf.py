@@ -25,6 +25,7 @@ os.environ['MPLBACKEND'] = 'Agg'  # avoid tkinter import errors on rtfd.io
 project = u'Opexebo'
 copyright = '2019, Simon Ball'
 author = 'Simon Ball'
+master_doc = 'index.rst'
 
 # The short X.Y version
 version = '0.5.0'
