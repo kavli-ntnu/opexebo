@@ -14,9 +14,9 @@ Contents
 .. toctree::
    :maxdepth: 2
    
-   installation
-   getting_started
-   detailed_doc
+   user_guide/installation
+   user_guide/getting_started
+   user_guide/detailed_doc
 
 
 
