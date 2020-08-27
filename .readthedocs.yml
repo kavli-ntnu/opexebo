@@ -23,6 +23,5 @@ sphinx:
 python:
   version: 3.6
   install:
-    - requirements: requirements.txt
     - requirements: dev-requirements.txt
   system_packages: true
