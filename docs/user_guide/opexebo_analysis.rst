@@ -31,7 +31,7 @@ Overview
 
 .. autosummary::
 	opexebo.analysis.population_vector_correlation
-	opexebo.analysis.theta_modulation
+	opexebo.analysis.theta_modulation_index
 	
 .. rubric:: Experimental
 

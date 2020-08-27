@@ -12,7 +12,7 @@ def validatekeyword__arena_size(kwv, provided_dimensions):
     "arena_size" is given to describe the arena in which the animal is moving
     It should be either a float, or an array-like of 2 floats (x, y)
     
-    Parameters:
+    Parameters
     ----------
     kw: float or array-like of floats
         The value given for the keyword `arena_size`

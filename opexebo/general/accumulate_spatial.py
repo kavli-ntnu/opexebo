@@ -9,10 +9,10 @@ def accumulate_spatial(pos, arena_size, **kwargs):
     """
     Given a list of positions, create a histogram of those positions. The
     resulting histogram is typically referred to as a map.
-
+    
     The complexity in this function comes down to selecting where the edges of
     the arena are, and generating the bins within those limits.
-
+    
     The histogram bin edges must be defined in one of 3 different ways
     
         * bin_width: based on the keyword `arena_size`, the number of bins will
