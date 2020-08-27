@@ -45,7 +45,7 @@ def smooth(data, sigma, **kwargs):
     The package is discussed at
     http://docs.astropy.org/en/stable/convolution/index.html
 
-    Parameters:
+    Parameters
     ----------
     data: np.ndarray or np.ma.MaskedArray
         Data that will be smoothed

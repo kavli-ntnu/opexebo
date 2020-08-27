@@ -15,9 +15,10 @@ Overview
     opexebo.general.upsample
 	opexebo.general.peak_search
     opexebo.general.circular_mask
-    opexebo.power_spectrum
-    opexebo.spatial_cross_correlation
+    opexebo.general.power_spectrum
+    opexebo.general.spatial_cross_correlation
 	opexebo.general.shuffle
+    
 
 .. rubric:: General Helper functions
 
