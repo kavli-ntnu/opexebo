@@ -1,5 +1,7 @@
 # opexebo
 
+
+[![Build Status](https://travis-ci.com/simon-ball/opexebo.svg?branch=master&status=passed)](https://travis-ci.com/simon-ball/opexebo)
 [![Documentation Status](https://readthedocs.org/projects/opexebo/badge/?version=latest)](https://opexebo.readthedocs.io/en/latest/?badge=latest)
 
 
