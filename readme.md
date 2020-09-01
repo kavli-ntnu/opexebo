@@ -1,7 +1,8 @@
 # opexebo
 
 
-[![Build Status](https://travis-ci.com/simon-ball/opexebo.svg?branch=master&status=passed)](https://travis-ci.com/simon-ball/opexebo)
+[![Build Status](https://travis-ci.com/kavli-ntnu/opexebo.svg?branch=master&status=passed)](https://travis-ci.com/kavli-ntnu/opexebo)
+[![codecov](https://codecov.io/gh/kavli-ntnu/opexebo/branch/master/graph/badge.svg)](https://codecov.io/gh/kavli-ntnu/opexebo)
 [![Documentation Status](https://readthedocs.org/projects/opexebo/badge/?version=latest)](https://opexebo.readthedocs.io/en/latest/?badge=latest)
 
 
