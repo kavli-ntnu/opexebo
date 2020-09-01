@@ -23,4 +23,4 @@ install:
 script:
   - python3 -m pytest ./opexebo
 after_success: 
-  - codecov
+  - bash <(curl -s https://codecov.io/bash)
