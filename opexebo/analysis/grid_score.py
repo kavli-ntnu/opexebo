@@ -5,7 +5,7 @@ Provide function for gridness score calculation.
 import numpy as np
 
 from scipy.spatial.distance import cdist
-from scipy.stats import pearsonr, circmean, circstd
+from scipy.stats import pearsonr
 from skimage import transform
 import opexebo
 import opexebo.defaults as default
@@ -153,7 +153,7 @@ def grid_score(aCorr, **kwargs):
         rotCorr = np.zeros_like(rotAngles_deg).astype(float)
         for j, angle in enumerate(rotAngles_deg):
             rotatedValues = rotatedACorr[mask, j]
-            r, p = pearsonr(aCorrValues, rotatedValues)
+            r, _ = pearsonr(aCorrValues, rotatedValues)
             rotCorr[j] = r
         GNS[i, 0] = np.min(rotCorr[[1, 3]]) - np.max(rotCorr[[0, 2, 4]])
         GNS[i, 1] = radius
@@ -395,7 +395,7 @@ def _draw_ellipse(x, y, rl, rs, theta):
 
 def _plotContours(img, contours):
     import matplotlib.pyplot as plt
-    fig, ax = plt.subplots()
+    _, ax = plt.subplots()
     ax.imshow(img, cmap='jet', origin='lower')
 
     centroids = np.zeros(shape=(len(contours), 2), dtype=float)
@@ -452,16 +452,25 @@ def _extract_grid_orientation(orientations):
         else:
             corr_orientations.append(orient)
 
+    corr_orientations = np.array(corr_orientations)
+    # Check 30 degree flips 
+    if np.mean(np.abs(np.abs(corr_orientations) - 30)) < np.mean(np.abs(corr_orientations)):
+        # Yes, angles close to 30 degrees (flipping axis)
+        # Try to reach consensus
+        if np.median(corr_orientations) < 0:
+            corr_orientations = np.negative(corr_orientations, where=corr_orientations<0)
+        else:
+            corr_orientations = np.positive(corr_orientations, where=corr_orientations>0)
+
     # Extract average and standard deviation
-    orientation     = circmean(corr_orientations, high=180., low=-180., nan_policy='omit')
-    orientation_std = circstd(corr_orientations,  high=180., low=-180., nan_policy='omit')
+    orientation     = np.nanmean(corr_orientations)
+    orientation_std = np.nanstd(corr_orientations)
 
     # Test / correct orientation 
     if np.argmin([np.abs(orientation-60), np.abs(orientation)]) == 0:
         orientation -= 60
 
     return orientation, orientation_std
-
 
 
 def _circ_dist2(X):
