@@ -5,7 +5,7 @@ Provide function for gridness score calculation.
 import numpy as np
 
 from scipy.spatial.distance import cdist
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, circmean, circstd
 from skimage import transform
 import opexebo
 import opexebo.defaults as default
@@ -313,8 +313,10 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
         # Convert from distance in bins to distance in units
         gs_spacings = distance[sorted_ids_ang][:3] * bin_width
         gs_orientations = np.degrees(orientation[sorted_ids_ang][:3]) % 180
+        # Work out mean orientation of grid. Take standard deviation as quality marker
+        gs_orientation, gs_orientations_std = _extract_grid_orientation(gs_orientations)
 
-        
+
         if debug:
             import matplotlib.pyplot as plt
             aCorr_masked = np.ma.masked_where(mask, aCorr.copy())
@@ -337,13 +339,6 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
             except np.linalg.LinAlgError as e:
                 print(f"LinAlgError: {e}")
                 print(f"Retuning NaN ellipse stats")
-
-        # Work out mean orientation of grid. Take standard deviation as quality marker
-        gs_orientation       = np.nanmean(gs_orientations % 60)
-        gs_orientations_std  = np.nanstd(gs_orientations % 60)
-        # Find out polarity of rotation
-        if np.argmin([np.abs(gs_orientation-60), np.abs(gs_orientation)]) == 0:
-            gs_orientation -= 60
 
     else:
         if debug: 
@@ -424,6 +419,49 @@ def _plotContours(img, contours):
     ax.set_yticks([])
     plt.show()
     return radii, centroids
+
+
+
+def _extract_grid_orientation(orientations):
+    '''
+    Extract grid orientation based on angular difference
+    of autocorrelation (aCorr) field coordinates to 60 degree axes. 
+
+    Parameter
+    ---------
+    orientations      : np.array
+                        (Raw) aCorr field angles in degrees 
+
+    Returns
+    -------
+    orientation       : float
+                        Grid orientation in degrees (average)
+    orientation_std   : float
+                        Standard deviation over grid field
+                        orientations
+    '''
+
+
+    orientations = orientations % 60 
+    corr_orientations = []
+    for orient in orientations: 
+        # For every angle extract min to 60 deg
+        diff_60 = orient - 60 
+        if np.abs(diff_60) < np.abs(orient): 
+            corr_orientations.append(diff_60)
+        else:
+            corr_orientations.append(orient)
+
+    # Extract average and standard deviation
+    orientation     = circmean(corr_orientations, high=180., low=-180., nan_policy='omit')
+    orientation_std = circstd(corr_orientations,  high=180., low=-180., nan_policy='omit')
+
+    # Test / correct orientation 
+    if np.argmin([np.abs(orientation-60), np.abs(orientation)]) == 0:
+        orientation -= 60
+
+    return orientation, orientation_std
+
 
 
 def _circ_dist2(X):
