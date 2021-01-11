@@ -457,10 +457,10 @@ def _extract_grid_orientation(orientations):
     if np.mean(np.abs(np.abs(corr_orientations) - 30)) < np.mean(np.abs(corr_orientations)):
         # Yes, angles close to 30 degrees (flipping axis)
         # Try to reach consensus
-        if np.median(corr_orientations) < 0:
-            corr_orientations = np.negative(corr_orientations, where=corr_orientations<0)
-        else:
-            corr_orientations = np.positive(corr_orientations, where=corr_orientations>0)
+        if np.median(corr_orientations) < 0: # Make everything negative
+            corr_orientations = np.negative(corr_orientations, where=corr_orientations>0, out=corr_orientations)
+        else: # Make everything positive
+            corr_orientations = np.negative(corr_orientations, where=corr_orientations<0, out=corr_orientations)
 
     # Extract average and standard deviation
     orientation     = np.nanmean(corr_orientations)
