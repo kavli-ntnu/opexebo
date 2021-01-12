@@ -153,7 +153,7 @@ def grid_score(aCorr, **kwargs):
         rotCorr = np.zeros_like(rotAngles_deg).astype(float)
         for j, angle in enumerate(rotAngles_deg):
             rotatedValues = rotatedACorr[mask, j]
-            r, p = pearsonr(aCorrValues, rotatedValues)
+            r, _ = pearsonr(aCorrValues, rotatedValues)
             rotCorr[j] = r
         GNS[i, 0] = np.min(rotCorr[[1, 3]]) - np.max(rotCorr[[0, 2, 4]])
         GNS[i, 1] = radius
@@ -313,8 +313,10 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
         # Convert from distance in bins to distance in units
         gs_spacings = distance[sorted_ids_ang][:3] * bin_width
         gs_orientations = np.degrees(orientation[sorted_ids_ang][:3]) % 180
+        # Work out mean orientation of grid. Take standard deviation as quality marker
+        gs_orientation, gs_orientations_std = _extract_grid_orientation(gs_orientations)
 
-        
+
         if debug:
             import matplotlib.pyplot as plt
             aCorr_masked = np.ma.masked_where(mask, aCorr.copy())
@@ -337,13 +339,6 @@ def grid_score_stats(aCorr, mask, centre, **kwargs):
             except np.linalg.LinAlgError as e:
                 print(f"LinAlgError: {e}")
                 print(f"Retuning NaN ellipse stats")
-
-        # Work out mean orientation of grid. Take standard deviation as quality marker
-        gs_orientation       = np.nanmean(gs_orientations % 60)
-        gs_orientations_std  = np.nanstd(gs_orientations % 60)
-        # Find out polarity of rotation
-        if np.argmin([np.abs(gs_orientation-60), np.abs(gs_orientation)]) == 0:
-            gs_orientation -= 60
 
     else:
         if debug: 
@@ -400,7 +395,7 @@ def _draw_ellipse(x, y, rl, rs, theta):
 
 def _plotContours(img, contours):
     import matplotlib.pyplot as plt
-    fig, ax = plt.subplots()
+    _, ax = plt.subplots()
     ax.imshow(img, cmap='jet', origin='lower')
 
     centroids = np.zeros(shape=(len(contours), 2), dtype=float)
@@ -424,6 +419,58 @@ def _plotContours(img, contours):
     ax.set_yticks([])
     plt.show()
     return radii, centroids
+
+
+
+def _extract_grid_orientation(orientations):
+    '''
+    Extract grid orientation based on angular difference
+    of autocorrelation (aCorr) field coordinates to 60 degree axes. 
+
+    Parameter
+    ---------
+    orientations      : np.array
+                        (Raw) aCorr field angles in degrees 
+
+    Returns
+    -------
+    orientation       : float
+                        Grid orientation in degrees (average)
+    orientation_std   : float
+                        Standard deviation over grid field
+                        orientations
+    '''
+
+
+    orientations = orientations % 60 
+    corr_orientations = []
+    for orient in orientations: 
+        # For every angle extract min to 60 deg
+        diff_60 = orient - 60 
+        if np.abs(diff_60) < np.abs(orient): 
+            corr_orientations.append(diff_60)
+        else:
+            corr_orientations.append(orient)
+
+    corr_orientations = np.array(corr_orientations)
+    # Check 30 degree flips 
+    if np.mean(np.abs(np.abs(corr_orientations) - 30)) < np.mean(np.abs(corr_orientations)):
+        # Yes, angles close to 30 degrees (flipping axis)
+        # Try to reach consensus
+        if np.median(corr_orientations) < 0: # Make everything negative
+            corr_orientations = np.negative(corr_orientations, where=corr_orientations>0, out=corr_orientations)
+        else: # Make everything positive
+            corr_orientations = np.negative(corr_orientations, where=corr_orientations<0, out=corr_orientations)
+
+    # Extract average and standard deviation
+    orientation     = np.nanmean(corr_orientations)
+    orientation_std = np.nanstd(corr_orientations)
+
+    # Test / correct orientation 
+    if np.argmin([np.abs(orientation-60), np.abs(orientation)]) == 0:
+        orientation -= 60
+
+    return orientation, orientation_std
 
 
 def _circ_dist2(X):
