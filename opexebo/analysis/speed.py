@@ -1,5 +1,9 @@
 import numpy as np
-from astropy.convolution import convolve
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    # Suppress the ConfigurationMissingWarning that Astropy triggers
+    from astropy.convolution import convolve
 
 
 def calc_speed(t, x, y=None, moving_average=None):

@@ -5,7 +5,11 @@ import pathlib
 os.environ["HOMESHARE"] = str(pathlib.Path.home())
 
 import numpy as np
-from astropy.convolution import convolve
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    # Suppress the ConfigurationMissingWarning that Astropy triggers
+    from astropy.convolution import convolve
 
 
 def rate_map_coherence(rate_map_raw):
