@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 
 from opexebo.analysis import speed_score as func
+from opexebo.errors import ArgumentError, SpeedBandwidthError
 
 print("=== tests_analysis_speedScore===")
 
@@ -11,14 +12,14 @@ def test_invalid_inputs():
     n = 1000
     # Wrong dimensions for inputs
     # Tracking times, speeds not the same size
-    with pytest.raises(ValueError):
+    with pytest.raises(ArgumentError):
         spike_times = np.sort(np.random.rand(n)) * n
         tracking_times = np.arange(n)
         tracking_speeds = np.random.rand(n + 10) * 30
         func(spike_times, tracking_times, tracking_speeds)
 
     # tracking_speeds wrong dimensions
-    with pytest.raises(ValueError):
+    with pytest.raises(ArgumentError):
         spike_times = np.sort(np.random.rand(n)) * n
         tracking_times = np.arange(n)
         tracking_speeds = np.random.rand(n, 2) * 30
@@ -33,7 +34,7 @@ def test_invalid_inputs():
         func(spike_times, tracking_times, tracking_speeds, bandpass=bandpass)
 
     # Impossibly high speed_bandwidth
-    with pytest.raises(ValueError):
+    with pytest.raises(SpeedBandwidthError):
         spike_times = np.sort(np.random.rand(n)) * n
         tracking_times = np.arange(n)
         tracking_speeds = np.random.rand(n) * 30
