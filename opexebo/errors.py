@@ -15,6 +15,7 @@ class ArgumentError(OpexeboError):
     Incorrect argument given in some way
     '''
 
+
 class SpeedBandwidthError(OpexeboError):
     """
     Raised if the Speedscore bandwidth calculation fails
