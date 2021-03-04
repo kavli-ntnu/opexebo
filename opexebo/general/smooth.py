@@ -5,7 +5,12 @@ import pathlib
 os.environ["HOMESHARE"] = str(pathlib.Path.home())
 
 import numpy as np
-from astropy.convolution import convolve, Gaussian2DKernel, Gaussian1DKernel
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    # Suppress the ConfigurationMissingWarning that Astropy triggers
+    from astropy.convolution import convolve, Gaussian2DKernel, Gaussian1DKernel
+
 import opexebo.defaults as default
 #http://docs.astropy.org/en/stable/convolution/index.html
 #
@@ -58,7 +63,7 @@ def smooth(data, sigma, **kwargs):
         from nearby cells. This will only apply if the input is a
         MaskedArray to start with. If the input is a standard np.ndarray,
         then no values will be substituted, even if there are nans present.
-    circle: bool, optional
+    circular: bool, optional
         If True, then smoothing at the edge of the array will be handled in
         a circular manner, i.e. the value to the left of data[0] will be
         data[-1]. If False, the edge will be handled by padding with values
@@ -133,5 +138,7 @@ def smooth(data, sigma, **kwargs):
     if type(data) == np.ma.MaskedArray:
         smoothed_data = np.ma.masked_where(data.mask, smoothed_data)
         smoothed_data.data[data.mask] = data.data[data.mask]
+    
+    assert smoothed_data.shape == data.shape, "Output array is a different shape to input array"
 
     return smoothed_data

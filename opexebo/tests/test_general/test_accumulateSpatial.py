@@ -87,6 +87,11 @@ def test_2d_bin_edges():
     hist, edges = func(pos, arena_size=arena_size, limits=limits, bin_edges=bin_edges)
     for i in range(2):
         assert np.array_equal(edges[i], bin_edges[i])
+    # Also test that passing in an array instead of a list works:
+    bin_edges = np.array(bin_edges)
+    hist, edges = func(pos, arena_size=arena_size, limits=limits, bin_edges=bin_edges)
+    for i in range(2):
+        assert np.array_equal(edges[i], bin_edges[i])
 
 
 if __name__ == "__main__":

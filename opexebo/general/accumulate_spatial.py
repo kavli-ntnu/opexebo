@@ -87,7 +87,6 @@ def accumulate_spatial(pos, arena_size, **kwargs):
 
     # Get kwargs values
     debug = kwargs.get("debug", False)
-#    arena_size = kwargs.get("arena_size")
     limits = kwargs.get("limits", None)
     if not isinstance(limits, (tuple, list, np.ndarray, type(None))):
         raise ValueError("You must provide an array-like 'limits' value, e.g."\
@@ -95,29 +94,30 @@ def accumulate_spatial(pos, arena_size, **kwargs):
 
     arena_size, is_2d = validatekeyword__arena_size(arena_size, dims)
 
-
-    # Handle the decision of bin_edges
+    
+    ###########################################################################
+    ####### Handle the decision of bin_edges
     # Logic:
         # If none are provided, use default bin_width
         # If more than 1 is provided, raise Exception
         # If bin_edges are provided, use them
         # Else use bin_width, if provided
         # Else use bin_number, if provided
-    bin_number = kwargs.get("bin_number", False)
-    bin_width = kwargs.get("bin_width", False)
-    bin_edges = kwargs.get("bin_edges", False)
-    if not bin_edges and not bin_width and not bin_number:
+    bin_number = kwargs.get("bin_number", None)
+    bin_width = kwargs.get("bin_width", None)
+    bin_edges = kwargs.get("bin_edges", None)
+    if bin_edges is None and bin_width is None and bin_number is None:
         # No bin decision was provided, so go with default
         bin_width = default.bin_width
         debug_bin_type = "default - bin_width"
-    elif sum([bool(bin_number), bool(bin_width), bool(bin_edges)]) != 1:
+    elif sum( [x is not None for x in (bin_edges, bin_width, bin_number)] ) != 1:
         # Count the number of values where a value other than False is present
         # If there are more than 1 "True" value, then the user has provided too many keywords
         raise KeyError("You have provided more than one method for determining"\
                        " the edges of the histogram. Only zero or one methods"\
                        " can be accepted.")
 
-    if bool(bin_edges):
+    if bin_edges is not None:
         # First priority: use predefined bin_edges
         # Remember - user provides (x, y), but histogram needs (y, x)
         if is_2d:
@@ -165,7 +165,8 @@ def accumulate_spatial(pos, arena_size, **kwargs):
         print(f"Binning type: {debug_bin_type}")
         print(f"bins : {bins}")
 
-    # Make the histogram
+    ###########################################################################
+    ###### Make the histogram
     if is_2d:
         x = pos[0]
         y = pos[1]

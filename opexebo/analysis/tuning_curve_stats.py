@@ -4,7 +4,12 @@ import pathlib
 os.environ["HOMESHARE"] = str(pathlib.Path.home())
 
 import numpy as np
-import astropy.stats.circstats as cs
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    # Suppress the ConfigurationMissingWarning that Astropy triggers
+    import astropy.stats.circstats as cs
+
 import opexebo.defaults as default
 
 

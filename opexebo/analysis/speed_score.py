@@ -3,6 +3,7 @@
 import numpy as np
 import opexebo.defaults as default
 import opexebo
+from opexebo.errors import SpeedBandwidthError, ArgumentError
 
 
 def speed_score(spike_times, tracking_times, tracking_speeds, **kwargs):
@@ -93,16 +94,16 @@ def speed_score(spike_times, tracking_times, tracking_speeds, **kwargs):
     '''
     # Check that the provided arrays have correct dimensions
     if spike_times.ndim != 1:
-        raise ValueError("spike_times must be an Nx1 array. You have provided"\
+        raise ArgumentError("spike_times must be an Nx1 array. You have provided"\
                          f" {spike_times.ndim} dimensions")
     elif tracking_times.ndim != 1:
-        raise ValueError("tracking_times must be an Nx1 array. You have provided"\
+        raise ArgumentError("tracking_times must be an Nx1 array. You have provided"\
                          f" {tracking_times.ndim} dimensions")
     elif tracking_speeds.ndim != 1:
-        raise ValueError("tracking_speeds must be an Nx1 array. You have provided"\
+        raise ArgumentError("tracking_speeds must be an Nx1 array. You have provided"\
                          f" {tracking_speeds.ndim} dimensions")
     if tracking_times.size != tracking_speeds.size:
-        raise ValueError("tracking_times and tracking_speeds must be the same length")
+        raise ArgumentError("tracking_times and tracking_speeds must be the same length")
 
     # Get kwargs values
     speed_bandwidth = kwargs.get('speed_bandwidth', default.speed_bandwidth)
@@ -215,7 +216,7 @@ def _bandpass_adaptive(speed, sampling_rate, lower_speed, upper_time, speed_bw, 
     if upper_speed is not None:
         _filter = _bandpass_fixed(speed, lower_speed, upper_speed, **kwargs)
     else:
-        raise ValueError(f"The animal did not spend {upper_time}s within a speed"\
+        raise SpeedBandwidthError(f"The animal did not spend {upper_time}s within a speed"\
                          f" bandwidth of {speed_bw} cm/s. Try using a"\
                          " larger speed-bandwidth")
     return _filter, upper_speed
