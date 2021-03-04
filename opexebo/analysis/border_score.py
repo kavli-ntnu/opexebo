@@ -195,13 +195,13 @@ def _identify_border(rmap, arena_shape, debug=False):
         angle: np.ndarray, optional
             [Circular arenas only] Array of angles from the centre. 
     '''
-    if not HAS_CV2:
-        raise ImportError("You must install OpenCV to use this function: `pip install opencv-python`")
     out = {}
     if arena_shape in default.shapes_square:
         mask = np.ones(rmap.shape, dtype=bool)
         out["mask"] = mask
-    elif arena_shape in default.shapes_circle:
+    elif arena_shape in default.shapes_circle:        
+        if not HAS_CV2:
+            raise ImportError("You must install OpenCV to use this function: `pip install opencv-python`")
         rmap_threshold = np.uint8(rmap>0)
         centres = cv2.findContours(rmap_threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
         x = y = radius = 0
@@ -218,5 +218,7 @@ def _identify_border(rmap, arena_shape, debug=False):
         out["angle"] = angle
         if debug:
             print(f"radius (bins): {radius}")
+    else:
+        raise NotImplementedError("arena shape '{}' not supported".format("arena_shape"))
     return out
         
