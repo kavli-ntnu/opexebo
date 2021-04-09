@@ -4,6 +4,7 @@ Provides function to calculate the spatial occupancy of the arena
 import numpy as np
 import opexebo
 from opexebo import defaults as default
+from opexebo import errors
 
 
 
@@ -69,26 +70,30 @@ def spatial_occupancy(time, position, speed, arena_size, **kwargs):
     bin_edges: ndarray or tuple of ndarray
         x, or (x, y), where x, y are 1d np.ndarrays
         Here x, y correspond to the output histogram
-
-    See Also
-    --------
-    opexebo.general.accumulate_spatial
-    opexebo.general.bin_width_to_bin_number
-
-    Notes
-    --------
-    BNT.+analyses.map
-
-    Copyright (C) 2019 by Simon Ball
     '''
     # Check for correct shapes.
-    dimensionality, num_samples = position.shape
+    # `positions` may be either 1D (x only) or 2D (x only, or x and y)
+    # Theremfore, must have ndim == 1 or 2
+    # ANd if ndim == 2, must have min(shape) == 1 or 2
+    dimensionality = position.ndim
+    num_dimensions_data = min(position.shape)
+    num_samples = max(position.shape)
     if dimensionality not in (1, 2):
-        raise ValueError("Positions array has the wrong number of columns (%d)" % dimensionality)
+        raise errors.ArgumentError(
+                "Positions array must be a 1D or 2D array, you have provided a"
+                " {}d array".format(dimensionality)
+                )
+    if dimensionality == 2 and num_dimensions_data not in (1, 2):
+        raise errors.ArgumentError(
+                "Positions array must contain either 1D data (x only) or 2D data"
+                " (x, y). You have provided {}d data".format(num_dimensions_data)
+                )
     if speed.ndim != 1:
-        raise ValueError("Speed array has the wrong number of columns")
+        raise errors.ArgumentError(
+                "Speed array has the wrong number of columns ({}, should be 1)".format(speed.ndim)
+                )
     if speed.size != num_samples:
-        raise ValueError("Speed array does not have the same number of samples as Positions")
+        raise errors.ArgumentError("Speed array does not have the same number of samples as Positions")
 
     # Handle NaN positions by converting to a Masked Array
     position = np.ma.masked_invalid(position)
@@ -102,8 +107,12 @@ def spatial_occupancy(time, position, speed, arena_size, **kwargs):
         print("Time stamp delta: %f" % np.min(np.diff(time)))
 
     good = np.ma.greater_equal(speed, speed_cutoff)
-    pos = np.array([position[0, :][good],
-                    position[1, :][good]])
+    # Mask `positions`, for either 1d or 2d (only accepted shapes)
+    
+    if dimensionality == 1:
+        pos = position[good]
+    elif dimensionality == 2:
+        pos = np.array([position[i, :][good] for i in range(min(position.shape))])
 
     occupancy_map, bin_edges = opexebo.general.accumulate_spatial(pos, arena_size, **kwargs)
     if debug:
@@ -142,8 +151,9 @@ def spatial_occupancy(time, position, speed, arena_size, **kwargs):
         # Due to the thresholding, coverage might be calculated to be  > 1
         # In this case, cut off to a maximum value of 1.
     elif shape.lower() in default.shapes_linear:
-        raise NotImplementedError("Spatial Occupancy does not currently"\
-                                  " support linear arenas")
+#        raise NotImplementedError("Spatial Occupancy does not currently"\
+#                                  " support linear arenas")
+        coverage = np.count_nonzero(occupancy_map) / occupancy_map.size
     else:
         raise NotImplementedError(f"Arena shape '{shape}' not understood")
 

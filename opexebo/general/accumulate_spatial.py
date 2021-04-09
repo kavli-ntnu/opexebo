@@ -67,19 +67,10 @@ def accumulate_spatial(pos, arena_size, **kwargs):
     edges: list-like
         `x`, or (`x`, `y`), where `x`, `y` are 1d np.ndarrays
         Here `x`, `y` correspond to the output histogram
-
-    See Also
-    --------
-    opexebo.general.bin_width_to_bin_number
-    
-    Notes
-    --------
-    BNT.+analyses.map()
-
-    Copyright (C) 2019 by Simon Ball
     """
 
     # Check correct inputs:
+    pos = np.squeeze(pos.copy()) 
     dims = pos.ndim
     if dims not in (1, 2):
         raise ValueError("pos should have either 1 or 2 dimensions. You have"\
