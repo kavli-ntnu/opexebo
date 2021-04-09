@@ -26,8 +26,17 @@ def test_circular_arena():
 
 
 def test_linear_arena():
-    # TODO!
-    pass
+    times = np.arange(5)
+    positions = np.arange(5)
+    speeds = np.ones(5)
+    kwargs = {
+            "arena_shape": "line",
+            "arena_size": 5,
+            "bin_width": 1,
+            "speed_cutoff": 0.1,
+            "limits": (0, 5)
+            }
+    map, cov, edges = func(times, positions, speeds, **kwargs)
 
 
 def test_invalid_inputs():
@@ -71,8 +80,8 @@ def test_invalid_inputs():
     print("test_invalid_inputs passed")
 
 
-# if __name__ == '__main__':
+#if __name__ == '__main__':
 #    test_circular_arena()
 #    test_linear_arena()
 #    test_invalid_inputs()
-#
+
