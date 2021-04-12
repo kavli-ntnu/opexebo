@@ -5,6 +5,7 @@ which the animal looked in each direction
 import numpy as np
 import opexebo
 import opexebo.defaults as default
+import opexebo.errors as errors
 
 
 def angular_occupancy(time, angle, **kwargs):
@@ -43,14 +44,16 @@ def angular_occupancy(time, angle, **kwargs):
     (at your option) any later version.
     '''
     if time.ndim != 1:
-        raise ValueError("time must be provided as a 1D array. You provided %d"\
+        raise errors.ArgumentError("time must be provided as a 1D array. You provided %d"\
                          " dimensions" % time.ndim)
     if angle.ndim != 1:
-        raise ValueError("angle must be provided as a 1D array. You provided %d"\
+        raise errors.ArgumentError("angle must be provided as a 1D array. You provided %d"\
                          " dimensions" % angle.ndim)
     if time.size != angle.size:
-        raise ValueError("Arrays 'time' and 'angle' must have the same number"\
+        raise errors.ArgumentError("Arrays 'time' and 'angle' must have the same number"\
                          f" of elements. You provided {time.size} and {angle.size}")
+    if time.size == 0:
+        raise errors.ArgumentError("Zero length array provided when data expected")
     if np.nanmax(angle) > 2*np.pi:
         raise Warning("Angles greater than 2pi detected. Please check that your"\
                       " angle array is in radians. If it is in degrees, you can"\
