@@ -133,6 +133,7 @@ def test_zero_fields_square():
     return True
 
 
+
 ###############################################################################
 ################                Circular arenas
 ###############################################################################
@@ -151,13 +152,13 @@ def test_zero_fields_square():
 #    print(cov)
 
 
-if __name__ == "__main__":
-    test_validate_func_square_correct_inputs()
-    test_validate_func_square_incorrect_inputs()
-    test_perfect_fields_square()
-    test_offset_perfect_field_square()
-    test_partial_field_square()
-    test_extended_field_square()
-    test_central_field_square()
-    test_zero_fields_square()
+#if __name__ == "__main__":
+#    test_validate_func_square_correct_inputs()
+#    test_validate_func_square_incorrect_inputs()
+#    test_perfect_fields_square()
+#    test_offset_perfect_field_square()
+#    test_partial_field_square()
+#    test_extended_field_square()
+#    test_central_field_square()
+#    test_zero_fields_square()
 #    test_perfect_field_circ()
