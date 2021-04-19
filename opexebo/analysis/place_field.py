@@ -8,6 +8,7 @@ from skimage import measure, morphology
 
 import opexebo
 import opexebo.defaults as default
+import opexebo.errors as err
 
 
 def place_field(firing_map, **kwargs):
@@ -100,15 +101,15 @@ def place_field(firing_map, **kwargs):
     debug = kwargs.get("debug", False)
 
     if not 0 < init_thresh <= 1:
-        raise ValueError("Keyword 'init_thresh' must be in the range [0, 1]."\
+        raise err.ArgumentError("Keyword 'init_thresh' must be in the range [0, 1]."\
                          f" You provided {init_thresh}")
     try:
         search_method = search_method.lower()
     except AttributeError:
-        raise ValueError("Keyword 'search_method' is expected to be a string"\
+        raise err.ArgumentError("Keyword 'search_method' is expected to be a string"\
                          f" You provided a {type(search_method)} ({search_method})")
     if search_method not in default.all_methods:
-        raise ValueError("Keyword 'search_method' must be left blank or given a"\
+        raise err.ArgumentError("Keyword 'search_method' must be left blank or given a"\
                          f" value from the following list: {default.all_methods}."\
                          f" You provided '{search_method}'.")
 

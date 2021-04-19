@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 
 from opexebo.analysis import place_field as func
+import opexebo.errors as err
 
 print("=== tests_analysis_placeField ===")
 
@@ -14,16 +15,16 @@ print("=== tests_analysis_placeField ===")
 # Simple input validation
 def test_invalid_input():
     fmap = np.ones((40, 40))
-    with pytest.raises(ValueError):  # invalid input threshold
+    with pytest.raises(err.ArgumentError):  # invalid input threshold
         init_thresh = 1.2
         func(fmap, init_thresh=init_thresh)
-    with pytest.raises(ValueError):  # invalid input threshold
+    with pytest.raises(err.ArgumentError):  # invalid input threshold
         init_thresh = 0
         func(fmap, init_thresh=init_thresh)
-    with pytest.raises(ValueError):  # invalid search method - wrong type
+    with pytest.raises(err.ArgumentError):  # invalid search method - wrong type
         sm = 3
         func(fmap, search_method=sm)
-    with pytest.raises(ValueError):  # invalid search method - unknown
+    with pytest.raises(err.ArgumentError):  # invalid search method - unknown
         sm = "3"
         func(fmap, search_method=sm)
     with pytest.raises(

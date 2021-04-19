@@ -9,6 +9,7 @@ from scipy.stats import pearsonr
 from skimage import transform
 import opexebo
 import opexebo.defaults as default
+import opexebo.errors as err
 
 
 # This is included as the return result of an invalid autocorrelogram
@@ -377,7 +378,7 @@ def _circular_mask(image, radius, polarity='outwards', center=None):
         elif polarity.lower() == 'outwards':
             mask = dist_from_center >= radius
         else:
-            raise ValueError('Polarity "{}" not defined'.format(polarity))
+            raise err.ArgumentError('Polarity "{}" not defined'.format(polarity))
         return mask
 
 def _draw_ellipse(x, y, rl, rs, theta):
