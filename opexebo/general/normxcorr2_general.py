@@ -13,6 +13,9 @@ import numpy as np
 import numpy.matlib  # Not included in the default numpy namespace
 from scipy.signal import convolve2d
 
+REQUIRED_OVERLAP_PIXELS = 0
+
+
 def normxcorr2_general(array):
     """Calculate spatial autocorrelation.
 
@@ -38,11 +41,11 @@ def normxcorr2_general(array):
     if not np.sum(np.isfinite(array)) == array.size:
         raise ValueError("Input array contains NaN values.")
 
-    requiredNumberOfOverlapPixels = 0
-    A = _shiftData(array)
-    T = _shiftData(array)
+    
+    A = _shift_data(array)
+    T = _shift_data(array)
 
-    numberOfOverlapPixels = _local_sum(np.ones(A.shape), T.shape[0], T.shape[1])
+    number_of_overlap_pixels = _local_sum(np.ones(A.shape), T.shape[0], T.shape[1])
 
     local_sum_A = _local_sum(A, T.shape[0], T.shape[1])
     local_sum_A2 = _local_sum(A*A, T.shape[0], T.shape[1])
@@ -50,7 +53,7 @@ def normxcorr2_general(array):
     # Note: diff_local_sums should be nonnegative, but it may have negative
     # values due to round off errors. Below, we use max to ensure the radicand
     # is nonnegative.
-    diff_local_sums_A = (local_sum_A2 - np.power(local_sum_A, 2) / numberOfOverlapPixels)
+    diff_local_sums_A = (local_sum_A2 - np.power(local_sum_A, 2) / number_of_overlap_pixels)
     del local_sum_A2
 
     denom_A = np.maximum(diff_local_sums_A, 0)
@@ -63,7 +66,7 @@ def normxcorr2_general(array):
     local_sum_T2 = _local_sum(rotatedT*rotatedT, A.shape[0], A.shape[1])
     del rotatedT
 
-    diff_local_sums_T = (local_sum_T2 - np.power(local_sum_T, 2) / numberOfOverlapPixels)
+    diff_local_sums_T = (local_sum_T2 - np.power(local_sum_T, 2) / number_of_overlap_pixels)
     del local_sum_T2
     denom_T = np.maximum(diff_local_sums_T, 0)
     del diff_local_sums_T
@@ -73,7 +76,7 @@ def normxcorr2_general(array):
 
     xcorr_TA = _xcorr2_fast(T, A)
     del A, T
-    numerator = xcorr_TA - local_sum_A * local_sum_T / numberOfOverlapPixels
+    numerator = xcorr_TA - local_sum_A * local_sum_T / number_of_overlap_pixels
     del xcorr_TA, local_sum_A, local_sum_T
 
     # denom is the sqrt of the product of positive numbers so it must be
@@ -89,11 +92,11 @@ def normxcorr2_general(array):
 
     # Remove the border values since they result from calculations using very
     # few pixels and are thus statistically unstable.
-    # By default, requiredNumberOfOverlapPixels = 0, so C is not modified.
-    if requiredNumberOfOverlapPixels > np.max(numberOfOverlapPixels):
-        raise ValueError("ERROR: requiredNumberOfOverlapPixels")
+    # By default, REQUIRED_OVERLAP_PIXELS = 0, so C is not modified.
+    if REQUIRED_OVERLAP_PIXELS > np.max(number_of_overlap_pixels):
+        raise ValueError("ERROR: REQUIRED_OVERLAP_PIXELS")
 
-    C[numberOfOverlapPixels < requiredNumberOfOverlapPixels] = 0
+    C[number_of_overlap_pixels < REQUIRED_OVERLAP_PIXELS] = 0
     return C
 
 
@@ -118,8 +121,8 @@ def _freqxcorr(a, b, outsize):
     # Find the next largest size that is a multiple of a combination of 2, 3,
     # and/or 5.  This makes the FFT calculation much faster.
     optimalSize = np.zeros((2, 1))
-    optimalSize[0] = _FindClosestValidDimension(outsize[0])
-    optimalSize[1] = _FindClosestValidDimension(outsize[1])
+    optimalSize[0] = _find_closest_valid_dimension(outsize[0])
+    optimalSize[1] = _find_closest_valid_dimension(outsize[1])
     optimalSize = optimalSize.squeeze()
     optimalSize = optimalSize.astype(np.integer)
 
@@ -166,12 +169,17 @@ def _time_fft2(outsize):
 
 
 def _local_sum(A, m, n):
-    # This algorithm depends on precomputing running sums.
+    """
+    This algorithm depends on precomputing running sums.
 
-    # If m, n are equal to the size of A, a faster method can be used for
-    # calculating the local sum.  Otherwise, the slower but more general method
-    # can be used.  The faster method is more than twice as fast and is also
-    # less memory intensive.
+    If m, n are equal to the size of A, a faster method can be used for
+    calculating the local sum.  Otherwise, the slower but more general method
+    can be used.  The faster method is more than twice as fast and is also
+    less memory intensive.
+    
+    As it is currently called (2021-04-12), the `else` case appears to never
+    be invoked
+    """
     if m == A.shape[0] and n == A.shape[1]:
         s = np.cumsum(A, axis=0)
         secondPart = np.matlib.repmat(s[-1, :], m-1, 1) - s[0:-1, :]
@@ -198,34 +206,37 @@ def _local_sum(A, m, n):
 
 
 # we assume that we only deal with float number
-def _shiftData(A):
+def _shift_data(A):
+    """
+    Convert array to type Float, and shift the data range to be greater than zero
+    """
     B = A.astype(np.float)
 
     if not np.issubdtype(A.dtype, np.unsignedinteger):
         min_B = np.min(B)
         if min_B < 0:
-            B = B - min_B
+            B -= min_B
     return B
 
 
-def _FindClosestValidDimension(n):
+def _find_closest_valid_dimension(n):
 
     # Find the closest valid dimension above the desired dimension.  This
     # will be a combination of 2s, 3s, and 5s.
 
     # Incrementally add 1 to the size until
     # we reach a size that can be properly factored.
-    newNumber = n
+    new_number = n
     result = 0
-    newNumber = newNumber - 1
+    new_number -= 1
     while not result == 1:
-        newNumber = newNumber + 1
-        result = _FactorizeNumber(newNumber)
+        new_number += 1
+        result = _factorize_number(new_number)
 
-    return newNumber
+    return new_number
 
 
-def _FactorizeNumber(n):
+def _factorize_number(n):
     for ifac in np.array([2, 3, 5]):
         while np.fmod(n, ifac) == 0:
             n = n / ifac

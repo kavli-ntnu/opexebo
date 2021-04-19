@@ -34,6 +34,21 @@ def test_1d_input():
     assert edges.size == hist.size + 1
     assert pos.size == np.sum(hist)
 
+def test_1d2d_input():
+    """
+    It is possible to give 1d data as a 2d array, i.e. with shape (1, n)
+    """
+    arena_size = 80
+    pos = np.random.rand(1000) * arena_size
+    pos = np.expand_dims(pos, 0)
+    bin_width = 2.32
+    limits = (np.nanmin(pos), np.nanmax(pos) * 1.0001)
+    hist, edges = func(pos, arena_size=arena_size, limits=limits, bin_width=bin_width)
+    assert hist.ndim == 1
+    assert hist.size == opexebo.general.bin_width_to_bin_number(arena_size, bin_width)
+    assert edges.size == hist.size + 1
+    assert pos.size == np.sum(hist)
+
 
 def test_2d_input():
     arena_size = np.array((80, 120))

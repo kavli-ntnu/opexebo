@@ -28,7 +28,7 @@ def border_score(rate_map, fields_map, fields, arena_shape, **kwargs):
     "Representation of Geometric Borders in the Entorhinal Cortex" by Solstad 
     et. al. (Science 2008).
     
-    Border score is either -1 (no firing fields provided) or in the range [0-1].
+    Border score is either -1 (no firing fields provided) or in the range [-1, 1].
     The score reflects both the width of a field (what fraction of a single wall
     it touches), and the depth of a field (how far away from the field it extends)
     The highest score is returned for a field with maximum width and infinitesimal
@@ -36,10 +36,11 @@ def border_score(rate_map, fields_map, fields, arena_shape, **kwargs):
     
     Consequently, a border score of 1 can only **ever** be returned given an 
     infinite resolution. A perfect field in a typical 40x40 bin map has a maximum
-    value of around 0.91.
+    value of around 0.91. (limited by the width of the binning compared to the
+    arena extent)
     
-    The score is only evaluated for the firing field that has the greatest wall
-    coverage. All other fields are ignored. 
+    The score is only evaluated for the single firing field that has the greatest
+    wall coverage. All other fields are ignored. 
     
     Parameters
     ----------

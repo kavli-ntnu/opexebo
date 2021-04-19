@@ -3,6 +3,8 @@ Provide function for population vector correlation calculation
 """
 import numpy as np
 
+from .. import errors as err
+
 
 def population_vector_correlation(stack_0, stack_1, **kwargs):
     """Calculates the bin-wise correlation between two stacks of rate maps
@@ -156,9 +158,9 @@ def _handle_both_inputs(stack_0, stack_1):
     stack_0 = _handle_single_input(stack_0, 0)
     stack_1 = _handle_single_input(stack_1, 1)
     if stack_0.shape[0] != stack_1.shape[0]:
-        raise ValueError("You have a different number of rate maps in each stack.")
+        raise err.ArgumentError("You have a different number of rate maps in each stack.")
     if stack_0.shape[1:] != stack_1.shape[1:]:
-        raise ValueError("Your rate maps do not have matching dimensions")
+        raise err.ArgumentError("Your rate maps do not have matching dimensions")
     return stack_0, stack_1
 
 def _handle_single_input(stack, i):
@@ -191,13 +193,13 @@ def _handle_single_input(stack, i):
         for element in stack:
             e = type(element)
             if e not in (np.ndarray, np.ma.MaskedArray):
-                raise ValueError(f"The elements of the list stack_{i} must be"\
+                raise err.ArgumentError(f"The elements of the list stack_{i} must be"\
                                  f" NumPy arrays. You provided {e}")
             if dims is None:
                 dims = element.shape
             else:
                 if element.shape != dims:
-                    raise ValueError(f"Your ratemaps are not a consistent"\
+                    raise err.ArgumentError(f"Your ratemaps are not a consistent"\
                                      f" shape in stack_{i}")
         # Passes error handling, now convert from list to masked array
         stack = np.ma.masked_invalid(stack)
@@ -210,12 +212,5 @@ def _handle_single_input(stack, i):
         dims = stack.shape[1:]
     return stack
 
-if __name__ == "__main__":
-    num_cells = 24
-    num_bins = 10
-    stack_0 = np.random.rand(num_cells, num_bins, num_bins+1)
-    stack_1 = np.random.rand(num_cells, num_bins, num_bins+1)
-    p = population_vector_correlation(stack_0, stack_1, debug=True, row_major=False)
-    print(p[2].shape)
-    plt.imshow(p[1])
+
     
