@@ -15,6 +15,10 @@ class ArgumentError(OpexeboError):
     Incorrect argument given in some way
     '''
 
+class DimensionMismatchError(OpexeboError):
+    """
+    Raised if 1D and 2D data is mixed
+    """
 
 class SpeedBandwidthError(OpexeboError):
     """

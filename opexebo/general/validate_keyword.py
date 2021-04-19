@@ -3,7 +3,7 @@
 import numpy as np
 
 import opexebo.defaults as default
-from opexebo.errors import ArgumentError
+import opexebo.errors as err
 
 def validatekeyword__arena_size(kwv, provided_dimensions):
     '''
@@ -41,7 +41,7 @@ def validatekeyword__arena_size(kwv, provided_dimensions):
     if type(kwv) in (float, int, str):
         kwv = float(kwv)
         if kwv <= 0: 
-            raise ValueError("Keyword 'arena_size' value must be greater than"\
+            raise err.ArgumentError("Keyword 'arena_size' value must be greater than"\
                              " zero (value given %f)" % kwv)
         if is_2d:
             arena_size = np.array((kwv, kwv))
@@ -55,15 +55,15 @@ def validatekeyword__arena_size(kwv, provided_dimensions):
             else:
                 arena_size = kwv[0]
         elif len(kwv) == 2 and not is_2d:
-            raise IndexError("Mismatch in dimensions: 1d position data but 2d"\
+            raise err.DimensionMismatchError("Mismatch in dimensions: 1d position data but 2d"\
                              " arena specified")
         elif len(kwv) not in [1, 2]:
-            raise IndexError("Keyword 'arena_size' value is invalid. Provide"\
+            raise err.ArgumentError("Keyword 'arena_size' value is invalid. Provide"\
                              " either a float or a 2-element tuple")
         else:
             arena_size = np.array(kwv)
     else:
-        raise ValueError("Keyword 'arena_size' value not understood. Please"\
+        raise err.ArgumentError("Keyword 'arena_size' value not understood. Please"\
                          " provide either a float or a tuple of 2 floats. Value"\
                          " provided: '%s'" % str(kwv))
     return arena_size, is_2d
@@ -85,7 +85,7 @@ def validate_keyword_arena_shape(arena_shape):
         recognised groups of arena_shapes
     '''
     if not isinstance(arena_shape, str):
-        raise ArgumentError("Keyword `arena_shape` must be a string, not type `{type(arena_shape)}`")
+        raise err.ArgumentError("Keyword `arena_shape` must be a string, not type `{type(arena_shape)}`")
     else:
         arena_shape = arena_shape.lower()
     

@@ -4,6 +4,7 @@ import pytest
 
 import opexebo
 from opexebo.analysis import rate_map as func
+from opexebo import errors as err
 
 print("=== tests_analysis_rateMap ===")
 
@@ -16,14 +17,14 @@ print("=== tests_analysis_rateMap ===")
 def test_rmap_invalid_inputs():
     # Mismatched dimensions
     # 2d time map but 1d spike pos
-    with pytest.raises(ValueError):
+    with pytest.raises(err.DimensionMismatchError):
         tmap = np.ones((10, 10))
         time = np.arange(100)
         spikes_x = np.random.rand(100)
         spikes_tracking = np.array((time, spikes_x))
         func(tmap, spikes_tracking, arena_size=1)
     # 1d time map but 2d spike_pos
-    with pytest.raises(IndexError):
+    with pytest.raises(err.DimensionMismatchError):
         tmap = np.ones(10)
         time = np.arange(100)
         spikes_x = np.random.rand(100)
@@ -31,11 +32,11 @@ def test_rmap_invalid_inputs():
         spikes_tracking = np.array((time, spikes_x, spikes_y))
         func(tmap, spikes_tracking, arena_size=(10, 10))
     # invalid input types
-    with pytest.raises(ValueError):
+    with pytest.raises(err.ArgumentError):
         tmap = (1, 2, 3, 4)  #! tmap should be an ndarray
         spikes = np.ones((2, 100))
         func(tmap, spikes, arena_size=1)
-    with pytest.raises(ValueError):
+    with pytest.raises(err.ArgumentError):
         tmap = np.ones(10)
         spikes = ([0.23, 1], [0.5, 1.2], [0.75, -3])  #! spikes should be an ndarray
         func(tmap, spikes, arena_size=1)
@@ -43,12 +44,12 @@ def test_rmap_invalid_inputs():
         tmap = np.ones((10, 10))
         spikes = np.ones((3, 100))  # t, x, y
         func(tmap, spikes)  #! missing arena_size
-    with pytest.raises(ValueError):
+    with pytest.raises(err.DimensionMismatchError):
         tmap = np.ones((10, 10))
         spikes = np.ones((3, 100))
         func(tmap, spikes, arena_size=1, limits="abc")  # limits should be a tuple
     # mismatched sizes
-    with pytest.raises(ValueError):
+    with pytest.raises(err.DimensionMismatchError):
         tmap = np.ones((40, 40))
         spikes = np.ones((3, 100))
         func(tmap, spikes, arena_size=80, bin_width=4)  #! 80/4 != 40

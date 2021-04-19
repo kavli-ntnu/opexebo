@@ -4,7 +4,8 @@ Occupancy Map and positioned Spike Times"""
 import numpy as np
 
 import opexebo
-import opexebo.defaults as default
+#import opexebo.defaults as default
+from .. import errors as err, defaults as default
 
 
 def rate_map(occupancy_map, spikes_tracking, arena_size, **kwargs):
@@ -72,18 +73,18 @@ def rate_map(occupancy_map, spikes_tracking, arena_size, **kwargs):
 
     # Check correct inputs
     if not isinstance(occupancy_map, (np.ndarray, np.ma.MaskedArray)):
-        raise ValueError("Occupancy Map not provided in usable format. Please"\
+        raise err.ArgumentError("Occupancy Map not provided in usable format. Please"\
             " provide either a Numpy ndarray or Numpy MaskedArray. You"\
             f" provided {type(occupancy_map)}.")
     if not isinstance(spikes_tracking, (np.ndarray, np.ma.MaskedArray)):
-        raise ValueError("spikes not provided in usable format. Please"\
+        raise err.ArgumentError("spikes not provided in usable format. Please"\
             " provide either a Numpy ndarray or Numpy MaskedArray. You"\
             f" provided {type(spikes_tracking)}.")
 
     dims_p = occupancy_map.ndim
     dims_s, _ = spikes_tracking.shape
     if dims_s-2 != dims_p:
-        raise ValueError("Spikes must have the same number of spatial"\
+        raise err.DimensionMismatchError("Spikes must have the same number of spatial"\
             " dimensions as positions ([t, s, x] or [t, s, x, y]). You have provided"\
             f" {dims_s} columns of spikes, and {dims_p} columns of positions")
 
@@ -105,7 +106,7 @@ def rate_map(occupancy_map, spikes_tracking, arena_size, **kwargs):
     spike_map, _ = opexebo.general.accumulate_spatial(spikes, arena_size, **kwargs)
 
     if spike_map.shape != occupancy_map.shape:
-        raise ValueError("Rate Map and Occupancy Map must have the same"\
+        raise err.DimensionMismatchError("Rate Map and Occupancy Map must have the same"\
                          f" dimensions. Provided: {spike_map.shape},"\
                          f" {occupancy_map.shape}")
     # Convert to rate map

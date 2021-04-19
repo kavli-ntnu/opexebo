@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 
 from opexebo.general import validatekeyword__arena_size as func
+from opexebo import errors as err
 
 print("=== tests_general_validatekeyword ===")
 
@@ -14,15 +15,15 @@ print("=== tests_general_validatekeyword ===")
 
 def test_invalid_inputs():
     # >2D dimensional data
-    with pytest.raises(ValueError):  # Negative length, 1d
+    with pytest.raises(err.ArgumentError):  # Negative length, 1d
         kwv = -1
         dim = 1
         func(kwv, dim)
-    with pytest.raises(ValueError):  # Negative length, 2d
+    with pytest.raises(err.ArgumentError):  # Negative length, 2d
         kwv = -1
         dim = 2
         func(kwv, dim)
-    with pytest.raises(ValueError):  # zero length
+    with pytest.raises(err.ArgumentError):  # zero length
         kwv = 0
         dim = 1
         func(kwv, dim)
@@ -34,7 +35,7 @@ def test_invalid_inputs():
         kwv = 80
         dim = 0
         func(kwv, dim)
-    with pytest.raises(IndexError):  # Invalid # dimensions
+    with pytest.raises(err.DimensionMismatchError):  # Invalid # dimensions
         kwv = (80, 80)
         dim = 1
         func(kwv, dim)
