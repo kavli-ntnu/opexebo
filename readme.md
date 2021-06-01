@@ -16,22 +16,12 @@ Specifications and documentation for `opexebo` are available on [Read the Docs](
 
 ### Installation
 
-Install by using pip:
+Install with pip:
 
 ```
-pip install git+https://github.com/kavli-ntnu/opexebo.git -U
+pip install opexebo
 ```
 
-A specific revision, branch, tag, or release an be installed with the @ modifier:
+Opexebo has an optional dependency, `sep`, that is not installed by default. To be able to install it, you require a C++ compiler installed on your system. On Linux, `gcc` will do the job. On Windows, the the Microsoft Visual C++ Build Tools fulfil the same role (https://www.microsoft.com/en-us/download/details.aspx?id=48159). To force installation of all optional dependencies, append `[full]` to the install command, for example:
 
-```
-pip install git+https://github.com/kavli-ntnu/opexebo.git@v0.5.2
-```
-
-Installing in this way requires having `git`, this can be acquired from::
-
-    https://git-scm.com/download
-
-Opexebo has an optional dependency, `sep`, that is not installed by default. To be able to install it, you require a C++ compiler installed on your system. On Linux, `gcc` will do the job. On Windows, the the Microsoft Visual C++ Build Tools fulfil the same role (https://www.microsoft.com/en-us/download/details.aspx?id=48159). To force installation of all optional dependencies, append `#egg[full]` to the install command, for example::
-
-    pip install git+https://github.com/kavli-ntnu/opexebo.git@v0.5.2#egg[full]
+    pip install opexebo[full]
