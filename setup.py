@@ -24,9 +24,14 @@ setup_requirements = [ ]
 test_requirements = [ ]
 
 setup(
+    name='opexebo',
+    description="Collection of python code in Kavli lab.",
+    long_description=readme + '\n\n' + history,
+    url='https://github.com/kavli-ntnu/opexebo',
     author="Simon Ball",
     author_email='simon.ball@ntnu.no',
     classifiers=[
+        "License :: OSI Approved :: MIT License",
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Natural Language :: English',
@@ -35,15 +40,11 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
     ],
-    description="Collection of python code in Kavli lab.",
     install_requires=requirements,
     extras_require={"full": optional_requirements},
-    long_description=readme + '\n\n' + history,
     include_package_data=True,
     keywords='neuroscience kavli gridscore',
-    name='opexebo',
     packages=find_packages(include=['opexebo*']),
-    url='https://github.com/kavli-ntnu/opexebo',
     version='0.5.2',
     zip_safe=False,
 )
