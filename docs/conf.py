@@ -27,9 +27,9 @@ copyright = '2019, Simon Ball'
 author = 'Simon Ball'
 
 # The short X.Y version
-version = '0.5.2'
+version = '0.5.5'
 # The full version, including alpha/beta/rc tags
-release = '0.5.2'
+release = '0.5.5'
 
 
 # -- General configuration ---------------------------------------------------
