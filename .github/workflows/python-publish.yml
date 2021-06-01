@@ -6,7 +6,10 @@ name: Publish Opexebo to PyPi-Test
 on:
   release:
     types: [created, edited]
-  push
+  push:
+    branches:
+      - main
+    
 
 jobs:
   build-and-publish:
