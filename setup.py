@@ -8,7 +8,7 @@ from os import path
 with open('readme.md') as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.rst') as history_file:
+with open('history.md') as history_file:
     history = history_file.read()
 
 here = path.abspath(path.dirname(__file__))
@@ -27,6 +27,7 @@ setup(
     name='opexebo',
     description="Collection of python code in Kavli lab.",
     long_description=readme + '\n\n' + history,
+    long_description_content_type="txt/x-md",
     url='https://github.com/kavli-ntnu/opexebo',
     author="Simon Ball",
     author_email='simon.ball@ntnu.no',
