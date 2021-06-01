@@ -7,7 +7,7 @@
 * Add Opexebo-specific errors
 * Add automated testing prior to release
 * Add `calculate_speed`
-* Add `egocentric_occupancy``
+* Add `egocentric_occupancy`
 * Fixed an edge case error in `accumulate_spatial`
 
 
