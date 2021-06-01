@@ -1,6 +1,11 @@
 # History
 
 
+## 0.5.5 (2021-06-01)
+
+* Publish to PyPi
+
+
 ## 0.5.2 (2021-04-19)
 
 * Support 1D data in spatial occupancy and ratemap
