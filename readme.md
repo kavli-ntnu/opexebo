@@ -25,7 +25,7 @@ pip install git+https://github.com/kavli-ntnu/opexebo.git -U
 A specific revision, branch, tag, or release an be installed with the @ modifier::
 
 ```bash
-pip install git+https://github.com/kavli-ntnu/opexebo.git@v0.3.3
+pip install git+https://github.com/kavli-ntnu/opexebo.git@v0.5.2
 ```
 
 Installing in this way requires having `git`, this can be acquired from::
