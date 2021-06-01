@@ -27,7 +27,7 @@ setup(
     name='opexebo',
     description="Collection of python code in Kavli lab.",
     long_description=readme + '\n\n' + history,
-    long_description_content_type="txt/x-md",
+    long_description_content_type="text/markdown",
     url='https://github.com/kavli-ntnu/opexebo',
     author="Simon Ball",
     author_email='simon.ball@ntnu.no',
@@ -36,7 +36,7 @@ setup(
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Natural Language :: English',
-        'Programming Language :: Python :: 3'
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
