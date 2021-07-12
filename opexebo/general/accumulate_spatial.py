@@ -69,8 +69,13 @@ def accumulate_spatial(pos, arena_size, **kwargs):
         Here `x`, `y` correspond to the output histogram
     """
 
-    # Check correct inputs:
-    pos = np.squeeze(pos.copy()) 
+    # Check correct inputs
+    # 1. Remove excess dimensions.
+    #    Note: this has to accommodate the special case of a unit with a single spike!
+    #    Squeezing an array containing only a single element results in an array with zero dimensions.
+    pos = pos.copy()
+    if pos.size >= 2:
+        pos = pos.squeeze()
     dims = pos.ndim
     if dims not in (1, 2):
         raise ValueError("pos should have either 1 or 2 dimensions. You have"\

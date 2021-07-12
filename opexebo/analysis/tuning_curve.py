@@ -8,8 +8,6 @@ import opexebo.defaults as default
 def tuning_curve(angular_occupancy, spike_angles, **kwargs):
     """Analogous to a RateMap - i.e. mapping spike activity to spatial position
     map spike rate as a function of angle
-    
-    STATUS : EXPERIMENTAL
 
     Parameters
     ----------
