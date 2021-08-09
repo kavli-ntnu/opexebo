@@ -11,6 +11,7 @@ with warnings.catch_warnings():
     import astropy.stats.circstats as cs
 
 import opexebo.defaults as default
+import opexebo.errors as error
 
 
 def tuning_curve_stats(tuning_curve, **kwargs):
@@ -90,11 +91,13 @@ def tuning_curve_stats(tuning_curve, **kwargs):
     percentile = kwargs.get('percentile', default.hd_percentile)
     ndim = tuning_curve.ndim
     if ndim != 1:
-        raise ValueError("tuning_curve should be a 1D array. You have provided" \
-                         " %d dimensions" % ndim)
+        raise error.DimensionMismatchError(
+            "tuning_curve should be a 1D array. You have provided {} dimensions".format(ndim)
+            )
     if not 0 <= percentile <= 1:
-        raise ValueError("Keyword 'percentile' should be in the range [0, 1]."\
-                         " You provided  %.2f. " % percentile)
+        raise error.ArgumentError(
+            "Keyword 'percentile' should be in the range [0, 1]. You provided  {:.2f.}".format(percentile)
+            )
     if type(tuning_curve) != np.ma.MaskedArray:
         tuning_curve = np.ma.masked_invalid(tuning_curve)
 
