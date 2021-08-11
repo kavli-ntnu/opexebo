@@ -24,7 +24,7 @@ def rate_map(occupancy_map, spikes_tracking, arena_size, **kwargs):
     occupancy_map: np.ndarray or np.ma.MaskedArray
         Nx1 or Nx2 array of time spent by animal in each bin, with time in bins
     spikes: np.ndarray
-        Nx3 or Nx4 array of spikes tracking: [t, speed, x] or [t, speed, x, y].
+        Nx2 or Nx3 array of spikes tracking: [t, x] or [t, x, y].
         Speeds are used for the same purpose as in Spatialoccupancy - spikes
         occurring with an instaneous speed below the threshold are discarded
     arena_size: float or tuple of floats
@@ -32,8 +32,6 @@ def rate_map(occupancy_map, spikes_tracking, arena_size, **kwargs):
             * For a linear track, length
             * For a circular arena, diameter
             * For a rectangular arena, length or (length, length)
-    speed_cutoff: float
-        Timestamps with instantaneous speed beneath this value are ignored. Default 0
     bin_width: float
         Bin size in cm. Default 2.5cm. If bin_width is supplied, `limit` must
         also be supplied. One of `bin_width`, `bin_number`, `bin_edges` must be
@@ -83,23 +81,20 @@ def rate_map(occupancy_map, spikes_tracking, arena_size, **kwargs):
 
     dims_p = occupancy_map.ndim
     dims_s, _ = spikes_tracking.shape
-    if dims_s-2 != dims_p:
+    if dims_s-1 != dims_p:
         raise err.DimensionMismatchError("Spikes must have the same number of spatial"\
-            " dimensions as positions ([t, s, x] or [t, s, x, y]). You have provided"\
+            " dimensions as positions ([t, x] or [t, x, y]). You have provided"\
             f" {dims_s} columns of spikes, and {dims_p} columns of positions")
 
     if isinstance(occupancy_map, np.ndarray):
         occupancy_map = np.ma.MaskedArray(occupancy_map)
 
-    speed_cutoff = kwargs.get("speed_cutoff", default.speed_cutoff)
 
-    speeds = spikes_tracking[1, :]
-    good_speeds = speeds > speed_cutoff
-    if dims_s == 3:
-        spikes = spikes_tracking[2, :][good_speeds]
-    elif dims_s == 4:
-        spikes_x = spikes_tracking[2, :][good_speeds]
-        spikes_y = spikes_tracking[3, :][good_speeds]
+    if dims_s == 2:
+        spikes = spikes_tracking[1, :]
+    elif dims_s == 3:
+        spikes_x = spikes_tracking[1, :]
+        spikes_y = spikes_tracking[2, :]
         spikes = np.array((spikes_x, spikes_y))
 
     # Histogram of spike positions

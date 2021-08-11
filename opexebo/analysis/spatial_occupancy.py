@@ -8,7 +8,7 @@ from opexebo import errors
 
 
 
-def spatial_occupancy(time, position, speed, arena_size, **kwargs):
+def spatial_occupancy(time, position, arena_size, **kwargs):
     '''
     Generate an occpuancy map: how much time the animal spent in each location
     in the arena.
@@ -25,15 +25,11 @@ def spatial_occupancy(time, position, speed, arena_size, **kwargs):
     position: np.ndarray (x, [y])
         1d or 2d array of positions at timestamps. If 2d, then row major, such
         that `position[0]` corresponds to all `x`; and `position[1]` to all `y`
-    speed: np.ndarray
-        1d array of speeds at timestamps
     arena_size: float or tuple of floats
         Dimensions of arena (in cm)
             * For a linear track, length
             * For a circular arena, diameter
             * For a rectangular arena, length or (length, length)
-    speed_cutoff: float
-        Timestamps with instantaneous speed beneath this value are ignored. Default 0
     arena_shape: {"square", "rect", "circle", "line"}
         Rectangular and square are equivalent. Elliptical or n!=4 polygons
         not currently supported. Defaults to Rectangular
@@ -77,7 +73,6 @@ def spatial_occupancy(time, position, speed, arena_size, **kwargs):
     # ANd if ndim == 2, must have min(shape) == 1 or 2
     dimensionality = position.ndim
     num_dimensions_data = min(position.shape)
-    num_samples = max(position.shape)
     if dimensionality not in (1, 2):
         raise errors.ArgumentError(
                 "Positions array must be a 1D or 2D array, you have provided a"
@@ -88,17 +83,12 @@ def spatial_occupancy(time, position, speed, arena_size, **kwargs):
                 "Positions array must contain either 1D data (x only) or 2D data"
                 " (x, y). You have provided {}d data".format(num_dimensions_data)
                 )
-    if speed.ndim != 1:
-        raise errors.ArgumentError(
-                "Speed array has the wrong number of columns ({}, should be 1)".format(speed.ndim)
-                )
-    if speed.size != num_samples:
-        raise errors.ArgumentError("Speed array does not have the same number of samples as Positions")
 
     # Handle NaN positions by converting to a Masked Array
     position = np.ma.masked_invalid(position)
+    if not position.any():
+        raise ValueError("The positions are entirely invalid")
 
-    speed_cutoff = kwargs.get("speed_cutoff", default.speed_cutoff)
     debug = kwargs.get("debug", False)
 
     if debug:
@@ -106,13 +96,11 @@ def spatial_occupancy(time, position, speed, arena_size, **kwargs):
         print("Maximum time stamp value: %.2f" % time[-1])
         print("Time stamp delta: %f" % np.min(np.diff(time)))
 
-    good = np.ma.greater_equal(speed, speed_cutoff)
-    # Mask `positions`, for either 1d or 2d (only accepted shapes)
     
     if dimensionality == 1:
-        pos = position[good]
+        pos = position
     elif dimensionality == 2:
-        pos = np.array([position[i, :][good] for i in range(min(position.shape))])
+        pos = np.array([position[i, :] for i in range(min(position.shape))])
 
     occupancy_map, bin_edges = opexebo.general.accumulate_spatial(pos, arena_size, **kwargs)
     if debug:

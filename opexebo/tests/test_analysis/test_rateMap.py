@@ -44,7 +44,7 @@ def test_rmap_invalid_inputs():
         tmap = np.ones((10, 10))
         spikes = np.ones((3, 100))  # t, x, y
         func(tmap, spikes)  #! missing arena_size
-    with pytest.raises(err.DimensionMismatchError):
+    with pytest.raises(ValueError):
         tmap = np.ones((10, 10))
         spikes = np.ones((3, 100))
         func(tmap, spikes, arena_size=1, limits="abc")  # limits should be a tuple
@@ -65,15 +65,12 @@ def test_1d_ratemap():
     tmap = np.ones(_num_bins)  # equal occupancy in all locations
     n = 5000
     times = np.sort(np.random.rand(n)) * 1200  # 20 minute session
-    speeds = np.random.rand(n) * 10  # linearly distributed speeds up to 10cm/s
     pos = np.random.rand(n) * arena_size
-    spikes_tracking = np.array([times, speeds, pos])
-    speed_cutoff = 2
+    spikes_tracking = np.array([times, pos])
     rmap = func(
         tmap,
         spikes_tracking,
         bin_width=bin_width,
-        speed_cutoff=speed_cutoff,
         arena_size=arena_size,
     )
     assert rmap.ndim == 1
@@ -88,23 +85,14 @@ def test_2d_ratemap():
     ).T  # Want to be [x] 16 by [y] 24, whereas Numpy writes this the opposite, so transpose
     n = 5000
     times = np.sort(np.random.rand(n)) * 1200  # 20 minute session
-    speeds = np.random.rand(n) * 10  # linearly distributed speeds up to 10cm/s
     pos_x = np.random.rand(n) * arena_size[0]
     pos_y = np.random.rand(n) * arena_size[1]
-    spikes_tracking = np.array([times, speeds, pos_x, pos_y])
-    speed_cutoff = 2
+    spikes_tracking = np.array([times,  pos_x, pos_y])
     rmap = func(
         tmap,
         spikes_tracking,
         bin_number=bin_number,
-        speed_cutoff=speed_cutoff,
         arena_size=arena_size,
     )
     assert rmap.ndim == 2
     assert rmap.shape == tmap.shape
-
-
-# if __name__ == '__main__':
-#    test_rmap_invalid_inputs()
-#    test_1d_ratemap()
-#    test_2d_ratemap()
