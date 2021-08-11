@@ -1,5 +1,12 @@
 # History
 
+## 0.6.0
+
+* Fix a bug where `accumulate_spatial` can't handle cases where a single spike is present
+* Fix an error in the LFP power spectrum calculation with fft
+* Rewrite `shuffle` to better handle edge cases (including 1-spike-only)
+
+
 
 ## 0.5.5 (2021-06-01)
 
