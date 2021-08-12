@@ -96,31 +96,23 @@ invalid_times = [
 invalid_offset = [
     -1,  # negative
     0,
-    None,
     8,  # too high, i.e. greater than half the difference
     np.nan,  # nonfinite
-    "a",
 ]
 invalid_iterations = [
     -1,  # negative
     0,
-    None,
-    np.nan,  # nonfinite
-    2.5,  # non-integer
-    "a",  # wrong type
 ]
 invalid_t_start = [
     np.nan,
     np.inf,
     1.6,  # larger than min(times)
-    "a",
 ]
 invalid_t_stop = [
     np.nan,
     np.inf,
     10,  # smaller than max(times)
     -1,  # smaller than t_start
-    "a",
 ]
 
 

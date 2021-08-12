@@ -65,10 +65,6 @@ def shuffle(
     if not np.isfinite(times).all():
         raise errors.ArgumentError("`times` cannot include non-finite or NaN values")
 
-    if not isinstance(offset_lim, (float, int)):
-        raise errors.ArgumentError(
-            "`offset_lim` must be a number ({})".format(type(offset_lim))
-        )
     if offset_lim <= 0:
         raise errors.ArgumentError(
             "`offset_lim` must be greater than zero ({}".format(offset_lim)
@@ -78,10 +74,6 @@ def shuffle(
             "`offset_lim` must be finite ({})".format(offset_lim)
         )
 
-    if not isinstance(iterations, int):
-        raise errors.ArgumentError(
-            "`iterations` must be an integer ({})".format(type(iterations))
-        )
     if iterations < 2:
         raise errors.ArgumentError(
             "qiterations must be a positive integer greater than 1 ({})".format(
@@ -91,14 +83,6 @@ def shuffle(
     if not np.isfinite(iterations):
         raise errors.ArgumentError("`iterations` must be finite".format(iterations))
 
-    if not isinstance(t_start, (int, float, type(None))):
-        raise errors.ArgumentError(
-            "`t_start` must be a number ({})".format(type(t_start))
-        )
-    if not isinstance(t_stop, (int, float, type(None))):
-        raise errors.ArgumentError(
-            "`t_stop` must be a number ({})".format(type(t_start))
-        )
     if not np.isfinite(t_start):
         raise errors.ArgumentError("`t_start` must be finite".format(t_start))
     if not np.isfinite(t_stop):
