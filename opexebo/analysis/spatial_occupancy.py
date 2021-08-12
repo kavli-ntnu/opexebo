@@ -139,8 +139,6 @@ def spatial_occupancy(time, position, arena_size, **kwargs):
         # Due to the thresholding, coverage might be calculated to be  > 1
         # In this case, cut off to a maximum value of 1.
     elif shape.lower() in default.shapes_linear:
-#        raise NotImplementedError("Spatial Occupancy does not currently"\
-#                                  " support linear arenas")
         coverage = np.count_nonzero(occupancy_map) / occupancy_map.size
     else:
         raise NotImplementedError(f"Arena shape '{shape}' not understood")
