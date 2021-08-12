@@ -38,13 +38,7 @@ def test_linear_arena():
     assert cov == 1
     assert edges.size == 11
     assert edges[1] == 0.1
-    
-    # Check that it works with a 2d array of 1d position data
-    positions = np.expand_dims(positions, 0)
-    map, cov, edges = func(times, positions, **kwargs)
-    assert cov == 1
-    assert edges.size == 11
-    assert edges[1] == 0.1
+
 
 def test_invalid_inputs():
     # wrong dimensions to positions
