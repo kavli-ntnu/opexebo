@@ -13,8 +13,6 @@
 * Fix an error in the LFP power spectrum calculation with fft
 
 
-
-
 ## 0.5.5 (2021-06-01)
 
 * Publish to PyPi
