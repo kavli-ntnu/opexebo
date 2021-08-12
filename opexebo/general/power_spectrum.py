@@ -89,6 +89,6 @@ def _power_spectrum_fft(values, time_stamps, sampling_frequency, **kwargs):
     
     amplitude_spectral_density = np.abs(np.fft.rfft(values))
     power_spectral_density = np.square(amplitude_spectral_density)
-    freqs = np.fft.rfftfreqs(values.size, sampling_time_period)
+    freqs = np.fft.rfftfreq(values.size, sampling_time_period)
     
     return freqs, power_spectral_density

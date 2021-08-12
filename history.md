@@ -1,5 +1,17 @@
 # History
 
+## 0.6.0
+
+* Rewrite `spatial_occupancy` and `rate_map` to remove the walk filter (signature breaking)
+  * The individual analysis functions should be single purpose, and the walk-filter breaks this rule.
+  * Ideally, the walk-filter should be applied to spikes/tracking data _first_, and the resulting data then used for further analysis. 
+  * A dedicated function has been provided to replace this: `general.walk_filter`
+* Rewrite `shuffle` to better handle edge cases (including 1-spike-only) (signature breaking)
+* Added `general.walk_filter` to provide replace the specific filtering implemented in each of `spatial_occupancy` and `rate_map`
+
+* Fix a bug where `accumulate_spatial` can't handle cases where a single spike is present
+* Fix an error in the LFP power spectrum calculation with fft
+
 
 ## 0.5.5 (2021-06-01)
 

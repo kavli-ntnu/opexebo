@@ -68,9 +68,6 @@ def accumulate_spatial(pos, arena_size, **kwargs):
         `x`, or (`x`, `y`), where `x`, `y` are 1d np.ndarrays
         Here `x`, `y` correspond to the output histogram
     """
-
-    # Check correct inputs:
-    pos = np.squeeze(pos.copy()) 
     dims = pos.ndim
     if dims not in (1, 2):
         raise ValueError("pos should have either 1 or 2 dimensions. You have"\

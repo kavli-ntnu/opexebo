@@ -1,5 +1,6 @@
 """ Tests for spatial occupancy"""
 from opexebo.general import shuffle as func
+from opexebo import errors
 
 import numpy as np
 import pytest
@@ -11,73 +12,135 @@ print("=== tests_general_shuffle ===")
 ###############################################################################
 
 
-def test_output_structure():
-    """Verify that the function correctly returns an array where each row is
-    a time-shifted copy of the input, with num_shuffle rows"""
-
-    times = np.random.randint(0, 100, size=1000)
-    offset_lim = 13
-    iterations = 274
-    tr = np.arange(111)
-    output, _ = func(times, offset_lim, iterations, tracking_range=tr)
-
-    # output.shape = rows, cols
-    assert output.shape[0] == iterations
-    assert output.shape[1] == times.size
-    print("test_output_structure() passed")
+t_start = 1
+t_stop = 13
+offset_lim = 2.3
+iterations = 1000
+times = np.arange(t_start + 0.5, t_stop - 0.5)
 
 
-def WIP_test_consistent_offset():
-    '''All the extra faff here is to deal with the fact that since times does
-    not necessarily fill the entire tracking range. Information can be "lost"
-    to np.diff because it's not circular (i.e. it doesn't compare last to first)
-    Therefore, we manually add this value in at the end "miss"'''
-    tr = np.arange(173)
-    times = np.random.randint(0, 100, size=10)
-    times = np.sort(times)
-    offset_lim = 13
-    iterations = 2
+def test_increment_creation():
+    """
+    Verify that the increments are correctly created between (t_start + offset_lim) and (t_stop - offset_lim)
+    """
 
-    output, inc = func(times, offset_lim, iterations)
-    miss = (np.min(times) - np.min(tr)) + (np.max(tr) - np.max(times))
-    inc = np.atleast_2d(inc + miss).transpose()
-    output = np.hstack((output, inc))
-    times = np.append(times, miss)
-
-    true_d = np.diff(times)
-    # true_d = np.sort(true_d).astype(int)
-    d = np.diff(output, axis=1)
-
-    # The order of each row of d **should** be preserved circularly, but we can't
-    # just compare like-for-like
-    # The simplest, but not best, way of comparison is to sort both
-    print(times)
-    print(true_d)
-    for r in range(iterations):
-        row = d[r].astype(int)
-        print(row)
-    print("test_consistent_offset() passed")
+    out, inc = func(times, offset_lim, iterations, t_start, t_stop)
+    assert inc.size == iterations
+    assert min(inc) >= t_start + offset_lim
+    assert (
+        min(inc) <= t_start + offset_lim + 0.5
+    )  # this is a random test, so it _could_ fail...
+    assert max(inc) <= t_stop - offset_lim
+    assert max(inc) >= t_stop - offset_lim - 0.5
+    return
 
 
-def test_stupid_values():
-    times = np.random.randint(0, 100, size=1000)
-    offset_lim = 13
-    iterations = 274
-    tr = np.arange(111)
-    with pytest.raises(ValueError):
-        stupid_times = np.random.randint(0, 100, size=(100, 100))  # wrong shape
-        func(stupid_times, offset_lim, iterations, tracking_range=tr)
-    with pytest.raises(ValueError):
-        stupid_times = times.copy().astype(float)
-        stupid_times[813] = np.nan  # Contains NaN
-        func(stupid_times, offset_lim, iterations, tracking_range=tr)
-    with pytest.raises(ValueError):
-        stupid_offset = 120
-        func(times, stupid_offset, iterations, tracking_range=tr)
-    print("test_stupid_values() passed")
+def test_output_creation():
+    """
+    verify that the output array is the correct shape and size, can be indexed correctly
+    """
+
+    out, inc = func(times, offset_lim, iterations, t_start, t_stop)
+    assert out.shape == (iterations, times.size)
+    assert out[0].shape == times.shape
+    return
 
 
-# if __name__ =='__main__':
-#    test_output_structure()
-#    test_consistent_offset()
-#    test_stupid_values()
+def test_output_logic():
+    """
+    Verify that the output is a shuffled copy of the input
+    """
+
+    out, inc = func(times, offset_lim, iterations, t_start, t_stop)
+
+    assert np.min(out) >= t_start
+    assert np.max(out) <= t_stop
+    for row in out:
+        assert np.array_equal(row, np.array(sorted(row)))
+    return
+
+
+def test_edge_cases():
+    """
+    Test some obvious edge cases
+    """
+    # Basic arguments
+    t_start = 1
+    t_stop = 13
+    offset_lim = 2.3
+    iterations = 1000
+
+    times = np.arange(t_start + 0.5, t_stop - 0.5)
+
+    # Few spikes compared to large time range
+    out, _ = func(times, 1e3, iterations, t_start, 1e4)
+    assert np.array_equal(np.diff(times), np.diff(out[0]))
+
+    # One spike
+    spk1 = np.array([5.3])
+    out, _ = func(spk1, offset_lim, iterations, t_start, t_stop)
+    assert out.shape == (iterations, spk1.size)
+
+
+"""
+Verify that the defensive logic covers as many stupid arguments as I can think of
+"""
+
+
+invalid_times = [
+    np.ones((2, 2)),  # 2d data
+    3,  # non-array data
+    np.full(4, np.nan),  # non-finite data
+    "a",
+]
+invalid_offset = [
+    -1,  # negative
+    0,
+    8,  # too high, i.e. greater than half the difference
+    np.nan,  # nonfinite
+]
+invalid_iterations = [
+    -1,  # negative
+    0,
+]
+invalid_t_start = [
+    np.nan,
+    np.inf,
+    1.6,  # larger than min(times)
+]
+invalid_t_stop = [
+    np.nan,
+    np.inf,
+    10,  # smaller than max(times)
+    -1,  # smaller than t_start
+]
+
+
+@pytest.mark.parametrize("invalid_data", invalid_times, ids=str)
+def test_invalid_times(invalid_data):
+    with pytest.raises(errors.ArgumentError):
+        func(invalid_data, offset_lim, iterations, t_start, t_stop)
+
+
+@pytest.mark.parametrize("invalid_data", invalid_offset, ids=str)
+def test_invalid_offsets(invalid_data):
+    with pytest.raises(errors.ArgumentError):
+        func(times, invalid_data, iterations, t_start, t_stop)
+
+
+@pytest.mark.parametrize("invalid_data", invalid_iterations, ids=str)
+def test_invalid_iterations(invalid_data):
+    with pytest.raises(errors.ArgumentError):
+        func(times, offset_lim, invalid_data, t_start, t_stop)
+
+
+@pytest.mark.parametrize("invalid_data", invalid_t_start, ids=str)
+def test_invalid_t_start(invalid_data):
+    with pytest.raises(errors.ArgumentError):
+        func(times, offset_lim, iterations, invalid_data, t_stop)
+
+
+@pytest.mark.parametrize("invalid_data", invalid_t_stop, ids=str)
+def test_invalid_t_stop(invalid_data):
+    with pytest.raises(errors.ArgumentError):
+        func(times, offset_lim, iterations, t_start, invalid_data)
