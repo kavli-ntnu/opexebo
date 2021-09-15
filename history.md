@@ -1,5 +1,10 @@
 # History
 
+## 0.6.1
+
+* Fix some docstrings that were not updated to reflect changes in 0.6.0
+* Fix the default limit behaviour of `accumulate_spatial` for bin width specification.
+
 ## 0.6.0
 
 * Rewrite `spatial_occupancy` and `rate_map` to remove the walk filter (signature breaking)
@@ -11,6 +16,9 @@
 
 * Fix a bug where `accumulate_spatial` can't handle cases where a single spike is present
 * Fix an error in the LFP power spectrum calculation with fft
+* Removed support for providing 1D position data as a 2d array with length 1
+  * Caused frustrating circular issues in cases where only a single data point was provided.
+  * Fairly low value addition, so support removed.
 
 
 ## 0.5.5 (2021-06-01)
