@@ -23,10 +23,8 @@ def rate_map(occupancy_map, spikes_tracking, arena_size, **kwargs):
     ----------
     occupancy_map: np.ndarray or np.ma.MaskedArray
         Nx1 or Nx2 array of time spent by animal in each bin, with time in bins
-    spikes: np.ndarray
+    spikes_tracking: np.ndarray
         Nx2 or Nx3 array of spikes tracking: [t, x] or [t, x, y].
-        Speeds are used for the same purpose as in Spatialoccupancy - spikes
-        occurring with an instaneous speed below the threshold are discarded
     arena_size: float or tuple of floats
         Dimensions of arena (in cm)
             * For a linear track, length
