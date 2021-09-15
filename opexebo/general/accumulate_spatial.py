@@ -125,7 +125,10 @@ def accumulate_spatial(pos, arena_size, **kwargs):
         num_bins = bin_width_to_bin_number(arena_size, bin_width)
         if limits is None:
             # Handle the case that limits is not provided, i.e. is None
-            lim = (0, 0, 0, 0)
+            if is_2d:
+                lim = (np.nanmin(pos[0]), np.nanmax(pos[0]), np.nanmin(pos[1]), np.nanmax(pos[1]))
+            else:
+                lim = (np.nanmin(pos), np.nanmax(pos))
         else:
             lim = limits
         if is_2d:

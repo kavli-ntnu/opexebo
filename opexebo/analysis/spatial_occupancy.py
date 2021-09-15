@@ -21,7 +21,7 @@ def spatial_occupancy(time, position, arena_size, **kwargs):
     Parameters
     ----------
     time: np.ndarray
-        timestamps of position and speed data
+        timestamps of position data
     position: np.ndarray (x, [y])
         1d or 2d array of positions at timestamps. If 2d, then row major, such
         that `position[0]` corresponds to all `x`; and `position[1]` to all `y`
