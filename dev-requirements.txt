@@ -8,7 +8,7 @@ sphinx_rtd_theme>=0.4.3
 numpydoc>=1.1
 coverage>=4.5.0
 twine>=3.0
-pytest==4.3.1
+pytest==7.4.2
 pytest-cov
-matplotlib>=3.1.1
+matplotlib>=3.7.1
 ipython>7.10
