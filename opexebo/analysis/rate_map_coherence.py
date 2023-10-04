@@ -42,8 +42,9 @@ def rate_map_coherence(rate_map_raw):
     kernel = np.array([[0.125, 0.125, 0.125],
                       [0.125, 0,     0.125],
                       [0.125, 0.125, 0.125]])
-
-    avg_map = convolve(rate_map_raw, kernel, 'fill', fill_value=0)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        avg_map = convolve(rate_map_raw, kernel, 'fill', fill_value=0)
     avg_map = avg_map.ravel()
     avg_map = np.nan_to_num(avg_map)
 
