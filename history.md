@@ -1,5 +1,9 @@
 # History
 
+## 0.7.0
+* Update dependencies for more modern versions (particularly `numpy`, `scipy` and `pytest`)
+* Switch supported Python versions for 3.8+
+
 ## 0.6.1
 
 * Fix some docstrings that were not updated to reflect changes in 0.6.0
