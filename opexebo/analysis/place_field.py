@@ -213,7 +213,7 @@ def place_field(firing_map, **kwargs):
     # this can be confusing, but this variable is just an index for the vector
     # peak_linear_ind
     peaks_index = np.arange(len(peak_coords))
-    fields_map = np.zeros(fmap.shape, dtype=np.integer)
+    fields_map = np.zeros(fmap.shape, dtype=int)
     field_id = 1
     for i, peak_rc in enumerate(peak_coords):
         # peak_rc == [row, col]
@@ -497,7 +497,7 @@ def _area_for_threshold(image, occupancy_mask, peak_rc, threshold, other_fields_
     # calclate euler_number by hand rather than by regionprops
     # This yields results that are more similar to Matlab's regionprops
     # NOTE - this uses scipy.ndimage.morphology, while most else uses skimage.morphology
-    filled_image = ndimage.morphology.binary_fill_holes(labeled_img)
+    filled_image = ndimage.binary_fill_holes(labeled_img)
     euler_array = (filled_image != labeled_img)  # True where holes were filled in
 
     euler_array = np.maximum((euler_array*1) - (occupancy_mask*1), 0)
