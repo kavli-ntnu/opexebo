@@ -19,7 +19,6 @@ def test_random_data():
     angular_occupancy = np.random.rand(int(360 / bw))
     func(angular_occupancy, spike_angles, bin_width=bw)
     print(f"{inspect.stack()[0][3]} passed")
-    return True
 
 
 # if __name__ == '__main__':

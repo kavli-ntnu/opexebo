@@ -15,7 +15,7 @@ print("=== tests_analysis_autocorrelation ===")
 def test_random_input():
     firing_map = np.random.rand(80, 80)
     acorr = func(firing_map)
-    return acorr
+    assert acorr is not None
 
 
 def test_perfect_artificial_grid():
@@ -28,4 +28,4 @@ def test_perfect_artificial_grid():
         fields=th.generate_hexagonal_grid_fields_dict(),
     )
     acorr = func(firing_map)
-    return acorr
+    assert acorr is not None

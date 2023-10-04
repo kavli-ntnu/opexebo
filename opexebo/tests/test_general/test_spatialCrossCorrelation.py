@@ -31,7 +31,6 @@ def test_invalid_inputs():
         arr1 = "b"
         func(arr0, arr1)
     print("test_invalid_inputs passed")
-    return True
 
 
 def test_trivial_inputs_1d():

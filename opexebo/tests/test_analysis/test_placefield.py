@@ -33,7 +33,6 @@ def test_invalid_input():
         sm = "not implemented"
         func(fmap, search_method=sm)
     print("test_invalid_input() passed")
-    return True
 
 
 def test_unchanging_ratemap():
@@ -57,4 +56,3 @@ def test_unchanging_ratemap():
     func(fmap)
     assert np.array_equal(fmap, fmap_original)
     print("test_unchanging_ratemap() passed")
-    return True
