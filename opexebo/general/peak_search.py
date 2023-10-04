@@ -182,7 +182,7 @@ def _peak_search_sep(firing_map, **kwargs):
     init_fields = sep.extract(tmp_firing_map-bkg, mask=tmp_mask, thresh=threshold, \
                           err=bkg.globalrms)
 
-    peak_coords = np.zeros(shape=(len(init_fields), 2), dtype=np.int)
+    peak_coords = np.zeros(shape=(len(init_fields), 2), dtype=int)
 
     for i, props in enumerate(init_fields):
         peak = np.array([props['y'], props['x']])
