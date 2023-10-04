@@ -1,5 +1,5 @@
 astropy>=5.3
 numpy>=1.24
 scipy>=1.10
-scikit-image>=0.20.x
+scikit-image>=0.20
 opencv-python
