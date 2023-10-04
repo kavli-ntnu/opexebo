@@ -25,3 +25,11 @@ pip install opexebo
 Opexebo has an optional dependency, `sep`, that is not installed by default. To be able to install it, you require a C++ compiler installed on your system. On Linux, `gcc` will do the job. On Windows, the the Microsoft Visual C++ Build Tools fulfil the same role (https://www.microsoft.com/en-us/download/details.aspx?id=48159). To force installation of all optional dependencies, append `[full]` to the install command, for example:
 
     pip install opexebo[full]
+
+### Tests
+
+Tests are implemented with `pytest`. Ensure that the various development tools are installed via 
+```python
+pip install -r dev-requirements.txt
+```
+And then run tests with `pytest .`
