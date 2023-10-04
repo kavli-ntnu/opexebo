@@ -118,6 +118,25 @@ def place_field(firing_map, **kwargs):
         if debug:
             print(f"Terminating due to invalid global peak: {global_peak}")
         return [], np.zeros_like(firing_map)
+    elif global_peak < 1:
+        # I have observed issues with firing maps which have low absolute values (maximum value << 1)
+        # Firing maps that have clearly visible firing fields, but with low absolute peaks (above the specified min_peak)
+        # are dropped by the peak_search stage. Therefore, scale the entire map, and specified minimums, up in order to have
+        # values >> 1
+        target_peak_factor = 4
+        if debug:
+            print(
+                "Absolute peak value is low ({}). Scaling such that the absolute peak factor is {}".format(
+                    global_peak,
+                    target_peak_factor
+                )
+            )
+        scaling = True
+        scaling_factor = target_peak_factor / global_peak
+    else:
+        scaling = False
+        if debug:
+            print("Absolute peak factor is > 1, no scaling applied")
 
     # Construct a mask of bins that the animal never visited (never visited -> true)
     # This needs to account for multiple input formats.
@@ -142,6 +161,13 @@ def place_field(firing_map, **kwargs):
         finite_firing_map = firing_map.copy()
         finite_firing_map[np.isnan(firing_map)] = 0
 
+    if scaling:
+        finite_firing_map *= scaling_factor
+        min_peak *= scaling_factor
+        min_mean *= scaling_factor
+        global_peak *= scaling_factor
+
+
     structured_element = morphology.disk(1)
     image_eroded = morphology.erosion(finite_firing_map, structured_element)
     fmap = morphology.reconstruction(image_eroded, finite_firing_map)
@@ -165,6 +191,14 @@ def place_field(firing_map, **kwargs):
     # leave only peaks that satisfy the threshold
     good_peaks = (found_peaks >= min_peak)
     peak_coords = peak_coords[good_peaks, :]
+
+    if debug:
+        print(
+            "Peak search outcome: {} peaks found; {} remaining after minimum peak constraint".format(
+                len(found_peaks),
+                len(good_peaks),
+            )
+        )
 
 
     ##########################################################################
@@ -246,6 +280,13 @@ def place_field(firing_map, **kwargs):
         fmap[pixels] = max_value * 1.5
         fields_map[pixels] = field_id
         field_id = field_id + 1
+
+    if debug:
+        print(
+            "Field expansion around peaks: {} fields remain".format(
+                len(np.unique(fields_map)) - 1, # zero means outside all fields
+            )
+        )
 
 
     ##########################################################################
