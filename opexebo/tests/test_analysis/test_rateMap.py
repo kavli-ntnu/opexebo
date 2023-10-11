@@ -55,7 +55,6 @@ def test_rmap_invalid_inputs():
         func(tmap, spikes, arena_size=80, bin_width=4)  #! 80/4 != 40
 
     print("test_rmap_invalid_inputs passed")
-    return True
 
 
 def test_1d_ratemap():

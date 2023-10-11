@@ -21,4 +21,3 @@ def test_invalid_inputs():
         d = np.ones((5, 5, 5))
         func(d, sigma=2)
     print("test_invalid_inputs passed")
-    return True

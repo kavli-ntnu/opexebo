@@ -9,6 +9,8 @@ if "Windows" in platform.platform():
     os.environ["HOMESHARE"] = r"C:\temp\astropy"
 elif "Linux" in platform.platform():
     os.environ["HOMESHARE"] = r"/tmp/astropy"
+elif "macos" in platform.platform():
+    os.environ["HOMESHARE"] = r"/tmp/astropy"
 
 
 from .test_helpers import *

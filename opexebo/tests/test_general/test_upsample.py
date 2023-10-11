@@ -42,7 +42,6 @@ def test_invalid_inputs():
         func(ndarray, neg_upscale)
 
     print("test_invalid_inputs passed")
-    return True
 
 
 def test_integer_scaling_2d():
@@ -61,7 +60,6 @@ def test_integer_scaling_2d():
     new_array = func(ndarray, upscale)
     assert np.array_equal(np.array(ndarray.shape) * upscale, np.array(new_array.shape))
     print("test_integer_scaling_2d passed")
-    return True
 
 
 def test_fractional_scaling_2d():
@@ -70,7 +68,6 @@ def test_fractional_scaling_2d():
     new_array = func(ndarray, upscale)
     assert np.array_equal(np.round(np.array(ndarray.shape) * upscale), new_array.shape)
     print("test_fractional_scaling_2d passed")
-    return True
 
 
 # if __name__ == '__main__':

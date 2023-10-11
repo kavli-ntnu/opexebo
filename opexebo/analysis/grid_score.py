@@ -503,7 +503,7 @@ def _findCentreRadius(aCorr, **kwargs):
     search_method = kwargs.get("search_method", default.search_method)
     halfHeight = np.ceil(aCorr.shape[0]/2)
     halfWidth = np.ceil(aCorr.shape[1]/2)
-    peak_coords = np.ones(shape=(1, 2), dtype=np.int)
+    peak_coords = np.ones(shape=(1, 2), dtype=int)
     peak_coords[0, 0] = halfHeight-1
     peak_coords[0, 1] = halfWidth-1
     fields = opexebo.analysis.place_field(aCorr, min_bins=5, min_peak=0, min_mean=0, init_thresh=.95, \
@@ -517,8 +517,8 @@ def _findCentreRadius(aCorr, **kwargs):
     else:
         pass
 
-    peak_coords = np.ndarray(shape=(len(fields), 2), dtype=np.integer)
-    areas = np.ndarray(shape=(len(fields), 1), dtype=np.integer)
+    peak_coords = np.ndarray(shape=(len(fields), 2), dtype=int)
+    areas = np.ndarray(shape=(len(fields), 1), dtype=int)
     for i, field in enumerate(fields):
         peak_rc = field['peak_coords']
         peak_coords[i, 0] = peak_rc[0]

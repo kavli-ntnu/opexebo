@@ -69,7 +69,6 @@ def test_perfect_fields_square():
     # The below verify that the function correctly identifies that a field is *not* there.
     assert func(left, shape, search_width=sw, walls="TRB") == 1 / 40
     print("test_perfect_fields() passed")
-    return True
 
 
 def test_offset_perfect_field_square():
@@ -82,7 +81,6 @@ def test_offset_perfect_field_square():
     shape = "s"
     assert func(fields, shape, search_width=8, walls="L") == 1
     print("test_offset_field() passed")
-    return True
 
 
 def test_partial_field_square():
@@ -97,7 +95,6 @@ def test_partial_field_square():
     field[:30, 0] = 1
     assert func(fields, "s", walls=walls) == 0.75
     print("test_partial_field() passed")
-    return True
 
 
 def test_extended_field_square():
@@ -110,7 +107,6 @@ def test_extended_field_square():
     assert func(fields, "s", walls="B") == 0.75
     assert func(fields, "s", walls="TRBL") == 0.75
     print("test_extended_field() passed")
-    return True
 
 
 def test_central_field_square():
@@ -123,14 +119,12 @@ def test_central_field_square():
     # locations that the animal never visited - the field MUST extend into the
     # location closest to the wall (that the animal visited) in order to qualify
     print("test_central_field() passed")
-    return True
 
 
 def test_zero_fields_square():
     fields = []
     assert func(fields, "s") == 0
     print("test_zero_fields() passed")
-    return True
 
 
 

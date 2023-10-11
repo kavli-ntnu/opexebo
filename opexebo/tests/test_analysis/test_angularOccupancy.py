@@ -19,7 +19,6 @@ def test_angular_random_data():
     angles = np.random.rand(n)
     a, b, c = func(time, angles)
     print(f"{inspect.stack()[0][3]} passed")
-    return True
 
 
 def test_angular_zero_data():
@@ -29,7 +28,6 @@ def test_angular_zero_data():
     angles = np.zeros(n)
     a, b, c = func(time, angles)
     print(f"{inspect.stack()[0][3]} passed")
-    return True
 
 
 # if __name__ == '__main__':

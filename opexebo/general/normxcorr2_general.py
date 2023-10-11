@@ -10,7 +10,6 @@ original function have been dropped.
 from __future__ import division
 
 import numpy as np
-import numpy.matlib  # Not included in the default numpy namespace
 from scipy.signal import convolve2d
 
 REQUIRED_OVERLAP_PIXELS = 0
@@ -124,7 +123,7 @@ def _freqxcorr(a, b, outsize):
     optimalSize[0] = _find_closest_valid_dimension(outsize[0])
     optimalSize[1] = _find_closest_valid_dimension(outsize[1])
     optimalSize = optimalSize.squeeze()
-    optimalSize = optimalSize.astype(np.integer)
+    optimalSize = optimalSize.astype(int)
 
     # Calculate correlation in frequency domain
     rot_version = np.rot90(a, 2)
@@ -182,13 +181,12 @@ def _local_sum(A, m, n):
     """
     if m == A.shape[0] and n == A.shape[1]:
         s = np.cumsum(A, axis=0)
-        secondPart = np.matlib.repmat(s[-1, :], m-1, 1) - s[0:-1, :]
+        secondPart = np.tile(s[-1], (m-1, 1)) - s[0:-1]
         c = np.concatenate((s, secondPart), axis=0)
-        s = np.cumsum(c, axis=1)
-        del c
-        lastColumn = s[:, -1].reshape((s.shape[0], 1))
-        secondPart = np.matlib.repmat(lastColumn, 1, n-1) - s[:, 0:-1]
-        local_sum_A = np.concatenate((s, secondPart), axis=1)
+        s2 = np.cumsum(c, axis=1)
+        lastColumn = s2[:, -1].reshape((s2.shape[0], 1))
+        secondPart = np.tile(lastColumn, (1, n-1)) - s2[:, 0:-1]
+        local_sum_A = np.concatenate((s2, secondPart), axis=1)
     else:
         # breal the padding into parts to save on memory
         B = np.zeros((A.shape[0] + 2*m, A.shape[1]))
@@ -210,7 +208,7 @@ def _shift_data(A):
     """
     Convert array to type Float, and shift the data range to be greater than zero
     """
-    B = A.astype(np.float)
+    B = A.astype(float)
 
     if not np.issubdtype(A.dtype, np.unsignedinteger):
         min_B = np.min(B)

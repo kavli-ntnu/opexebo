@@ -109,7 +109,7 @@ def _peak_search_skimage(image, **kwargs):
         regionalMaxMap = morphology.local_minima(image_copy, connectivity=connectivity, allow_borders=True)
     labelled_max = measure.label(regionalMaxMap, connectivity=connectivity)
     regions = measure.regionprops(labelled_max)
-    peak_coords = np.zeros(shape=(len(regions), 2), dtype=np.int)
+    peak_coords = np.zeros(shape=(len(regions), 2), dtype=int)
     
     distance_from_mask = distance_transform_cdt(image_copy * (1-mask))
 
@@ -182,7 +182,7 @@ def _peak_search_sep(firing_map, **kwargs):
     init_fields = sep.extract(tmp_firing_map-bkg, mask=tmp_mask, thresh=threshold, \
                           err=bkg.globalrms)
 
-    peak_coords = np.zeros(shape=(len(init_fields), 2), dtype=np.int)
+    peak_coords = np.zeros(shape=(len(init_fields), 2), dtype=int)
 
     for i, props in enumerate(init_fields):
         peak = np.array([props['y'], props['x']])

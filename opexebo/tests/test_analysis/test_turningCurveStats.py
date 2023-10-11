@@ -18,7 +18,6 @@ def test_random_data():
     tuning_curve = np.histogram(data, bins=int(360 / 15))[0]
     func(tuning_curve)
     print(f"{inspect.stack()[0][3]} passed")
-    return True
 
 
 # if __name__ == '__main__':

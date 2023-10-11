@@ -40,7 +40,6 @@ def test_invalid_inputs():
         dim = 1
         func(kwv, dim)
     print("test_invalid_inputs passed")
-    return True
 
 
 def test_1d_int_valid():
@@ -50,7 +49,6 @@ def test_1d_int_valid():
     assert ars == 80.0
     assert not is_2d
     print("test_1d_int_valid passed")
-    return True
 
 
 def test_1d_str_valid():
@@ -60,7 +58,6 @@ def test_1d_str_valid():
     assert ars == 80.0
     assert not is_2d
     print("test_1d_str_valid passed")
-    return True
 
 
 def test_2d_square_valid():
@@ -71,7 +68,6 @@ def test_2d_square_valid():
     assert ars[0] == ars[1] == kwv
     assert is_2d
     print("test_2d_square_valid passed")
-    return True
 
 
 def test_2d_rectangle_valid():
@@ -81,4 +77,3 @@ def test_2d_rectangle_valid():
     assert np.array_equal(ars, np.array((80, 120)))
     assert is_2d
     print("test_2d_rectangle_valid passed")
-    return True

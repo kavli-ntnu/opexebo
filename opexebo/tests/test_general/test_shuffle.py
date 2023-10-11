@@ -32,7 +32,6 @@ def test_increment_creation():
     )  # this is a random test, so it _could_ fail...
     assert max(inc) <= t_stop - offset_lim
     assert max(inc) >= t_stop - offset_lim - 0.5
-    return
 
 
 def test_output_creation():
@@ -43,7 +42,6 @@ def test_output_creation():
     out, inc = func(times, offset_lim, iterations, t_start, t_stop)
     assert out.shape == (iterations, times.size)
     assert out[0].shape == times.shape
-    return
 
 
 def test_output_logic():
@@ -57,7 +55,6 @@ def test_output_logic():
     assert np.max(out) <= t_stop
     for row in out:
         assert np.array_equal(row, np.array(sorted(row)))
-    return
 
 
 def test_edge_cases():

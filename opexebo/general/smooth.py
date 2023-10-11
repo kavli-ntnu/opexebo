@@ -104,36 +104,38 @@ def smooth(data, sigma, **kwargs):
 
     width = int(4*sigma)
 
-    if circular:
-        smoothed_data = convolve(working_data, kernel, boundary="wrap")
-        # Don't bother with padding. Use the values from the other end of the 
-        # array, i.e. imagine the array wrapped around a cylinder
-    elif not circular:
-        working_data = np.pad(working_data, pad_width=width, mode='symmetric')
-        # pad the outer boundary to depth "width
-        # The padding values are based on reflecting at the border
-        # mode='symmetrical' results in
-        # [0, 1, 2, 3, 4] -> [1,0  ,0,1,2,3,4,  4,3]
-        # mode='reflect' results in
-        # [0, 1, 2, 3, 4] -> [2,1  ,0,1,2,3,4,  3,2]
-        # i.e. changing whether the reflection axis is outside the original data
-        # or overlaid on the outermost row
-    
-        smoothed_data = convolve(working_data, kernel, boundary='extend')
-        # Because of the padding, the boundary mode isn't really relevant
-        # By choosing a large width, the edge effects arising from this additional
-        # padding (boundary='extend') is minimised
-    
-        if d == 2:
-            smoothed_data = smoothed_data[width:-width, width:-width]
-        elif d == 1:
-            smoothed_data = smoothed_data[width:-width]
-        else: # This condition should never happen, due to checking above
-            raise NotImplementedError("This function currently supports smoothing"\
-                    f" 1D, 2D data. You have provided {d} dimensional data")
-        # We have to get rid of the padding that we previously added, and the only
-        # way to do that is slicing, which is NOT dimensional-agnostic
-        # There may be a more elegant solution than if/else, but this will do now
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        if circular:
+            smoothed_data = convolve(working_data, kernel, boundary="wrap")
+            # Don't bother with padding. Use the values from the other end of the
+            # array, i.e. imagine the array wrapped around a cylinder
+        elif not circular:
+            working_data = np.pad(working_data, pad_width=width, mode='symmetric')
+            # pad the outer boundary to depth "width
+            # The padding values are based on reflecting at the border
+            # mode='symmetrical' results in
+            # [0, 1, 2, 3, 4] -> [1,0  ,0,1,2,3,4,  4,3]
+            # mode='reflect' results in
+            # [0, 1, 2, 3, 4] -> [2,1  ,0,1,2,3,4,  3,2]
+            # i.e. changing whether the reflection axis is outside the original data
+            # or overlaid on the outermost row
+
+            smoothed_data = convolve(working_data, kernel, boundary='extend')
+            # Because of the padding, the boundary mode isn't really relevant
+            # By choosing a large width, the edge effects arising from this additional
+            # padding (boundary='extend') is minimised
+
+            if d == 2:
+                smoothed_data = smoothed_data[width:-width, width:-width]
+            elif d == 1:
+                smoothed_data = smoothed_data[width:-width]
+            else: # This condition should never happen, due to checking above
+                raise NotImplementedError("This function currently supports smoothing"\
+                        f" 1D, 2D data. You have provided {d} dimensional data")
+            # We have to get rid of the padding that we previously added, and the only
+            # way to do that is slicing, which is NOT dimensional-agnostic
+            # There may be a more elegant solution than if/else, but this will do now
 
     if type(data) == np.ma.MaskedArray:
         smoothed_data = np.ma.masked_where(data.mask, smoothed_data)

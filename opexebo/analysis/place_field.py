@@ -118,6 +118,25 @@ def place_field(firing_map, **kwargs):
         if debug:
             print(f"Terminating due to invalid global peak: {global_peak}")
         return [], np.zeros_like(firing_map)
+    elif global_peak < 1:
+        # I have observed issues with firing maps which have low absolute values (maximum value << 1)
+        # Firing maps that have clearly visible firing fields, but with low absolute peaks (above the specified min_peak)
+        # are dropped by the peak_search stage. Therefore, scale the entire map, and specified minimums, up in order to have
+        # values >> 1
+        target_peak_factor = 4
+        if debug:
+            print(
+                "Absolute peak value is low ({}). Scaling such that the absolute peak factor is {}".format(
+                    global_peak,
+                    target_peak_factor
+                )
+            )
+        scaling = True
+        scaling_factor = target_peak_factor / global_peak
+    else:
+        scaling = False
+        if debug:
+            print("Absolute peak factor is > 1, no scaling applied")
 
     # Construct a mask of bins that the animal never visited (never visited -> true)
     # This needs to account for multiple input formats.
@@ -141,6 +160,13 @@ def place_field(firing_map, **kwargs):
         occupancy_mask[np.isnan(firing_map)] = True
         finite_firing_map = firing_map.copy()
         finite_firing_map[np.isnan(firing_map)] = 0
+
+    if scaling:
+        finite_firing_map *= scaling_factor
+        min_peak *= scaling_factor
+        min_mean *= scaling_factor
+        global_peak *= scaling_factor
+
 
     structured_element = morphology.disk(1)
     image_eroded = morphology.erosion(finite_firing_map, structured_element)
@@ -166,6 +192,14 @@ def place_field(firing_map, **kwargs):
     good_peaks = (found_peaks >= min_peak)
     peak_coords = peak_coords[good_peaks, :]
 
+    if debug:
+        print(
+            "Peak search outcome: {} peaks found; {} remaining after minimum peak constraint".format(
+                len(found_peaks),
+                len(good_peaks),
+            )
+        )
+
 
     ##########################################################################
     #####    Part 3: from local maxima get fields by expanding around maxima
@@ -179,7 +213,7 @@ def place_field(firing_map, **kwargs):
     # this can be confusing, but this variable is just an index for the vector
     # peak_linear_ind
     peaks_index = np.arange(len(peak_coords))
-    fields_map = np.zeros(fmap.shape, dtype=np.integer)
+    fields_map = np.zeros(fmap.shape, dtype=int)
     field_id = 1
     for i, peak_rc in enumerate(peak_coords):
         # peak_rc == [row, col]
@@ -246,6 +280,13 @@ def place_field(firing_map, **kwargs):
         fmap[pixels] = max_value * 1.5
         fields_map[pixels] = field_id
         field_id = field_id + 1
+
+    if debug:
+        print(
+            "Field expansion around peaks: {} fields remain".format(
+                len(np.unique(fields_map)) - 1, # zero means outside all fields
+            )
+        )
 
 
     ##########################################################################
@@ -456,7 +497,7 @@ def _area_for_threshold(image, occupancy_mask, peak_rc, threshold, other_fields_
     # calclate euler_number by hand rather than by regionprops
     # This yields results that are more similar to Matlab's regionprops
     # NOTE - this uses scipy.ndimage.morphology, while most else uses skimage.morphology
-    filled_image = ndimage.morphology.binary_fill_holes(labeled_img)
+    filled_image = ndimage.binary_fill_holes(labeled_img)
     euler_array = (filled_image != labeled_img)  # True where holes were filled in
 
     euler_array = np.maximum((euler_array*1) - (occupancy_mask*1), 0)

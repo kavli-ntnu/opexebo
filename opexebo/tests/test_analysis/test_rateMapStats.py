@@ -19,7 +19,6 @@ def test_random_data():
     rmap = np.random.rand(n, n)
     func(tmap, rmap)
     print(f"{inspect.stack()[0][3]} passed")
-    return True
 
 
 def test_zero_data():
@@ -29,7 +28,6 @@ def test_zero_data():
     rmap = np.ma.zeros((n, n))
     func(tmap, rmap)
     print(f"{inspect.stack()[0][3]} passed")
-    return True
 
 
 # if __name__ == '__main__':
